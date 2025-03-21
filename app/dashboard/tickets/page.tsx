@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
-import { Calendar, MapPin, QrCode } from "lucide-react"
+import { Calendar, MapPin, Plus, QrCode } from "lucide-react"
+import { useEffect, useState } from "react"
 
 type TicketEvent = {
   id: string
@@ -35,12 +38,31 @@ export default function TicketsPage() {
   const [availableEvents, setAvailableEvents] = useState<TicketEvent[]>([])
   const [myTickets, setMyTickets] = useState<TicketPurchase[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newEvent, setNewEvent] = useState({
+    event_name: "",
+    price: "",
+    date: "",
+    location: "",
+    total_quantity: "",
+  })
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return
 
       try {
+        // Get user role
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        if (userError) throw userError
+        setUserRole(userData.role)
+
         // Fetch available events
         const { data: events, error: eventsError } = await supabase
           .from("tickets")
@@ -68,7 +90,7 @@ export default function TicketsPage() {
           .order("created_at", { ascending: false })
 
         if (ticketsError) throw ticketsError
-        setMyTickets(tickets as TicketPurchase[])
+        setMyTickets(tickets as unknown as TicketPurchase[])
       } catch (error) {
         console.error("Error fetching tickets data:", error)
         toast({
@@ -161,6 +183,49 @@ export default function TicketsPage() {
     }
   }
 
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    try {
+      const { error } = await supabase.from("tickets").insert({
+        event_name: newEvent.event_name,
+        price: parseFloat(newEvent.price),
+        date: newEvent.date,
+        location: newEvent.location,
+        total_quantity: parseInt(newEvent.total_quantity),
+        remaining_quantity: parseInt(newEvent.total_quantity),
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Evento criado com sucesso!",
+        description: "O novo evento foi adicionado à lista de eventos disponíveis.",
+      })
+
+      // Reset form and close dialog
+      setNewEvent({
+        event_name: "",
+        price: "",
+        date: "",
+        location: "",
+        total_quantity: "",
+      })
+      setIsDialogOpen(false)
+
+      // Refresh the data
+      window.location.reload()
+    } catch (error) {
+      console.error("Error creating event:", error)
+      toast({
+        title: "Erro ao criar evento",
+        description: "Não foi possível criar o novo evento.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -171,9 +236,95 @@ export default function TicketsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Ingressos</h1>
-        <p className="text-gray-500">Compre ingressos para os eventos do JISC ou visualize seus ingressos.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Ingressos</h1>
+          <p className="text-gray-500">Compre ingressos para os eventos do JISC ou visualize seus ingressos.</p>
+        </div>
+
+        {userRole === "admin" && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#0456FC]">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Evento
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Criar Novo Evento</DialogTitle>
+                <DialogDescription>Preencha os detalhes do novo evento.</DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleCreateEvent} className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="event_name">Nome do Evento</Label>
+                  <Input
+                    id="event_name"
+                    value={newEvent.event_name}
+                    onChange={(e) => setNewEvent({ ...newEvent, event_name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price">Preço (R$)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newEvent.price}
+                    onChange={(e) => setNewEvent({ ...newEvent, price: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="date">Data e Hora</Label>
+                  <Input
+                    id="date"
+                    type="datetime-local"
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location">Local</Label>
+                  <Input
+                    id="location"
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="total_quantity">Quantidade Total de Ingressos</Label>
+                  <Input
+                    id="total_quantity"
+                    type="number"
+                    min="1"
+                    value={newEvent.total_quantity}
+                    onChange={(e) => setNewEvent({ ...newEvent, total_quantity: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="bg-[#0456FC]">
+                    Criar Evento
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Available Events Section */}
