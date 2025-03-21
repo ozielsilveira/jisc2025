@@ -152,7 +152,7 @@ export default function PackagesPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleCategoryChange = (value: "games" | "party" | "combined") => {
+  const handleCategoryChange = (value: "games" | "combined") => {
     let includes_games = formData.includes_games
     let includes_party = formData.includes_party
 
@@ -160,10 +160,8 @@ export default function PackagesPage() {
     if (value === "games") {
       includes_games = true
       includes_party = false
-    } else if (value === "party") {
-      includes_games = false
-      includes_party = true
-    } else if (value === "combined") {
+    }
+    else if (value === "combined") {
       includes_games = true
       includes_party = true
     }
@@ -589,16 +587,12 @@ export default function PackagesPage() {
                   <Label>Categoria do Pacote</Label>
                   <RadioGroup
                     value={formData.category}
-                    onValueChange={(value) => handleCategoryChange(value as "games" | "party" | "combined")}
+                    onValueChange={(value) => handleCategoryChange(value as "games" | "combined")}
                     className="flex flex-col space-y-1"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="games" id="games" />
                       <Label htmlFor="games">Jogos (Apenas modalidades esportivas)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="party" id="party" />
-                      <Label htmlFor="party">Festa (Apenas ingresso para festa)</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="combined" id="combined" />

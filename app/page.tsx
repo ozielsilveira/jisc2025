@@ -17,13 +17,13 @@ export default function Home() {
           </div>
           <div className="space-x-2">
             <Link href="/login">
-              <Button variant="outline" className="text-black border-white hover:bg-white/20">
+              <Button variant="outline" className="bg-[#93FF6D] text-black hover:bg-[#7de05c]">
                 Entrar
               </Button>
             </Link>
-            <Link href="/register">
+            {/* <Link href="/register">
               <Button className="bg-[#93FF6D] text-black hover:bg-[#7de05c]">Cadastrar</Button>
-            </Link>
+            </Link> */}
           </div>
         </div>
       </header>

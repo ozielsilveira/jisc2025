@@ -397,7 +397,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           {userRole === "athletic" && <TabsTrigger value="athletic">Atlética</TabsTrigger>}
-          {tableExists && <TabsTrigger value="preferences">Preferências</TabsTrigger>}
+          {/* {tableExists && <TabsTrigger value="preferences">Preferências</TabsTrigger>} */}
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
