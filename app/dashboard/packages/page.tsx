@@ -1,0 +1,671 @@
+"use client"
+
+import type React from "react"
+
+import { useAuth } from "@/components/auth-provider"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase"
+import { AlertTriangle, DollarSign, Edit, Percent, Plus, Trash2, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+
+type PackageType = {
+  id: string
+  name: string
+  description: string
+  price: number
+  category: "games" | "party" | "combined"
+  includes_party: boolean
+  includes_games: boolean
+  discount_percentage: number | null
+  created_at: string
+  updated_at: string
+  _count?: {
+    athletes: number
+  }
+}
+
+export default function PackagesPage() {
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const router = useRouter()
+  const [packages, setPackages] = useState<PackageType[]>([])
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null)
+  const [isTableReady, setIsTableReady] = useState(true)
+
+  // For package creation/editing
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    description: "",
+    price: "",
+    category: "games" as "games" | "party" | "combined",
+    includes_party: false,
+    includes_games: true,
+    discount_percentage: "",
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // useEffect(() => {
+  //   const checkTableStructure = async () => {
+  //     try {
+  //       // Check if the packages table exists and has the required columns
+  //       const { data: columns, error: columnsError } = await supabase
+  //         .from("information_schema.columns")
+  //         .select("column_name")
+  //         .eq("table_schema", "public")
+  //         .eq("table_name", "packages")
+
+  //       if (columnsError) {
+  //         console.error("Error checking columns:", columnsError)
+  //         setIsTableReady(false)
+  //         return
+  //       }
+
+  //       if (!columns || columns.length === 0) {
+  //         setIsTableReady(false)
+  //         return
+  //       }
+
+  //       const columnNames = columns.map((col) => col.column_name)
+  //       const requiredColumns = ["category", "includes_games", "discount_percentage"]
+  //       const missingColumns = requiredColumns.filter((col) => !columnNames.includes(col))
+
+  //       if (missingColumns.length > 0) {
+  //         setIsTableReady(false)
+  //         return
+  //       }
+
+  //       setIsTableReady(true)
+  //     } catch (error) {
+  //       console.error("Error checking table structure:", error)
+  //       setIsTableReady(false)
+  //     }
+  //   }
+
+  //   checkTableStructure()
+  // }, [])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user || !isTableReady) return
+
+      try {
+        // Get user role
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        if (userError) throw userError
+        setUserRole(userData.role)
+
+        // Fetch packages
+        const { data: packagesData, error: packagesError } = await supabase.from("packages").select("*").order("price")
+
+        if (packagesError) throw packagesError
+
+        // Get athlete counts for each package
+        const packagesWithCounts = await Promise.all(
+          packagesData.map(async (pkg) => {
+            const { count, error } = await supabase
+              .from("athlete_packages")
+              .select("*", { count: "exact", head: true })
+              .eq("package_id", pkg.id)
+
+            return {
+              ...pkg,
+              _count: {
+                athletes: count || 0,
+              },
+            }
+          }),
+        )
+
+        setPackages(packagesWithCounts as PackageType[])
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar os pacotes.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [user, toast, isTableReady])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleCategoryChange = (value: "games" | "party" | "combined") => {
+    let includes_games = formData.includes_games
+    let includes_party = formData.includes_party
+
+    // Update includes_games and includes_party based on category
+    if (value === "games") {
+      includes_games = true
+      includes_party = false
+    } else if (value === "party") {
+      includes_games = false
+      includes_party = true
+    } else if (value === "combined") {
+      includes_games = true
+      includes_party = true
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      category: value,
+      includes_games,
+      includes_party,
+    }))
+  }
+
+  const resetForm = () => {
+    setFormData({
+      id: "",
+      name: "",
+      description: "",
+      price: "",
+      category: "games",
+      includes_party: false,
+      includes_games: true,
+      discount_percentage: "",
+    })
+    setSelectedPackage(null)
+  }
+
+  const openEditDialog = (pkg: PackageType) => {
+    setSelectedPackage(pkg)
+    setFormData({
+      id: pkg.id,
+      name: pkg.name,
+      description: pkg.description || "",
+      price: pkg.price.toString(),
+      category: pkg.category,
+      includes_party: pkg.includes_party,
+      includes_games: pkg.includes_games,
+      discount_percentage: pkg.discount_percentage ? pkg.discount_percentage.toString() : "",
+    })
+    setIsDialogOpen(true)
+  }
+
+  const openDeleteDialog = (pkg: PackageType) => {
+    setSelectedPackage(pkg)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleCreateOrUpdatePackage = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.name || !formData.price) {
+      toast({
+        title: "Formulário incompleto",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const packageData = {
+        name: formData.name,
+        description: formData.description,
+        price: Number.parseFloat(formData.price),
+        category: formData.category,
+        includes_party: formData.includes_party,
+        includes_games: formData.includes_games,
+        discount_percentage: formData.discount_percentage ? Number.parseFloat(formData.discount_percentage) : null,
+      }
+
+      let result
+
+      if (formData.id) {
+        // Update existing package
+        const { data, error } = await supabase.from("packages").update(packageData).eq("id", formData.id).select()
+
+        if (error) throw error
+        result = data
+
+        toast({
+          title: "Pacote atualizado com sucesso",
+          description: "O pacote foi atualizado no sistema.",
+        })
+      } else {
+        // Create new package
+        const { data, error } = await supabase.from("packages").insert(packageData).select()
+
+        if (error) throw error
+        result = data
+
+        toast({
+          title: "Pacote criado com sucesso",
+          description: "O pacote foi adicionado ao sistema.",
+        })
+      }
+
+      // Reset form and close dialog
+      resetForm()
+      setIsDialogOpen(false)
+
+      // Refresh the packages list
+      const { data: packagesData, error: packagesError } = await supabase.from("packages").select("*").order("price")
+
+      if (packagesError) throw packagesError
+
+      // Get athlete counts for each package
+      const packagesWithCounts = await Promise.all(
+        packagesData.map(async (pkg) => {
+          const { count, error } = await supabase
+            .from("athlete_packages")
+            .select("*", { count: "exact", head: true })
+            .eq("package_id", pkg.id)
+
+          return {
+            ...pkg,
+            _count: {
+              athletes: count || 0,
+            },
+          }
+        }),
+      )
+
+      setPackages(packagesWithCounts as PackageType[])
+    } catch (error) {
+      console.error("Error creating/updating package:", error)
+      toast({
+        title: "Erro ao salvar pacote",
+        description: "Não foi possível salvar o pacote no sistema.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeletePackage = async () => {
+    if (!selectedPackage) return
+
+    try {
+      // Check if package is in use
+      const { count, error: countError } = await supabase
+        .from("athlete_packages")
+        .select("*", { count: "exact", head: true })
+        .eq("package_id", selectedPackage.id)
+
+      if (countError) throw countError
+
+      if (count && count > 0) {
+        toast({
+          title: "Não é possível excluir",
+          description: "Este pacote está atribuído a atletas e não pode ser excluído.",
+          variant: "destructive",
+        })
+        setIsDeleteDialogOpen(false)
+        return
+      }
+
+      // Delete package
+      const { error } = await supabase.from("packages").delete().eq("id", selectedPackage.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Pacote excluído com sucesso",
+        description: "O pacote foi removido do sistema.",
+      })
+
+      // Update packages list
+      setPackages((prev) => prev.filter((pkg) => pkg.id !== selectedPackage.id))
+    } catch (error) {
+      console.error("Error deleting package:", error)
+      toast({
+        title: "Erro ao excluir pacote",
+        description: "Não foi possível excluir o pacote do sistema.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleteDialogOpen(false)
+      setSelectedPackage(null)
+    }
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value)
+  }
+
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case "games":
+        return <Badge className="bg-blue-500">Jogos</Badge>
+      case "party":
+        return <Badge className="bg-purple-500">Festa</Badge>
+      case "combined":
+        return <Badge className="bg-green-500">Combinado</Badge>
+      default:
+        return <Badge>Desconhecido</Badge>
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-[#0456FC]"></div>
+      </div>
+    )
+  }
+
+  // Only admin can access this page
+  if (userRole !== "admin") {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
+        <p className="text-gray-500">Você não tem permissão para acessar esta página.</p>
+      </div>
+    )
+  }
+
+  if (!isTableReady) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Pacotes</h1>
+          <p className="text-gray-500">Gerencie os pacotes disponíveis para os atletas.</p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center text-amber-600">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Configuração Necessária
+            </CardTitle>
+            <CardDescription>
+              A tabela de pacotes precisa ser configurada antes de usar esta funcionalidade.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">
+              É necessário executar a configuração do banco de dados para criar ou atualizar a estrutura da tabela de
+              pacotes.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.push("/dashboard/database-setup")} className="w-full bg-[#0456FC]">
+              Ir para Configuração do Banco de Dados
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Pacotes</h1>
+          <p className="text-gray-500">Gerencie os pacotes disponíveis para os atletas.</p>
+        </div>
+
+        <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) resetForm()
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button className="bg-[#0456FC]">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Pacote
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>{formData.id ? "Editar Pacote" : "Adicionar Novo Pacote"}</DialogTitle>
+              <DialogDescription>
+                {formData.id
+                  ? "Edite os detalhes do pacote existente."
+                  : "Preencha os detalhes para criar um novo pacote."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleCreateOrUpdatePackage} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome do Pacote</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Pacote Completo"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Descreva o que está incluído neste pacote..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price">Preço (R$)</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Categoria do Pacote</Label>
+                <RadioGroup
+                  value={formData.category}
+                  onValueChange={(value) => handleCategoryChange(value as "games" | "party" | "combined")}
+                  className="flex flex-col space-y-1"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="games" id="games" />
+                    <Label htmlFor="games">Jogos (Apenas modalidades esportivas)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="party" id="party" />
+                    <Label htmlFor="party">Festa (Apenas ingresso para festa)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="combined" id="combined" />
+                    <Label htmlFor="combined">Combinado (Jogos + Festa)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {formData.category === "combined" && (
+                <div className="space-y-2">
+                  <Label htmlFor="discount_percentage">Desconto (%) para pacote combinado</Label>
+                  <Input
+                    id="discount_percentage"
+                    name="discount_percentage"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.discount_percentage}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Opcional: Desconto aplicado ao comprar o pacote combinado em vez de comprar separadamente.
+                  </p>
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button type="submit" className="bg-[#0456FC]" disabled={isSubmitting}>
+                  {isSubmitting ? "Salvando..." : formData.id ? "Atualizar Pacote" : "Criar Pacote"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o pacote{" "}
+              <span className="font-semibold">{selectedPackage?.name}</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePackage} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Tabs defaultValue="all">
+        <TabsList>
+          <TabsTrigger value="all">Todos os Pacotes</TabsTrigger>
+          <TabsTrigger value="games">Jogos</TabsTrigger>
+          <TabsTrigger value="party">Festa</TabsTrigger>
+          <TabsTrigger value="combined">Combinados</TabsTrigger>
+        </TabsList>
+
+        {["all", "games", "party", "combined"].map((category) => (
+          <TabsContent key={category} value={category} className="space-y-4">
+            {packages.filter((pkg) => category === "all" || pkg.category === category).length === 0 ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-center text-gray-500">
+                    Não há pacotes {category === "all" ? "" : `do tipo ${category}`} cadastrados no sistema.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                {packages
+                  .filter((pkg) => category === "all" || pkg.category === category)
+                  .map((pkg) => (
+                    <Card key={pkg.id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle>{pkg.name}</CardTitle>
+                          {getCategoryBadge(pkg.category)}
+                        </div>
+                        <CardDescription>{pkg.description || "Sem descrição disponível."}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-2xl font-bold">{formatCurrency(pkg.price)}</span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {pkg.includes_games && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              Jogos
+                            </Badge>
+                          )}
+                          {pkg.includes_party && (
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                              Festa
+                            </Badge>
+                          )}
+                          {pkg.discount_percentage && pkg.discount_percentage > 0 && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <Percent className="h-3 w-3 mr-1" />
+                              {pkg.discount_percentage}% de desconto
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-gray-500" />
+                          <span>{pkg._count?.athletes || 0} atletas inscritos</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between">
+                        <Button
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => openDeleteDialog(pkg)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Excluir
+                        </Button>
+                        <Button onClick={() => openEditDialog(pkg)}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+              </div>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  )
+}
+
