@@ -28,6 +28,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
@@ -52,17 +59,27 @@ type PackageType = {
   }
 }
 
+type Athletic = {
+  id: string
+  name: string
+  university: string
+}
+
 export default function PackagesPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
   const [packages, setPackages] = useState<PackageType[]>([])
+  const [athletics, setAthletics] = useState<Athletic[]>([])
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null)
   const [isTableReady, setIsTableReady] = useState(true)
+  const [selectedAthleticId, setSelectedAthleticId] = useState<string>("")
+  const [showAthleticSelection, setShowAthleticSelection] = useState(false)
+  const [tempSelectedPackage, setTempSelectedPackage] = useState<PackageType | null>(null)
 
   // For package creation/editing
   const [formData, setFormData] = useState({
@@ -76,46 +93,6 @@ export default function PackagesPage() {
     discount_percentage: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // useEffect(() => {
-  //   const checkTableStructure = async () => {
-  //     try {
-  //       // Check if the packages table exists and has the required columns
-  //       const { data: columns, error: columnsError } = await supabase
-  //         .from("information_schema.columns")
-  //         .select("column_name")
-  //         .eq("table_schema", "public")
-  //         .eq("table_name", "packages")
-
-  //       if (columnsError) {
-  //         console.error("Error checking columns:", columnsError)
-  //         setIsTableReady(false)
-  //         return
-  //       }
-
-  //       if (!columns || columns.length === 0) {
-  //         setIsTableReady(false)
-  //         return
-  //       }
-
-  //       const columnNames = columns.map((col) => col.column_name)
-  //       const requiredColumns = ["category", "includes_games", "discount_percentage"]
-  //       const missingColumns = requiredColumns.filter((col) => !columnNames.includes(col))
-
-  //       if (missingColumns.length > 0) {
-  //         setIsTableReady(false)
-  //         return
-  //       }
-
-  //       setIsTableReady(true)
-  //     } catch (error) {
-  //       console.error("Error checking table structure:", error)
-  //       setIsTableReady(false)
-  //     }
-  //   }
-
-  //   checkTableStructure()
-  // }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -390,6 +367,96 @@ export default function PackagesPage() {
     }
   }
 
+  const handlePackageSelection = (pkg: PackageType) => {
+    if (userRole === "admin" || userRole === "athletic") {
+      // Admin and athletic users can edit/delete packages
+      return
+    }
+
+    if (pkg.category === "games" || pkg.category === "combined") {
+      // For games or combined packages, show athletic selection
+      setTempSelectedPackage(pkg)
+      setShowAthleticSelection(true)
+    } else {
+      // For party packages, proceed with purchase
+      handlePackagePurchase(pkg)
+    }
+  }
+
+  const handlePackagePurchase = async (pkg: PackageType) => {
+    if (!user) return
+
+    try {
+      // Create athlete_package record
+      const { error } = await supabase.from("athlete_packages").insert({
+        athlete_id: user.id,
+        package_id: pkg.id,
+        payment_status: "pending",
+      })
+
+      if (error) throw error
+
+      toast({
+        title: "Pacote selecionado",
+        description: "Você será redirecionado para a página de pagamento.",
+      })
+
+      // Redirect to payment page
+      router.push(`/dashboard/payments?package=${pkg.id}`)
+    } catch (error) {
+      console.error("Error selecting package:", error)
+      toast({
+        title: "Erro ao selecionar pacote",
+        description: "Não foi possível selecionar o pacote.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleAthleticSelection = async () => {
+    if (!tempSelectedPackage || !selectedAthleticId) return
+
+    try {
+      // Create athlete record if user is not already an athlete
+      const { data: existingAthlete, error: athleteCheckError } = await supabase
+        .from("athletes")
+        .select("id")
+        .eq("user_id", user?.id)
+        .maybeSingle()
+
+      if (athleteCheckError) throw athleteCheckError
+
+      if (!existingAthlete) {
+        // Create athlete record
+        const { error: athleteError } = await supabase.from("athletes").insert({
+          user_id: user?.id,
+          athletic_id: selectedAthleticId,
+          status: "pending",
+        })
+
+        if (athleteError) throw athleteError
+      }
+
+      // Show approval message
+      toast({
+        title: "Solicitação enviada",
+        description: "Sua solicitação será analisada pela atlética antes de prosseguir com o pagamento.",
+      })
+
+      // Reset state
+      setShowAthleticSelection(false)
+      setTempSelectedPackage(null)
+      setSelectedAthleticId("")
+    } catch (error) {
+      console.error("Error handling athletic selection:", error)
+      toast({
+        title: "Erro ao processar solicitação",
+        description: "Não foi possível processar sua solicitação.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -447,122 +514,128 @@ export default function PackagesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Pacotes</h1>
-          <p className="text-gray-500">Gerencie os pacotes disponíveis para os atletas.</p>
+          <p className="text-gray-500">
+            {userRole === "admin" || userRole === "athletic"
+              ? "Gerencie os pacotes disponíveis para os atletas."
+              : "Selecione o pacote que deseja adquirir."}
+          </p>
         </div>
 
-        <Dialog
-          open={isDialogOpen}
-          onOpenChange={(open) => {
-            setIsDialogOpen(open)
-            if (!open) resetForm()
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button className="bg-[#0456FC]">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Pacote
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>{formData.id ? "Editar Pacote" : "Adicionar Novo Pacote"}</DialogTitle>
-              <DialogDescription>
-                {formData.id
-                  ? "Edite os detalhes do pacote existente."
-                  : "Preencha os detalhes para criar um novo pacote."}
-              </DialogDescription>
-            </DialogHeader>
+        {(userRole === "admin" || userRole === "athletic") && (
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              setIsDialogOpen(open)
+              if (!open) resetForm()
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button className="bg-[#0456FC]">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Pacote
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>{formData.id ? "Editar Pacote" : "Adicionar Novo Pacote"}</DialogTitle>
+                <DialogDescription>
+                  {formData.id
+                    ? "Edite os detalhes do pacote existente."
+                    : "Preencha os detalhes para criar um novo pacote."}
+                </DialogDescription>
+              </DialogHeader>
 
-            <form onSubmit={handleCreateOrUpdatePackage} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome do Pacote</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Pacote Completo"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Descreva o que está incluído neste pacote..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="price">Preço (R$)</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Categoria do Pacote</Label>
-                <RadioGroup
-                  value={formData.category}
-                  onValueChange={(value) => handleCategoryChange(value as "games" | "party" | "combined")}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="games" id="games" />
-                    <Label htmlFor="games">Jogos (Apenas modalidades esportivas)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="party" id="party" />
-                    <Label htmlFor="party">Festa (Apenas ingresso para festa)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="combined" id="combined" />
-                    <Label htmlFor="combined">Combinado (Jogos + Festa)</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {formData.category === "combined" && (
+              <form onSubmit={handleCreateOrUpdatePackage} className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="discount_percentage">Desconto (%) para pacote combinado</Label>
+                  <Label htmlFor="name">Nome do Pacote</Label>
                   <Input
-                    id="discount_percentage"
-                    name="discount_percentage"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Pacote Completo"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Descreva o que está incluído neste pacote..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="price">Preço (R$)</Label>
+                  <Input
+                    id="price"
+                    name="price"
                     type="number"
                     step="0.01"
                     min="0"
-                    max="100"
-                    value={formData.discount_percentage}
+                    value={formData.price}
                     onChange={handleInputChange}
                     placeholder="0.00"
+                    required
                   />
-                  <p className="text-xs text-gray-500">
-                    Opcional: Desconto aplicado ao comprar o pacote combinado em vez de comprar separadamente.
-                  </p>
                 </div>
-              )}
 
-              <DialogFooter>
-                <Button type="submit" className="bg-[#0456FC]" disabled={isSubmitting}>
-                  {isSubmitting ? "Salvando..." : formData.id ? "Atualizar Pacote" : "Criar Pacote"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="space-y-2">
+                  <Label>Categoria do Pacote</Label>
+                  <RadioGroup
+                    value={formData.category}
+                    onValueChange={(value) => handleCategoryChange(value as "games" | "party" | "combined")}
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="games" id="games" />
+                      <Label htmlFor="games">Jogos (Apenas modalidades esportivas)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="party" id="party" />
+                      <Label htmlFor="party">Festa (Apenas ingresso para festa)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="combined" id="combined" />
+                      <Label htmlFor="combined">Combinado (Jogos + Festa)</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {formData.category === "combined" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="discount_percentage">Desconto (%) para pacote combinado</Label>
+                    <Input
+                      id="discount_percentage"
+                      name="discount_percentage"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={formData.discount_percentage}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Opcional: Desconto aplicado ao comprar o pacote combinado em vez de comprar separadamente.
+                    </p>
+                  </div>
+                )}
+
+                <DialogFooter>
+                  <Button type="submit" className="bg-[#0456FC]" disabled={isSubmitting}>
+                    {isSubmitting ? "Salvando..." : formData.id ? "Atualizar Pacote" : "Criar Pacote"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -582,6 +655,41 @@ export default function PackagesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showAthleticSelection} onOpenChange={setShowAthleticSelection}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Selecione sua Atlética</DialogTitle>
+            <DialogDescription>
+              Para participar dos jogos, é necessário selecionar a atlética à qual você pertence.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="athletic">Atlética</Label>
+              <Select onValueChange={setSelectedAthleticId} value={selectedAthleticId}>
+                <SelectTrigger id="athletic">
+                  <SelectValue placeholder="Selecione sua atlética" />
+                </SelectTrigger>
+                <SelectContent>
+                  {athletics.map((athletic) => (
+                    <SelectItem key={athletic.id} value={athletic.id}>
+                      {athletic.name} - {athletic.university}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={handleAthleticSelection} disabled={!selectedAthleticId}>
+                Confirmar
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="all">
         <TabsList>

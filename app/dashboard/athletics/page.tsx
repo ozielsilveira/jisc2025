@@ -2,24 +2,15 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
-import { Building, Copy, Medal, Plus, School, Users } from "lucide-react"
+import { Building, Copy, Medal, School, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 
 type Athletic = {
   id: string
@@ -226,64 +217,9 @@ export default function AthleticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Atléticas</h1>
-          <p className="text-gray-500">Gerencie as atléticas participantes do campeonato.</p>
-        </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#0456FC]">
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Atlética
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Adicionar Nova Atlética</DialogTitle>
-              <DialogDescription>
-                Preencha os detalhes para cadastrar uma nova atlética no campeonato.
-              </DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={handleCreateAthletic} className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome da Atlética</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Atlética Medicina"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="university">Universidade</Label>
-                <Input
-                  id="university"
-                  name="university"
-                  value={formData.university}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Universidade Federal"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="logo">Logo da Atlética (opcional)</Label>
-                <Input id="logo" name="logo" type="file" accept="image/*" onChange={handleFileChange} />
-                <p className="text-xs text-gray-500">Recomendado: imagem quadrada com pelo menos 200x200 pixels.</p>
-              </div>
-
-              <DialogFooter>
-                <Button type="submit" className="bg-[#0456FC]" disabled={isSubmitting}>
-                  {isSubmitting ? "Criando..." : "Criar Atlética"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-3xl font-bold">Atléticas</h1>
+        <p className="text-gray-500">Visualize as atléticas participantes do campeonato.</p>
       </div>
 
       {athletics.length === 0 ? (
@@ -301,7 +237,7 @@ export default function AthleticsPage() {
                   <div className="h-16 w-16 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
                     {athletic.logo_url ? (
                       <img
-                        src={athletic.logo_url || "/placeholder.svg"}
+                        src={athletic.logo_url}
                         alt={`Logo da ${athletic.name}`}
                         className="h-full w-full object-cover"
                       />

@@ -63,7 +63,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       email,
       password,
       options: {
-        data: userData,
+        data: userData, 
       },
     })
     if (error) throw error

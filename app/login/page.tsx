@@ -2,16 +2,17 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/lib/supabase"
+import Image from "next/image"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -27,6 +28,35 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password)
+
+      // Check if user is an athletic representative and needs to complete registration
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("role, id")
+        .eq("email", email)
+        .single()
+
+      if (userError) throw userError
+
+      if (userData.role === "athletic") {
+        const { data: athleticData, error: athleticError } = await supabase
+          .from("athletics")
+          .select("university, logo_url")
+          .eq("representative_id", userData.id)
+          .single()
+
+        if (athleticError) throw athleticError
+
+        if (!athleticData.university || !athleticData.logo_url) {
+          toast({
+            title: "Login realizado com sucesso",
+            description: "Por favor, complete o cadastro da sua atlética nas configurações.",
+          })
+          router.push("/dashboard/settings")
+          return
+        }
+      }
+
       toast({
         title: "Login realizado com sucesso",
         description: "Você será redirecionado para o dashboard.",

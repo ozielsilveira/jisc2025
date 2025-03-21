@@ -2,24 +2,24 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
+import Image from "next/image"
+import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function RegisterPage() {
   const searchParams = useSearchParams()
   const defaultType = searchParams.get("type") || "buyer"
   const restricted = searchParams.get("restricted") === "true"
+  const athleticReferral = searchParams.get("athletic")
 
   const [formData, setFormData] = useState({
     name: "",
@@ -30,20 +30,60 @@ export default function RegisterPage() {
     phone: "",
     gender: "",
     role: defaultType as "buyer" | "athlete" | "athletic",
+    athletic_id: athleticReferral || "",
+    package_id: "",
   })
 
+  const [athletics, setAthletics] = useState<Array<{ id: string; name: string; university: string }>>([])
+  const [packages, setPackages] = useState<Array<{ id: string; name: string; description: string; price: number; category: "games" | "party" | "combined" }>>([])
+  const [selectedPackage, setSelectedPackage] = useState<{ category: "games" | "party" | "combined" } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const { signUp } = useAuth()
+  // const { signUp } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
 
-  // Atualizar o role quando o tipo padrão muda
+  // Fetch athletics and packages on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch athletics
+        const { data: athleticsData, error: athleticsError } = await supabase
+          .from("athletics")
+          .select("id, name, university")
+          .order("name")
+
+        if (athleticsError) throw athleticsError
+        setAthletics(athleticsData || [])
+
+        // Fetch packages
+        const { data: packagesData, error: packagesError } = await supabase
+          .from("packages")
+          .select("id, name, description, price, category")
+          .order("price")
+
+        if (packagesError) throw packagesError
+        setPackages(packagesData || [])
+      } catch (error) {
+        console.error("Error fetching data:", error)
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar as atléticas e pacotes.",
+          variant: "destructive",
+        })
+      }
+    }
+
+    fetchData()
+  }, [toast])
+
+  // Atualizar o role e athletic_id quando os parâmetros mudam
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
       role: defaultType as "buyer" | "athlete" | "athletic",
+      athletic_id: athleticReferral || prev.athletic_id,
     }))
-  }, [defaultType])
+  }, [defaultType, athleticReferral])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -52,6 +92,11 @@ export default function RegisterPage() {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (name === "package_id") {
+      const selectedPackage = packages.find(pkg => pkg.id === value)
+      setSelectedPackage(selectedPackage || null)
+    }
   }
 
   const validateForm = () => {
@@ -73,6 +118,24 @@ export default function RegisterPage() {
       return false
     }
 
+    if ((formData.role === "athlete" || formData.role === "buyer") && !formData.athletic_id) {
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, selecione sua atlética.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (formData.role !== "athletic" && !formData.package_id) {
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, selecione um pacote.",
+        variant: "destructive",
+      })
+      return false
+    }
+
     return true
   }
 
@@ -84,7 +147,23 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // Primeiro, vamos criar o usuário na tabela de autenticação
+      // First, check if user already exists in auth
+      const { data: existingAuth } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (existingAuth.user) {
+        toast({
+          title: "Usuário já existe",
+          description: "Este e-mail já está cadastrado. Por favor, faça login.",
+          variant: "destructive",
+        })
+        router.push('/login')
+        return
+      }
+
+      // Create new user in auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -99,27 +178,87 @@ export default function RegisterPage() {
       if (authError) throw authError
       if (!authData.user) throw new Error("Falha ao criar usuário")
 
-      // Agora, vamos inserir os dados do usuário na tabela personalizada
-      const { error: profileError } = await supabase.from("users").insert({
-        id: authData.user.id,
-        email: formData.email,
-        name: formData.name,
-        cpf: formData.cpf,
-        phone: formData.phone,
-        gender: formData.gender,
-        role: formData.role,
-      })
+      // Create user profile
+      const { error: profileError } = await supabase
+        .from("users")
+        .insert({
+          id: authData.user.id,
+          email: formData.email,
+          name: formData.name,
+          cpf: formData.cpf,
+          phone: formData.phone,
+          gender: formData.gender,
+          role: formData.role,
+        })
 
       if (profileError) {
-        // Se houver erro ao inserir na tabela users, vamos tentar excluir o usuário da autenticação
-        console.error("Erro ao criar perfil:", profileError)
+        // If there's an error creating the profile, we should delete the auth user
         await supabase.auth.admin.deleteUser(authData.user.id)
         throw new Error(`Erro ao criar perfil: ${profileError.message}`)
       }
 
+      // If user is an athletic representative, create pre-registration in athletics table
+      if (formData.role === "athletic") {
+        const { error: athleticError } = await supabase
+          .from("athletics")
+          .insert({
+            name: formData.name,
+            university: "", // Will be filled later in settings
+            logo_url: "", // Will be filled later in settings
+            status: "pending",
+            representative_id: authData.user.id,
+          })
+
+        if (athleticError) {
+          await supabase.auth.admin.deleteUser(authData.user.id)
+          throw new Error(`Erro ao criar pré-registro da atlética: ${athleticError.message}`)
+        }
+
+        toast({
+          title: "Cadastro realizado com sucesso",
+          description: "Por favor, complete o cadastro da sua atlética nas configurações após fazer login.",
+        })
+        router.push("/login")
+        return
+      }
+
+      // If user is an athlete, create athlete record
+      if (formData.role === "athlete") {
+        const { error: athleteError } = await supabase
+          .from("athletes")
+          .insert({
+            user_id: authData.user.id,
+            athletic_id: formData.athletic_id,
+            photo_url: "", // This will be updated later
+            enrollment_document_url: "", // This will be updated later
+            status: "pending",
+          })
+
+        if (athleteError) {
+          await supabase.auth.admin.deleteUser(authData.user.id)
+          throw new Error(`Erro ao criar perfil de atleta: ${athleteError.message}`)
+        }
+      }
+
+      // Create athlete package record
+      const { error: packageError } = await supabase
+        .from("athlete_packages")
+        .insert({
+          athlete_id: authData.user.id,
+          package_id: formData.package_id,
+          payment_status: "pending",
+        })
+
+      if (packageError) {
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        throw new Error(`Erro ao criar pacote: ${packageError.message}`)
+      }
+
       toast({
         title: "Cadastro realizado com sucesso",
-        description: "Você pode fazer login agora.",
+        description: selectedPackage?.category === "games" || selectedPackage?.category === "combined"
+          ? "Sua solicitação será analisada pela atlética antes de prosseguir com o pagamento."
+          : "Você pode fazer login agora.",
       })
 
       router.push("/login")
@@ -225,7 +364,7 @@ export default function RegisterPage() {
               </Select>
             </div>
 
-            {!restricted && (
+            {!restricted && !searchParams.get("type") && (
               <div className="space-y-2">
                 <Label>Tipo de cadastro</Label>
                 <RadioGroup
@@ -246,6 +385,59 @@ export default function RegisterPage() {
                     <Label htmlFor="athletic">Representante de Atlética</Label>
                   </div>
                 </RadioGroup>
+              </div>
+            )}
+
+            {(formData.role === "athlete" || formData.role === "buyer") && (
+              <div className="space-y-2">
+                <Label htmlFor="athletic">Atlética</Label>
+                <Select
+                  onValueChange={(value) => handleSelectChange("athletic_id", value)}
+                  value={formData.athletic_id || undefined}
+                  disabled={!!athleticReferral}
+                >
+                  <SelectTrigger id="athletic">
+                    <SelectValue placeholder="Selecione sua atlética" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {athletics.map((athletic) => (
+                      <SelectItem key={athletic.id} value={athletic.id}>
+                        {athletic.name} - {athletic.university}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {athleticReferral && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Você está se cadastrando para a atlética {athletics.find(a => a.id === athleticReferral)?.name}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {formData.role !== "athletic" && (
+              <div className="space-y-2">
+                <Label htmlFor="package">Pacote</Label>
+                <Select
+                  onValueChange={(value) => handleSelectChange("package_id", value)}
+                  value={formData.package_id || undefined}
+                >
+                  <SelectTrigger id="package">
+                    <SelectValue placeholder="Selecione um pacote" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {packages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id}>
+                        {pkg.name} - R$ {pkg.price.toFixed(2)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedPackage && (selectedPackage.category === "games" || selectedPackage.category === "combined") && (
+                  <p className="text-sm text-yellow-600 mt-1">
+                    Este pacote requer aprovação da atlética antes do pagamento.
+                  </p>
+                )}
               </div>
             )}
 

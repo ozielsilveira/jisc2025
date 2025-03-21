@@ -2,18 +2,26 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
-import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Clock, FileText, Upload, User, X } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CheckCircle, Clock, Copy, FileText, Share2, Upload, User, X } from "lucide-react"
+import { useEffect, useState } from "react"
 
 type Athlete = {
   id: string
@@ -57,6 +65,9 @@ export default function AthletesPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [athleticId, setAthleticId] = useState<string | null>(null)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [shareLink, setShareLink] = useState("")
+  const [athleticLink, setAthleticLink] = useState("")
 
   // For athlete registration
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -97,11 +108,20 @@ export default function AthletesPage() {
           const { data: athleticData, error: athleticError } = await supabase
             .from("athletics")
             .select("id")
-            .eq("id", user.id)
-            .single()
+            .eq("representative_id", user.id)
+            .maybeSingle()
 
-          if (!athleticError && athleticData) {
+          if (athleticError) {
+            console.error("Error fetching athletic data:", athleticError)
+            toast({
+              title: "Erro ao carregar dados da atlética",
+              description: "Não foi possível carregar as informações da sua atlética.",
+              variant: "destructive",
+            })
+          } else if (athleticData) {
             setAthleticId(athleticData.id)
+            // Generate athletic registration link
+            setAthleticLink(`${window.location.origin}/register/athletic/${athleticData.id}`)
           }
         }
 
@@ -319,6 +339,44 @@ export default function AthletesPage() {
     }
   }
 
+  const handleShareLink = (athleticId: string) => {
+    const link = `${window.location.origin}/register?type=athlete&athletic=${athleticId}`
+    setShareLink(link)
+    setShareDialogOpen(true)
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink)
+      toast({
+        title: "Link copiado",
+        description: "O link foi copiado para a área de transferência.",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar link",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleCopyAthleticLink = async () => {
+    try {
+      await navigator.clipboard.writeText(athleticLink)
+      toast({
+        title: "Link copiado",
+        description: "O link foi copiado para a área de transferência.",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro ao copiar link",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -329,15 +387,43 @@ export default function AthletesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Atletas</h1>
-        <p className="text-gray-500">
-          {userRole === "admin"
-            ? "Gerencie todos os atletas do campeonato."
-            : userRole === "athletic"
-              ? "Gerencie os atletas da sua atlética."
-              : "Cadastre-se como atleta ou veja seu status."}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Atletas</h1>
+          <p className="text-gray-500">
+            {userRole === "admin"
+              ? "Gerencie todos os atletas do campeonato."
+              : userRole === "athletic"
+                ? "Gerencie os atletas da sua atlética."
+                : "Cadastre-se como atleta ou veja seu status."}
+          </p>
+        </div>
+        {userRole === "athletic" && (
+          <div className="flex gap-2">
+            <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleShareLink(athleticId!)} className="bg-[#0456FC]">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Compartilhar Link
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Link de Cadastro</DialogTitle>
+                  <DialogDescription>
+                    Compartilhe este link com os atletas da sua atlética para que eles possam se cadastrar diretamente.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2">
+                  <Input value={shareLink} readOnly className="flex-1" />
+                  <Button onClick={handleCopyLink} variant="outline" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue={isUserAthlete || userRole === "athletic" || userRole === "admin" ? "list" : "register"}>
@@ -584,4 +670,3 @@ export default function AthletesPage() {
     </div>
   )
 }
-
