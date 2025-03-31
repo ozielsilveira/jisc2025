@@ -110,13 +110,29 @@ export default function AssignPackagesPage() {
           .eq("id", user.id)
           .single()
 
-        if (userError) throw userError
+        if (userError) {
+          console.error("Error fetching user role:", userError)
+          throw userError
+        }
+
+        if (!userData) {
+          throw new Error("No user data found")
+        }
+
         setUserRole(userData.role)
 
         // Fetch packages
         const { data: packagesData, error: packagesError } = await supabase.from("packages").select("*").order("price")
 
-        if (packagesError) throw packagesError
+        if (packagesError) {
+          console.error("Error fetching packages:", packagesError)
+          throw packagesError
+        }
+
+        if (!packagesData) {
+          throw new Error("No packages data found")
+        }
+
         setPackages(packagesData)
 
         // Fetch athletes based on role
@@ -127,8 +143,8 @@ export default function AssignPackagesPage() {
             user_id,
             athletic_id,
             status,
-            user:users(name, email)[],
-            athletic:athletics(name)[]
+            user:users(name, email),
+            athletic:athletics(name)
           `)
           .eq("status", "approved")
 
@@ -136,13 +152,18 @@ export default function AssignPackagesPage() {
           athletesQuery = athletesQuery.eq("athletic_id", user.id)
         }
 
-        const { data: athletesData, error: athletesError } = await athletesQuery as unknown as { data: Athlete[], error: any }
-        if (athletesError) throw athletesError
-        setAthletes(athletesData.map((athlete: any) => ({
-          ...athlete,
-          user: athlete.user[0],
-          athletic: athlete.athletic[0],
-        })))
+        const { data: athletesData, error: athletesError } = await athletesQuery
+
+        if (athletesError) {
+          console.error("Error fetching athletes:", athletesError)
+          throw athletesError
+        }
+
+        if (!athletesData) {
+          throw new Error("No athletes data found")
+        }
+
+        setAthletes(athletesData)
 
         // Fetch athlete packages
         let packagesQuery = supabase
@@ -161,30 +182,31 @@ export default function AssignPackagesPage() {
             package:packages(*)
           `)
           .order("created_at", { ascending: false })
-
         if (userData.role === "athletic") {
-          // Get athletes from this athletic
-          const athleteIds = athletesData.map((athlete: Athlete) => athlete.id)
+          const athleteIds = athletesData.map((athlete) => athlete.id)
           if (athleteIds.length > 0) {
             packagesQuery = packagesQuery.in("athlete_id", athleteIds)
           }
         }
 
         const { data: athletePackagesData, error: athletePackagesError } = await packagesQuery
-        if (athletePackagesError) throw athletePackagesError
-        setAthletePackages(athletePackagesData.map((pkg: any) => ({
-          ...pkg,
-          athlete: {
-            user: pkg.athlete.user[0],
-            athletic: pkg.athlete.athletic[0],
-          },
-          package: pkg.package[0],
-        })))
+
+        if (athletePackagesError) {
+          console.error("Error fetching athlete packages:", athletePackagesError)
+          throw athletePackagesError
+        }
+
+        if (!athletePackagesData) {
+          throw new Error("No athlete packages data found")
+        }
+
+        setAthletePackages(athletePackagesData)
+
       } catch (error) {
         console.error("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
-          description: "Não foi possível carregar os dados necessários.",
+          description: error instanceof Error ? error.message : "Não foi possível carregar os dados necessários.",
           variant: "destructive",
         })
       } finally {
@@ -672,4 +694,3 @@ export default function AssignPackagesPage() {
     </div>
   )
 }
-

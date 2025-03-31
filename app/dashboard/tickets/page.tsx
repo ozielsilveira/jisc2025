@@ -235,17 +235,17 @@ export default function TicketsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Ingressos</h1>
-          <p className="text-gray-500">Compre ingressos para os eventos do JISC ou visualize seus ingressos.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Ingressos</h1>
+          <p className="text-sm sm:text-base text-gray-500">Compre ingressos para os eventos do JISC ou visualize seus ingressos.</p>
         </div>
 
         {userRole === "admin" && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#0456FC]">
+              <Button className="w-full sm:w-auto bg-[#0456FC]">
                 <Plus className="h-4 w-4 mr-2" />
                 Novo Evento
               </Button>
@@ -329,17 +329,17 @@ export default function TicketsPage() {
 
       {/* Available Events Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Eventos Disponíveis</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold">Eventos Disponíveis</h2>
 
         {availableEvents.length === 0 ? (
           <p className="text-gray-500">Não há eventos disponíveis no momento.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {availableEvents.map((event) => (
-              <Card key={event.id}>
-                <CardHeader>
-                  <CardTitle>{event.event_name}</CardTitle>
-                  <CardDescription>
+              <Card key={event.id} className="flex flex-col">
+                <CardHeader className="flex-1">
+                  <CardTitle className="text-lg sm:text-xl">{event.event_name}</CardTitle>
+                  <CardDescription className="text-sm">
                     <div className="flex items-center mt-1">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>{formatDate(event.date)}</span>
@@ -350,8 +350,8 @@ export default function TicketsPage() {
                     </div>
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(event.price)}</div>
+                <CardContent className="flex-1">
+                  <div className="text-xl sm:text-2xl font-bold">{formatCurrency(event.price)}</div>
                   <p className="text-sm text-gray-500">
                     {event.remaining_quantity} de {event.total_quantity} ingressos disponíveis
                   </p>
@@ -369,17 +369,17 @@ export default function TicketsPage() {
 
       {/* My Tickets Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Meus Ingressos</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold">Meus Ingressos</h2>
 
         {myTickets.length === 0 ? (
           <p className="text-gray-500">Você ainda não possui ingressos.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {myTickets.map((purchase) => (
-              <Card key={purchase.id}>
-                <CardHeader>
-                  <CardTitle>{purchase.ticket.event_name}</CardTitle>
-                  <CardDescription>
+              <Card key={purchase.id} className="flex flex-col">
+                <CardHeader className="flex-1">
+                  <CardTitle className="text-lg sm:text-xl">{purchase.ticket.event_name}</CardTitle>
+                  <CardDescription className="text-sm">
                     <div className="flex items-center mt-1">
                       <Calendar className="h-4 w-4 mr-1" />
                       <span>{formatDate(purchase.ticket.date)}</span>
@@ -390,18 +390,18 @@ export default function TicketsPage() {
                     </div>
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="flex-1 space-y-3 sm:space-y-4">
                   <div>
                     <div className="text-sm font-medium">Quantidade</div>
-                    <div>{purchase.quantity}</div>
+                    <div className="text-base sm:text-lg">{purchase.quantity}</div>
                   </div>
                   <div>
                     <div className="text-sm font-medium">Valor Total</div>
-                    <div>{formatCurrency(purchase.total_price)}</div>
+                    <div className="text-base sm:text-lg">{formatCurrency(purchase.total_price)}</div>
                   </div>
                   <div>
                     <div className="text-sm font-medium">Status</div>
-                    <div className="capitalize">{purchase.payment_status}</div>
+                    <div className="capitalize text-base sm:text-lg">{purchase.payment_status}</div>
                   </div>
                 </CardContent>
                 <CardFooter>

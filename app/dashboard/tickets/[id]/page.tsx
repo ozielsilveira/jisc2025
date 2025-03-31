@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useAuth } from "@/components/auth-provider"
+import { PixDisplay } from "@/components/pix-display"
+import { QRCodeDisplay } from "@/components/qr-code"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
-import { QRCodeDisplay } from "@/components/qr-code"
 import { ArrowLeft, Calendar, MapPin, Share2, Ticket, User } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 type TicketPurchase = {
   id: string
@@ -19,6 +20,7 @@ type TicketPurchase = {
   payment_status: string
   payment_date: string | null
   qr_code: string
+  athletic_referral_id: string | null
   created_at: string
   ticket: {
     event_name: string
@@ -29,6 +31,11 @@ type TicketPurchase = {
   user: {
     name: string
     email: string
+  }
+  athletic?: {
+    name: string
+    pix_code: string | null
+    pix_approved: boolean | null
   }
 }
 
@@ -50,7 +57,8 @@ export default function TicketDetailPage() {
           .select(`
             *,
             ticket:tickets(*),
-            user:users(name, email)
+            user:users(name, email),
+            athletic:athletics(name, pix_code, pix_approved)
           `)
           .eq("id", id)
           .single()
@@ -191,18 +199,40 @@ export default function TicketDetailPage() {
           </CardFooter>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>QR Code do Ingresso</CardTitle>
-            <CardDescription>Apresente este QR Code na entrada do evento.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            <QRCodeDisplay value={ticketPurchase.qr_code} size={250} level="H" className="mb-4" />
-            <p className="text-sm text-center text-gray-500">
-              Este QR Code é único e pessoal. Não compartilhe com outras pessoas.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>QR Code do Ingresso</CardTitle>
+              <CardDescription>Apresente este QR Code na entrada do evento.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <QRCodeDisplay value={ticketPurchase.qr_code} size={250} level="H" className="mb-4" />
+              <p className="text-sm text-center text-gray-500">
+                Este QR Code é único e pessoal. Não compartilhe com outras pessoas.
+              </p>
+            </CardContent>
+          </Card>
+
+          {ticketPurchase.athletic_referral_id &&
+            ticketPurchase.athletic?.pix_code &&
+            ticketPurchase.athletic?.pix_approved && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pagamento para Atlética</CardTitle>
+                  <CardDescription>
+                    Utilize a chave PIX abaixo para realizar o pagamento para a atlética.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PixDisplay
+                    pixKey={ticketPurchase.athletic.pix_code}
+                    athleticName={ticketPurchase.athletic.name}
+                    showQRCode={false}
+                  />
+                </CardContent>
+              </Card>
+            )}
+        </div>
       </div>
     </div>
   )

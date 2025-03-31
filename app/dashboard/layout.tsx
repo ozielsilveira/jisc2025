@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import DashboardSidebar from "@/components/dashboard-sidebar"
+import { ThemeProvider } from "@/contexts/theme-context"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -30,12 +31,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <DashboardSidebar />
-      <div className="flex-1 overflow-auto">
-        <main className="p-6">{children}</main>
+    <ThemeProvider>
+      <div className="flex h-screen bg-background">
+        <DashboardSidebar />
+        <div className="flex-1 overflow-auto">
+          <main className="p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </ThemeProvider>
   )
 }
-

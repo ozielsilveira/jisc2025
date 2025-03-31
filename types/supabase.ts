@@ -76,6 +76,8 @@ export interface Database {
           name: string
           logo_url: string
           university: string
+          pix_code: string | null
+          pix_approved: boolean | null
           created_at: string
           updated_at: string
         }
@@ -84,6 +86,8 @@ export interface Database {
           name: string
           logo_url: string
           university: string
+          pix_code?: string | null
+          pix_approved?: boolean | null
           created_at?: string
           updated_at?: string
         }
@@ -92,6 +96,8 @@ export interface Database {
           name?: string
           logo_url?: string
           university?: string
+          pix_code?: string | null
+          pix_approved?: boolean | null
           created_at?: string
           updated_at?: string
         }

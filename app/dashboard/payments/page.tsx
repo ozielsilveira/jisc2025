@@ -2,7 +2,9 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
+import { PixDisplay } from "@/components/pix-display"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -17,10 +19,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
-import { Badge } from "@/components/ui/badge"
 import { Calendar, Check, CreditCard, DollarSign, Package, User, X } from "lucide-react"
+import { useEffect, useState } from "react"
 
 type PackageType = {
   id: string
@@ -44,9 +45,15 @@ type AthletePackage = {
   package: PackageType
   athlete: {
     user_id: string
+    athletic_id: string
     user: {
       name: string
       email: string
+    }
+    athletic?: {
+      name: string
+      pix_code: string | null
+      pix_approved: boolean | null
     }
   }
 }
@@ -60,15 +67,25 @@ type Athlete = {
   }
 }
 
+type Athletic = {
+  id: string
+  name: string
+  pix_code: string | null
+  pix_approved: boolean | null
+}
+
 export default function PaymentsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [packages, setPackages] = useState<PackageType[]>([])
   const [athletePackages, setAthletePackages] = useState<AthletePackage[]>([])
   const [athletes, setAthletes] = useState<Athlete[]>([])
+  const [athletic, setAthletic] = useState<Athletic | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedPackage, setSelectedPackage] = useState<AthletePackage | null>(null)
+  const [showPixDialog, setShowPixDialog] = useState(false)
 
   // For package assignment
   const [formData, setFormData] = useState({
@@ -106,7 +123,9 @@ export default function PaymentsPage() {
             package:packages(*),
             athlete:athletes(
               user_id,
-              user:users(name, email)
+              athletic_id,
+              user:users(name, email),
+              athletic:athletics(name, pix_code, pix_approved)
             )
           `)
           .order("created_at", { ascending: false })
@@ -115,12 +134,23 @@ export default function PaymentsPage() {
           // Get athlete ID
           const { data: athleteData, error: athleteError } = await supabase
             .from("athletes")
-            .select("id")
+            .select("id, athletic_id")
             .eq("user_id", user.id)
             .single()
 
           if (athleteError) throw athleteError
           query = query.eq("athlete_id", athleteData.id)
+
+          // Get athletic data for the athlete
+          const { data: athleticData, error: athleticError } = await supabase
+            .from("athletics")
+            .select("id, name, pix_code, pix_approved")
+            .eq("id", athleteData.athletic_id)
+            .single()
+
+          if (!athleticError && athleticData) {
+            setAthletic(athleticData as Athletic)
+          }
         } else if (userData.role === "athletic") {
           // Get athletes from this athletic
           const { data: athletesData, error: athletesError } = await supabase
@@ -138,6 +168,17 @@ export default function PaymentsPage() {
             setAthletePackages([])
             setIsLoading(false)
             return
+          }
+
+          // Get athletic data
+          const { data: athleticData, error: athleticError } = await supabase
+            .from("athletics")
+            .select("id, name, pix_code, pix_approved")
+            .eq("id", user.id)
+            .single()
+
+          if (!athleticError && athleticData) {
+            setAthletic(athleticData as Athletic)
           }
         }
 
@@ -162,7 +203,11 @@ export default function PaymentsPage() {
 
           const { data: athletesData, error: athletesError } = await athletesQuery
           if (athletesError) throw athletesError
-          setAthletes(athletesData as unknown as Athlete[])
+          setAthletes(athletesData.map(athlete => ({
+            id: athlete.id,
+            user_id: athlete.user_id,
+            user: athlete.user[0]
+          })))
         }
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -282,10 +327,10 @@ export default function PaymentsPage() {
         prev.map((item) =>
           item.id === id
             ? {
-                ...item,
-                payment_status: status,
-                payment_date: status === "completed" ? new Date().toISOString() : null,
-              }
+              ...item,
+              payment_status: status,
+              payment_date: status === "completed" ? new Date().toISOString() : null,
+            }
             : item,
         ),
       )
@@ -297,6 +342,11 @@ export default function PaymentsPage() {
         variant: "destructive",
       })
     }
+  }
+
+  const handleShowPixPayment = (pkg: AthletePackage) => {
+    setSelectedPackage(pkg)
+    setShowPixDialog(true)
   }
 
   const formatCurrency = (value: number) => {
@@ -534,6 +584,7 @@ export default function PaymentsPage() {
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         onClick={() => handleUpdatePaymentStatus(item.id, "refunded")}
                       >
+                        {" "}
                         <X className="h-4 w-4 mr-1" />
                         Cancelar
                       </Button>
@@ -549,7 +600,7 @@ export default function PaymentsPage() {
 
                   {userRole === "athlete" && item.payment_status === "pending" && (
                     <CardFooter>
-                      <Button className="w-full bg-[#0456FC]">
+                      <Button className="w-full bg-[#0456FC]" onClick={() => handleShowPixPayment(item)}>
                         <CreditCard className="h-4 w-4 mr-2" />
                         Realizar Pagamento
                       </Button>
@@ -561,7 +612,52 @@ export default function PaymentsPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* PIX Payment Dialog */}
+      <Dialog open={showPixDialog} onOpenChange={setShowPixDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Pagamento via PIX</DialogTitle>
+            <DialogDescription>
+              Realize o pagamento do pacote {selectedPackage?.package.name} utilizando a chave PIX abaixo.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            {selectedPackage?.athlete.athletic?.pix_code && selectedPackage?.athlete.athletic?.pix_approved ? (
+              <div className="space-y-4">
+                <div className="rounded-md bg-muted p-4">
+                  <p className="text-sm text-muted-foreground mb-2">Valor a pagar:</p>
+                  <p className="text-2xl font-bold">{formatCurrency(selectedPackage.package.price)}</p>
+                </div>
+
+                <PixDisplay
+                  pixKey={selectedPackage.athlete.athletic.pix_code}
+                  athleticName={selectedPackage.athlete.athletic.name || "sua atlética"}
+                />
+
+                <div className="text-sm text-muted-foreground mt-2">
+                  <p>Após realizar o pagamento, entre em contato com sua atlética para confirmar o pagamento.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-amber-600 mb-2">Chave PIX não disponível</p>
+                <p className="text-sm text-muted-foreground">
+                  A atlética ainda não cadastrou uma chave PIX ou a chave está aguardando aprovação. Entre em contato
+                  com a atlética para obter informações sobre como realizar o pagamento.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPixDialog(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-
