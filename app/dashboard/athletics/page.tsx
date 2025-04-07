@@ -3,13 +3,13 @@
 
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import { Building, Copy, Medal, School, Users } from "lucide-react"
+import { Building, Copy, School, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type Athletic = {
@@ -53,6 +53,7 @@ export default function AthleticsPage() {
 
         console.log("User role data:", userData)
         setUserRole(userData.role)
+        console.log("User role:", userRole);
 
         // Fetch athletics
         const { data: athleticsData, error: athleticsError } = await supabase
@@ -116,21 +117,27 @@ export default function AthleticsPage() {
     setIsLinkDialogOpen(true)
   }
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(registrationLink).then(() => {
+  const copyToClipboard = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
       toast({
         title: "Link copiado",
-        description: "Link de cadastro de atlética copiado para a área de transferência.",
-      })
-    }).catch((error) => {
-      console.error("Erro ao copiar link:", error)
+        description: "Link de registro para atléticas copiado para a área de transferência.",
+      });
+    } catch (err) {
+      console.error("Erro ao copiar link", err);
       toast({
         title: "Erro ao copiar link",
         description: "Não foi possível copiar o link para a área de transferência.",
         variant: "destructive",
-      })
-    })
-  }
+      });
+    }
+    document.body.removeChild(textArea);
+  };
 
   if (isLoading) {
     return (
@@ -158,29 +165,33 @@ export default function AthleticsPage() {
           <h1 className="text-3xl font-bold">Atléticas</h1>
           <p className="text-gray-500">Visualize as atléticas participantes do campeonato.</p>
         </div>
-        <Button
-          onClick={openLinkDialog}
-          className="flex items-center gap-2"
-        >
-          <Building className="h-4 w-4" />
-          Gerar Link de Cadastro
-        </Button>
+        {userRole === "admin" && (
+          <div className="ml-auto">
+            <Button
+              onClick={() => setIsLinkDialogOpen(true)}
+              className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
+            >
+              <Copy className="h-4 w-4" />
+              Gerar Link de Registro
+            </Button>
+          </div>
+        )}
       </div>
 
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>Link de Cadastro de Atlética</DialogTitle>
+            <DialogTitle>Link de Registro de Atlética</DialogTitle>
             <DialogDescription>
               Copie o link abaixo para compartilhar com a atlética que deseja cadastrar.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Link de Cadastro</Label>
+              <Label>Link de Registro</Label>
               <div className="flex items-center">
                 <Input
-                  value={registrationLink}
+                  value={`${window.location.origin}/register?type=athletic`}
                   readOnly
                   className="pr-10"
                 />
@@ -188,7 +199,7 @@ export default function AthleticsPage() {
                   variant="ghost"
                   size="icon"
                   className="ml-[-40px]"
-                  onClick={copyLink}
+                  onClick={() => copyToClipboard(`${window.location.origin}/register?type=athletic`)}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -244,18 +255,37 @@ export default function AthleticsPage() {
                 <div className="space-y-2">
                   <Label>Link de Referência para Atletas</Label>
                   <div className="flex items-center">
-                    <Input value={referralLinks[athletic.id] || ""} readOnly className="pr-10" />
+                    <Input
+                      value={`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`}
+                      readOnly
+                      className="pr-10"
+                    />
                     <Button
                       variant="ghost"
                       size="icon"
                       className="ml-[-40px]"
-                      onClick={() => copyReferralLink(athletic.id)}
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`)
+                          toast({
+                            title: "Link copiado",
+                            description: "Link de referência para atlética copiado para a área de transferência.",
+                          })
+                        } else {
+                          console.error("Clipboard API não suportada ou indisponível")
+                          toast({
+                            title: "Erro ao copiar link",
+                            description: "A API de área de transferência não é suportada ou está indisponível neste navegador.",
+                            variant: "destructive",
+                          })
+                        }
+                      }}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Compartilhe este link com os atletas para que eles se cadastrem vinculados a esta atlética.
+                    Compartilhe este link para cadastro de novos membros da atlética.
                   </p>
                 </div>
 
@@ -272,11 +302,20 @@ export default function AthleticsPage() {
                       size="icon"
                       className="ml-[-40px]"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`)
-                        toast({
-                          title: "Link copiado",
-                          description: "Link de referência para atlética copiado para a área de transferência.",
-                        })
+                        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+                          navigator.clipboard.writeText(`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`)
+                          toast({
+                            title: "Link copiado",
+                            description: "Link de referência para atlética copiado para a área de transferência.",
+                          })
+                        } else {
+                          console.error("Clipboard API não suportada ou indisponível")
+                          toast({
+                            title: "Erro ao copiar link",
+                            description: "A API de área de transferência não é suportada ou está indisponível neste navegador.",
+                            variant: "destructive",
+                          })
+                        }
                       }}
                     >
                       <Copy className="h-4 w-4" />
@@ -287,16 +326,6 @@ export default function AthleticsPage() {
                   </p>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => (window.location.href = `/dashboard/athletes?athletic=${athletic.id}`)}
-                >
-                  <Medal className="h-4 w-4 mr-2" />
-                  Ver Atletas
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
@@ -304,4 +333,3 @@ export default function AthleticsPage() {
     </div>
   )
 }
-

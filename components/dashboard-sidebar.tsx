@@ -118,14 +118,6 @@ export default function DashboardSidebar() {
           <Icons.LogOut className="mr-2 h-5 w-5" />
           Sair
         </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={toggleTheme}
-        >
-          {theme === "light" ? <Icons.Moon className="mr-2 h-5 w-5" /> : <Icons.Sun className="mr-2 h-5 w-5" />}
-          {theme === "light" ? "Modo Escuro" : "Modo Claro"}
-        </Button>
       </div>
     </div>
   )

@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/components/auth-provider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 import { Calendar, Medal, Ticket, Trophy } from "lucide-react"
+import { useEffect, useState } from "react"
 
 type UserRole = "buyer" | "athlete" | "athletic" | "admin"
 type UserData = {
