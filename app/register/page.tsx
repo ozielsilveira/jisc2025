@@ -28,7 +28,6 @@ export default function RegisterPage() {
     confirmPassword: "",
     cpf: "",
     phone: "",
-    gender: "",
     role: defaultType as "buyer" | "athlete" | "athletic",
     athletic_id: athleticReferral || "",
     package_id: "",
@@ -178,8 +177,8 @@ export default function RegisterPage() {
       if (authError) throw authError
       if (!authData.user) throw new Error("Falha ao criar usuário")
 
-      // Create user profile
-      const { error: profileError } = await supabase
+      // Create user profile in users table
+      const { error: userError } = await supabase
         .from("users")
         .insert({
           id: authData.user.id,
@@ -187,14 +186,14 @@ export default function RegisterPage() {
           name: formData.name,
           cpf: formData.cpf,
           phone: formData.phone,
-          gender: formData.gender,
           role: formData.role,
+          gender: "not_specified", // Default value, can be updated later
         })
 
-      if (profileError) {
-        // If there's an error creating the profile, we should delete the auth user
+      if (userError) {
+        // If there's an error creating the user profile, we should delete the auth user
         await supabase.auth.admin.deleteUser(authData.user.id)
-        throw new Error(`Erro ao criar perfil: ${profileError.message}`)
+        throw new Error(`Erro ao criar perfil de usuário: ${userError.message}`)
       }
 
       // If user is an athletic representative, create pre-registration in athletics table
@@ -210,6 +209,8 @@ export default function RegisterPage() {
           })
 
         if (athleticError) {
+          // If there's an error creating the athletic, we should delete the user and auth
+          await supabase.from("users").delete().eq("id", authData.user.id)
           await supabase.auth.admin.deleteUser(authData.user.id)
           throw new Error(`Erro ao criar pré-registro da atlética: ${athleticError.message}`)
         }
@@ -235,23 +236,30 @@ export default function RegisterPage() {
           })
 
         if (athleteError) {
+          // If there's an error creating the athlete, we should delete the user and auth
+          await supabase.from("users").delete().eq("id", authData.user.id)
           await supabase.auth.admin.deleteUser(authData.user.id)
           throw new Error(`Erro ao criar perfil de atleta: ${athleteError.message}`)
         }
-      }
 
-      // Create athlete package record
-      const { error: packageError } = await supabase
-        .from("athlete_packages")
-        .insert({
-          athlete_id: authData.user.id,
-          package_id: formData.package_id,
-          payment_status: "pending",
-        })
+        // Create athlete package record if a package was selected
+        if (formData.package_id) {
+          const { error: packageError } = await supabase
+            .from("athlete_packages")
+            .insert({
+              athlete_id: authData.user.id,
+              package_id: formData.package_id,
+              payment_status: "pending",
+            })
 
-      if (packageError) {
-        await supabase.auth.admin.deleteUser(authData.user.id)
-        throw new Error(`Erro ao criar pacote: ${packageError.message}`)
+          if (packageError) {
+            // If there's an error creating the package, we should delete the athlete, user and auth
+            await supabase.from("athletes").delete().eq("user_id", authData.user.id)
+            await supabase.from("users").delete().eq("id", authData.user.id)
+            await supabase.auth.admin.deleteUser(authData.user.id)
+            throw new Error(`Erro ao criar pacote: ${packageError.message}`)
+          }
+        }
       }
 
       toast({
@@ -281,22 +289,28 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-4">
             <Image src="/logo.svg" alt="JISC Logo" width={80} height={80} />
           </div>
-          <CardTitle className="text-2xl font-bold text-center">Criar uma conta</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            {formData.role === "athletic" ? "Cadastro de Atlética" : "Criar uma conta"}
+          </CardTitle>
           <CardDescription className="text-center">
-            {restricted
-              ? "Preencha os dados abaixo para se cadastrar como comprador de ingressos"
-              : "Preencha os dados abaixo para se cadastrar no JISC"}
+            {formData.role === "athletic"
+              ? "Preencha os dados abaixo para cadastrar sua atlética"
+              : restricted
+                ? "Preencha os dados abaixo para se cadastrar como comprador de ingressos"
+                : "Preencha os dados abaixo para se cadastrar no JISC"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
+              <Label htmlFor="name">
+                {formData.role === "athletic" ? "Nome da Atlética" : "Nome completo"}
+              </Label>
               <Input
                 id="name"
                 name="name"
                 type="text"
-                placeholder="Seu nome completo"
+                placeholder={formData.role === "athletic" ? "Nome da sua atlética" : "Seu nome completo"}
                 value={formData.name}
                 onChange={handleChange}
                 required
@@ -340,28 +354,6 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Gênero</Label>
-              <Select
-                onValueChange={(value) => handleSelectChange("gender", value)}
-                value={formData.gender || "placeholder"}
-                defaultValue="placeholder"
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione seu gênero" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="placeholder" disabled>
-                    Selecione seu gênero
-                  </SelectItem>
-                  <SelectItem value="male">Masculino</SelectItem>
-                  <SelectItem value="female">Feminino</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
-                  <SelectItem value="prefer_not_to_say">Prefiro não informar</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {!restricted && !searchParams.get("type") && (

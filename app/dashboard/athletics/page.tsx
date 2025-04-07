@@ -1,10 +1,10 @@
 "use client"
 
-import type React from "react"
 
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
@@ -30,16 +30,9 @@ export default function AthleticsPage() {
   const [athletics, setAthletics] = useState<Athletic[]>([])
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-
-  // For athletic creation
-  const [formData, setFormData] = useState({
-    name: "",
-    university: "",
-    logoFile: null as File | null,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [referralLinks, setReferralLinks] = useState<{ [key: string]: string }>({})
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
+  const [registrationLink, setRegistrationLink] = useState("")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +46,12 @@ export default function AthleticsPage() {
           .eq("id", user.id)
           .single()
 
-        if (userError) throw userError
+        if (userError) {
+          console.error("Error fetching user role:", userError)
+          throw userError
+        }
+
+        console.log("User role data:", userData)
         setUserRole(userData.role)
 
         // Fetch athletics
@@ -86,7 +84,7 @@ export default function AthleticsPage() {
         // Generate referral links
         const links: { [key: string]: string } = {}
         athleticsData.forEach((athletic) => {
-          links[athletic.id] = `${window.location.origin}/register?type=athlete&athletic=${athletic.id}`
+          links[athletic.id] = `${window.location.origin}/register?type=athletic&athletic=${athletic.id}`
         })
         setReferralLinks(links)
       } catch (error) {
@@ -104,96 +102,33 @@ export default function AthleticsPage() {
     fetchData()
   }, [user, toast])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, logoFile: e.target.files![0] }))
-    }
-  }
-
-  const handleCreateAthletic = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.name || !formData.university) {
-      toast({
-        title: "Formulário incompleto",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      let logoUrl = ""
-
-      // Upload logo if provided
-      if (formData.logoFile) {
-        const fileName = `athletic-logo-${Date.now()}`
-        const { data: fileData, error: fileError } = await supabase.storage
-          .from("athletic-logos")
-          .upload(fileName, formData.logoFile)
-
-        if (fileError) throw fileError
-
-        // Get logo URL
-        const { data: urlData } = supabase.storage.from("athletic-logos").getPublicUrl(fileName)
-
-        logoUrl = urlData.publicUrl
-      } else {
-        // Use a placeholder logo
-        logoUrl = "/placeholder.svg?height=200&width=200"
-      }
-
-      // Create athletic
-      const { data: athleticData, error: athleticError } = await supabase
-        .from("athletics")
-        .insert({
-          name: formData.name,
-          university: formData.university,
-          logo_url: logoUrl,
-        })
-        .select()
-
-      if (athleticError) throw athleticError
-
-      toast({
-        title: "Atlética criada com sucesso",
-        description: "A atlética foi adicionada ao sistema.",
-      })
-
-      // Reset form and close dialog
-      setFormData({
-        name: "",
-        university: "",
-        logoFile: null,
-      })
-      setIsDialogOpen(false)
-
-      // Refresh the athletics list
-      window.location.reload()
-    } catch (error) {
-      console.error("Error creating athletic:", error)
-      toast({
-        title: "Erro ao criar atlética",
-        description: "Não foi possível adicionar a atlética ao sistema.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   const copyReferralLink = (athleticId: string) => {
     navigator.clipboard.writeText(referralLinks[athleticId])
     toast({
       title: "Link copiado",
       description: "Link de referência copiado para a área de transferência.",
+    })
+  }
+
+  const openLinkDialog = () => {
+    const link = `${window.location.origin}/register?type=athletic`
+    setRegistrationLink(link)
+    setIsLinkDialogOpen(true)
+  }
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(registrationLink).then(() => {
+      toast({
+        title: "Link copiado",
+        description: "Link de cadastro de atlética copiado para a área de transferência.",
+      })
+    }).catch((error) => {
+      console.error("Erro ao copiar link:", error)
+      toast({
+        title: "Erro ao copiar link",
+        description: "Não foi possível copiar o link para a área de transferência.",
+        variant: "destructive",
+      })
     })
   }
 
@@ -211,16 +146,62 @@ export default function AthleticsPage() {
       <div className="flex flex-col items-center justify-center h-full">
         <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
         <p className="text-gray-500">Você não tem permissão para acessar esta página.</p>
+        <p className="text-sm text-gray-400 mt-2">Role atual: {userRole || "Não definida"}</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Atléticas</h1>
-        <p className="text-gray-500">Visualize as atléticas participantes do campeonato.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Atléticas</h1>
+          <p className="text-gray-500">Visualize as atléticas participantes do campeonato.</p>
+        </div>
+        <Button
+          onClick={openLinkDialog}
+          className="flex items-center gap-2"
+        >
+          <Building className="h-4 w-4" />
+          Gerar Link de Cadastro
+        </Button>
       </div>
+
+      <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Link de Cadastro de Atlética</DialogTitle>
+            <DialogDescription>
+              Copie o link abaixo para compartilhar com a atlética que deseja cadastrar.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Link de Cadastro</Label>
+              <div className="flex items-center">
+                <Input
+                  value={registrationLink}
+                  readOnly
+                  className="pr-10"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-[-40px]"
+                  onClick={copyLink}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLinkDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {athletics.length === 0 ? (
         <Card>
@@ -275,6 +256,34 @@ export default function AthleticsPage() {
                   </div>
                   <p className="text-xs text-gray-500">
                     Compartilhe este link com os atletas para que eles se cadastrem vinculados a esta atlética.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Link de Referência para Atléticas</Label>
+                  <div className="flex items-center">
+                    <Input
+                      value={`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`}
+                      readOnly
+                      className="pr-10"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="ml-[-40px]"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`)
+                        toast({
+                          title: "Link copiado",
+                          description: "Link de referência para atlética copiado para a área de transferência.",
+                        })
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Compartilhe este link para cadastro de novos membros da atlética.
                   </p>
                 </div>
               </CardContent>

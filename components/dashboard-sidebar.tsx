@@ -50,7 +50,7 @@ export default function DashboardSidebar() {
       items: [
         { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["athlete", "athletic", "admin"] },
         { label: "Pacotes", icon: "Package", href: "/dashboard/packages", roles: ["admin"] },
-        { label: "Atribuir Pacotes", icon: "Tag", href: "/dashboard/assign-packages", roles: ["athletic", "admin"] },
+        //{ label: "Atribuir Pacotes", icon: "Tag", href: "/dashboard/assign-packages", roles: ["athletic", "admin"] },
       ]
     },
     {
