@@ -44,6 +44,9 @@ export default function RegisterPage() {
   // Fetch athletics and packages on component mount
   useEffect(() => {
     const fetchData = async () => {
+      // Não busca dados se o usuário for do tipo athletic
+      if (formData.role === "athletic") return;
+
       try {
         // Fetch athletics
         const { data: athleticsData, error: athleticsError } = await supabase
@@ -73,7 +76,7 @@ export default function RegisterPage() {
     }
 
     fetchData()
-  }, [toast])
+  }, [toast, formData.role])
 
   // Atualizar o role e athletic_id quando os parâmetros mudam
   useEffect(() => {
@@ -187,7 +190,7 @@ export default function RegisterPage() {
           cpf: formData.cpf,
           phone: formData.phone,
           role: formData.role,
-          gender: "not_specified", // Default value, can be updated later
+          gender: null, // Default value, can be updated later
         })
 
       if (userError) {
@@ -201,17 +204,15 @@ export default function RegisterPage() {
         const { error: athleticError } = await supabase
           .from("athletics")
           .insert({
+            id: authData.user.id,
             name: formData.name,
-            university: "", // Will be filled later in settings
-            logo_url: "", // Will be filled later in settings
+            university: "",
+            logo_url: "",
             status: "pending",
             representative_id: authData.user.id,
           })
 
         if (athleticError) {
-          // If there's an error creating the athletic, we should delete the user and auth
-          await supabase.from("users").delete().eq("id", authData.user.id)
-          await supabase.auth.admin.deleteUser(authData.user.id)
           throw new Error(`Erro ao criar pré-registro da atlética: ${athleticError.message}`)
         }
 
@@ -230,15 +231,12 @@ export default function RegisterPage() {
           .insert({
             user_id: authData.user.id,
             athletic_id: formData.athletic_id,
-            photo_url: "", // This will be updated later
-            enrollment_document_url: "", // This will be updated later
+            photo_url: "",
+            enrollment_document_url: "",
             status: "pending",
           })
 
         if (athleteError) {
-          // If there's an error creating the athlete, we should delete the user and auth
-          await supabase.from("users").delete().eq("id", authData.user.id)
-          await supabase.auth.admin.deleteUser(authData.user.id)
           throw new Error(`Erro ao criar perfil de atleta: ${athleteError.message}`)
         }
 
@@ -253,10 +251,6 @@ export default function RegisterPage() {
             })
 
           if (packageError) {
-            // If there's an error creating the package, we should delete the athlete, user and auth
-            await supabase.from("athletes").delete().eq("user_id", authData.user.id)
-            await supabase.from("users").delete().eq("id", authData.user.id)
-            await supabase.auth.admin.deleteUser(authData.user.id)
             throw new Error(`Erro ao criar pacote: ${packageError.message}`)
           }
         }
@@ -301,7 +295,10 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit(e);
+          }} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">
                 {formData.role === "athletic" ? "Nome da Atlética" : "Nome completo"}

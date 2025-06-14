@@ -54,11 +54,14 @@ export default function PixSettingsPage() {
                 // Buscar o ID da atlética associada ao usuário
                 const { data: athleticData, error: athleticError } = await supabase
                     .from("athletics")
-                    .select("id, pix_code, pix_approved")
-                    .eq("id", user.user_metadata.athletic_id)
+                    .select("id, name, pix_code, pix_approved")
+                    .eq("representative_id", user.id)
                     .maybeSingle()
 
-                if (athleticError) throw athleticError
+                if (athleticError) {
+                    console.error("Erro ao buscar dados da atlética:", athleticError)
+                    throw athleticError
+                }
 
                 if (athleticData) {
                     setAthleticId(athleticData.id)
@@ -71,7 +74,7 @@ export default function PixSettingsPage() {
                 } else {
                     toast({
                         title: "Atlética não encontrada",
-                        description: "Não foi possível encontrar os dados da sua atlética.",
+                        description: "Não foi possível encontrar os dados da sua atlética. Verifique se você está corretamente vinculado como representante.",
                         variant: "destructive",
                     })
                 }
@@ -108,7 +111,14 @@ export default function PixSettingsPage() {
     }
 
     const savePixCode = async () => {
-        if (!athleticId || !isValid) return
+        if (!athleticId || !isValid) {
+            toast({
+                title: "Dados inválidos",
+                description: "Por favor, verifique se todos os campos estão preenchidos corretamente.",
+                variant: "destructive",
+            })
+            return
+        }
 
         setIsSaving(true)
 
@@ -121,19 +131,22 @@ export default function PixSettingsPage() {
                 })
                 .eq("id", athleticId)
 
-            if (error) throw error
+            if (error) {
+                console.error("Erro ao salvar código PIX:", error)
+                throw error
+            }
 
             setPixApproved(null) // Atualizar o estado local para pendente
 
             toast({
                 title: "Código PIX salvo",
-                description: "Seu código PIX foi salvo e está aguardando aprovação.",
+                description: "Seu código PIX foi salvo e está aguardando aprovação da comissão organizadora.",
             })
         } catch (error) {
             console.error("Erro ao salvar código PIX:", error)
             toast({
                 title: "Erro ao salvar código PIX",
-                description: "Não foi possível salvar seu código PIX.",
+                description: "Não foi possível salvar seu código PIX. Por favor, tente novamente.",
                 variant: "destructive",
             })
         } finally {
@@ -238,7 +251,7 @@ export default function PixSettingsPage() {
                         <Button
                             onClick={savePixCode}
                             disabled={isSaving || !isValid}
-                            className="w-full flex items-center justify-center"
+                            className="w-full flex items-center justify-center bg-[#0456FC] hover:bg-[#0344C7] text-white"
                         >
                             <Save className="h-4 w-4 mr-2" />
                             {isSaving ? "Salvando..." : "Salvar Chave PIX"}

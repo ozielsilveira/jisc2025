@@ -464,7 +464,7 @@ export default function PackagesPage() {
   }
 
   // Only admin can access this page
-  if (userRole !== "admin") {
+  if (userRole !== "admin" && userRole !== "athletic") {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
@@ -513,13 +513,13 @@ export default function PackagesPage() {
         <div>
           <h1 className="text-3xl font-bold">Pacotes</h1>
           <p className="text-gray-500">
-            {userRole === "admin" || userRole === "athletic"
+            {userRole === "admin"
               ? "Gerencie os pacotes disponíveis para os atletas."
-              : "Selecione o pacote que deseja adquirir."}
+              : "Visualize os pacotes disponíveis para os atletas."}
           </p>
         </div>
 
-        {(userRole === "admin" || userRole === "athletic") && (
+        {userRole === "admin" && (
           <Dialog
             open={isDialogOpen}
             onOpenChange={(open) => {
@@ -747,18 +747,22 @@ export default function PackagesPage() {
                         </div>
                       </CardContent>
                       <CardFooter className="flex justify-between">
-                        <Button
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => openDeleteDialog(pkg)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Excluir
-                        </Button>
-                        <Button onClick={() => openEditDialog(pkg)}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          Editar
-                        </Button>
+                        {userRole === "admin" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => openDeleteDialog(pkg)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Excluir
+                            </Button>
+                            <Button onClick={() => openEditDialog(pkg)}>
+                              <Edit className="h-4 w-4 mr-1" />
+                              Editar
+                            </Button>
+                          </>
+                        )}
                       </CardFooter>
                     </Card>
                   ))}

@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabase"
+import { useEffect, useState } from "react"
 
 type UserProfile = {
   id: string
@@ -148,15 +148,17 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gender">Gênero</Label>
-            <div className="rounded-md border p-2">
-              {profile?.gender === "male" && "Masculino"}
-              {profile?.gender === "female" && "Feminino"}
-              {profile?.gender === "other" && "Outro"}
-              {profile?.gender === "prefer_not_to_say" && "Prefiro não informar"}
+          {profile?.role !== "athletic" && (
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gênero</Label>
+              <div className="rounded-md border p-2">
+                {profile?.gender === "male" && "Masculino"}
+                {profile?.gender === "female" && "Feminino"}
+                {profile?.gender === "other" && "Outro"}
+                {profile?.gender === "prefer_not_to_say" && "Prefiro não informar"}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="role">Tipo de Usuário</Label>

@@ -407,7 +407,7 @@ export default function AthletesPage() {
                   Compartilhar Link
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="bg-white">
                 <DialogHeader>
                   <DialogTitle>Link de Cadastro</DialogTitle>
                   <DialogDescription>

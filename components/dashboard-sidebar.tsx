@@ -49,7 +49,7 @@ export default function DashboardSidebar() {
       category: "Competição",
       items: [
         { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["athlete", "athletic", "admin"] },
-        { label: "Pacotes", icon: "Package", href: "/dashboard/packages", roles: ["admin"] },
+        { label: "Pacotes", icon: "Package", href: "/dashboard/packages", roles: ["athletic", "admin"] },
         //{ label: "Atribuir Pacotes", icon: "Tag", href: "/dashboard/assign-packages", roles: ["athletic", "admin"] },
       ]
     },
