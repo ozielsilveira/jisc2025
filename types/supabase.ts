@@ -76,6 +76,7 @@ export interface Database {
           name: string
           logo_url: string
           university: string
+          representative_id: string | null
           pix_code: string | null
           pix_approved: boolean | null
           created_at: string
@@ -86,6 +87,7 @@ export interface Database {
           name: string
           logo_url: string
           university: string
+          representative_id?: string | null
           pix_code?: string | null
           pix_approved?: boolean | null
           created_at?: string
@@ -96,6 +98,7 @@ export interface Database {
           name?: string
           logo_url?: string
           university?: string
+          representative_id?: string | null
           pix_code?: string | null
           pix_approved?: boolean | null
           created_at?: string
@@ -343,6 +346,38 @@ export interface Database {
           updated_at?: string
         }
       }
+      user_settings: {
+        Row: {
+          id: string
+          user_id: string
+          theme_preference: string
+          notification_email: boolean
+          notification_push: boolean
+          language: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          theme_preference?: string
+          notification_email?: boolean
+          notification_push?: boolean
+          language?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          theme_preference?: string
+          notification_email?: boolean
+          notification_push?: boolean
+          language?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -355,4 +390,3 @@ export interface Database {
     }
   }
 }
-

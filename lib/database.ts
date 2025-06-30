@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS athletics (
   name TEXT NOT NULL,
   logo_url TEXT,
   university TEXT NOT NULL,
+  representative_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  pix_code TEXT,
+  pix_approved BOOLEAN,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -98,7 +101,10 @@ CREATE TABLE IF NOT EXISTS packages (
   name TEXT NOT NULL,
   description TEXT,
   price DECIMAL(10, 2) NOT NULL,
+  category TEXT NOT NULL DEFAULT 'combined' CHECK (category IN ('games', 'party', 'combined')),
   includes_party BOOLEAN NOT NULL DEFAULT false,
+  includes_games BOOLEAN NOT NULL DEFAULT false,
+  discount_percentage DECIMAL(5, 2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -143,6 +149,19 @@ CREATE TABLE IF NOT EXISTS ticket_purchases (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User Settings table
+CREATE TABLE IF NOT EXISTS user_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  theme_preference TEXT NOT NULL DEFAULT 'system',
+  notification_email BOOLEAN NOT NULL DEFAULT true,
+  notification_push BOOLEAN NOT NULL DEFAULT true,
+  language TEXT NOT NULL DEFAULT 'pt-BR',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id)
+);
+
 -- Create RLS policies
 -- Enable Row Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -156,6 +175,7 @@ ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE athlete_packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ticket_purchases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for each table
 -- Users policies
@@ -177,16 +197,6 @@ FOR SELECT USING (
 
 -- Temporarily disable RLS for initial setup
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
-
--- Athletics can view their athletes' data" ON users
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM athletes 
-      JOIN users u ON u.id = auth.uid() 
-      WHERE athletes.user_id = users.id 
-      AND u.role = 'athletic'
-    )
-  );
 
 -- Create triggers for updated_at
 CREATE OR REPLACE FUNCTION update_modified_column()
@@ -232,5 +242,8 @@ FOR EACH ROW EXECUTE FUNCTION update_modified_column();
 CREATE TRIGGER update_ticket_purchases_modtime
 BEFORE UPDATE ON ticket_purchases
 FOR EACH ROW EXECUTE FUNCTION update_modified_column();
-`
 
+CREATE TRIGGER update_user_settings_modtime
+BEFORE UPDATE ON user_settings
+FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+`
