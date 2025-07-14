@@ -195,8 +195,72 @@ FOR SELECT USING (
   )
 );
 
--- Temporarily disable RLS for initial setup
-ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
+-- Athletics policies
+CREATE POLICY IF NOT EXISTS "Users can view all athletics" ON athletics
+FOR SELECT USING (true);
+
+CREATE POLICY IF NOT EXISTS "Admins can insert athletics" ON athletics
+FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
+  )
+);
+
+CREATE POLICY IF NOT EXISTS "Admins or representatives can update athletics" ON athletics
+FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND (role = 'admin' OR id = representative_id)
+  )
+);
+
+-- Athletes policies
+CREATE POLICY IF NOT EXISTS "Users can view their own athlete data" ON athletes
+FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert their own athlete data" ON athletes
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Admins or representatives can view all athletes in their athletic" ON athletes
+FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM users u JOIN athletics a ON u.id = a.representative_id
+    WHERE u.id = auth.uid() AND a.id = athletic_id
+  ) OR
+  EXISTS (
+    SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'
+  )
+);
+
+-- Sports policies
+CREATE POLICY IF NOT EXISTS "Users can view all sports" ON sports
+FOR SELECT USING (true);
+
+-- Games policies
+CREATE POLICY IF NOT EXISTS "Users can view all games" ON games
+FOR SELECT USING (true);
+
+-- Packages policies
+CREATE POLICY IF NOT EXISTS "Users can view all packages" ON packages
+FOR SELECT USING (true);
+
+-- Tickets policies
+CREATE POLICY IF NOT EXISTS "Users can view all tickets" ON tickets
+FOR SELECT USING (true);
+
+-- Ticket Purchases policies
+CREATE POLICY IF NOT EXISTS "Users can view their own ticket purchases" ON ticket_purchases
+FOR SELECT USING (auth.uid() = user_id);
+
+-- User Settings policies
+CREATE POLICY IF NOT EXISTS "Users can view their own settings" ON user_settings
+FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can update their own settings" ON user_settings
+FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY IF NOT EXISTS "Users can insert their own settings" ON user_settings
+FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 
 -- Create triggers for updated_at
 CREATE OR REPLACE FUNCTION update_modified_column()
