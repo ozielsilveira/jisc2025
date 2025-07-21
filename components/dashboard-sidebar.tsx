@@ -15,7 +15,6 @@ export default function DashboardSidebar() {
   const { user, signOut } = useAuth()
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
 
   // Fetch user role
@@ -70,7 +69,7 @@ export default function DashboardSidebar() {
   ]
 
   const SidebarContent = () => (
-    <div className={`flex flex-col h-full ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div className="flex flex-col h-full bg-white text-gray-900">
       <div className="p-4 text-center border-b">
         <h2 className="text-2xl font-bold text-[#0456FC]">JISC</h2>
         <p className="text-sm text-gray-500">Campeonato Universitário</p>
@@ -95,8 +94,7 @@ export default function DashboardSidebar() {
                       href={item.href}
                       className={`nav-item flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-200 ${pathname === item.href
                         ? 'bg-[#0456FC] text-white shadow-lg transform scale-102'
-                        : `${theme === 'dark' ? 'text-gray-300 hover:bg-gray-800' : 'text-gray-700 hover:bg-gray-100'}`
-                        }`}
+                        : 'text-gray-700 hover:bg-gray-100'}`}
                     >
                       <Icon className="h-5 w-5 mr-3" />
                       <span>{item.label}</span>
@@ -130,7 +128,7 @@ export default function DashboardSidebar() {
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={theme === 'dark' ? 'bg-gray-800' : 'bg-white'}
+          className="bg-white"
         >
           {isMobileMenuOpen ? <Icons.X className="h-5 w-5" /> : <Icons.Menu className="h-5 w-5" />}
         </Button>

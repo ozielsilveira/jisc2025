@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
