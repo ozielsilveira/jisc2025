@@ -32,7 +32,7 @@ export default function DashboardSidebar() {
       category: "Principal",
       items: [
         { label: "Dashboard", icon: "Home", href: "/dashboard", roles: ["buyer", "athlete", "athletic", "admin"] },
-        { label: "Meu Perfil", icon: "User", href: "/dashboard/profile", roles: ["buyer", "athlete", "athletic", "admin"] },
+        { label: "Cadastro", icon: "User", href: "/dashboard/profile", roles: ["athlete"] },
       ]
     },
     {
