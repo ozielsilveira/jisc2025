@@ -5,7 +5,7 @@ import { CheckCircle, Clock, Upload } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -23,12 +23,6 @@ type UserProfile = {
   role: string
 }
 
-type Athletic = {
-  id: string
-  name: string
-  university: string
-}
-
 type Sport = {
   id: string
   name: string
@@ -43,12 +37,10 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<Partial<UserProfile>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isAthleteRegistered, setIsAthleteRegistered] = useState(false)
+  const [isDocumentRegistered, setIsDocumentRegistered] = useState(false)
 
   // Athlete registration state
-  const [athletics, setAthletics] = useState<Athletic[]>([])
   const [sports, setSports] = useState<Sport[]>([])
-  const [selectedAthleticId, setSelectedAthleticId] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
   const [selectedSports, setSelectedSports] = useState<string[]>([])
@@ -68,7 +60,7 @@ export default function ProfilePage() {
         if (data.role === "athlete") {
           const { data: athleteData, error: athleteError } = await supabase
             .from("athletes")
-            .select("id")
+            .select("id, status")
             .eq("user_id", user.id)
             .single()
 
@@ -77,11 +69,9 @@ export default function ProfilePage() {
             throw athleteError
           }
 
-          if (athleteData) {
-            setIsAthleteRegistered(true)
+          if (athleteData && athleteData.status === "approved") {
+            setIsDocumentRegistered(true)
           } else {
-            // Fetch data needed for registration form
-            fetchAthletics()
             fetchSports()
           }
         }
@@ -99,21 +89,6 @@ export default function ProfilePage() {
 
     fetchProfile()
   }, [user, toast])
-
-  const fetchAthletics = async () => {
-    try {
-      const { data, error } = await supabase.from("athletics").select("*")
-      if (error) throw error
-      setAthletics(data)
-    } catch (error) {
-      console.error("Error fetching athletics:", error)
-      toast({
-        title: "Erro ao carregar atléticas",
-        description: "Não foi possível carregar a lista de atléticas.",
-        variant: "destructive",
-      })
-    }
-  }
 
   const fetchSports = async () => {
     try {
@@ -193,7 +168,7 @@ export default function ProfilePage() {
 
   const handleAthleteRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user || !photoFile || !enrollmentFile || !selectedAthleticId || selectedSports.length === 0) {
+    if (!user || !photoFile || !enrollmentFile || selectedSports.length === 0) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos do formulário.",
@@ -226,7 +201,6 @@ export default function ProfilePage() {
         .from("athletes")
         .insert({
           user_id: user.id,
-          athletic_id: selectedAthleticId,
           document_photo_url: photoUrlData.publicUrl,
           enrollment_proof_url: enrollmentUrlData.publicUrl,
           status: "pending", // or 'approved' depending on your workflow
@@ -249,7 +223,7 @@ export default function ProfilePage() {
         title: "Cadastro enviado com sucesso!",
         description: "Seu cadastro de atleta foi enviado e está aguardando aprovação.",
       })
-      setIsAthleteRegistered(true)
+      setIsDocumentRegistered(true)
     } catch (error: any) {
       console.error("Error during athlete registration:", error)
       toast({
@@ -277,34 +251,10 @@ export default function ProfilePage() {
         <p className="text-gray-500">Visualize e edite suas informações pessoais.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Pessoais</CardTitle>
-          <CardDescription>Seus dados cadastrados no sistema.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* ... (personal info fields) */}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          {isEditing ? (
-            <>
-              <Button variant="outline" onClick={handleCancel}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)}>Editar Perfil</Button>
-          )}
-        </CardFooter>
-      </Card>
-
       {profile?.role === "athlete" && (
         <Tabs defaultValue="register" className="w-full">
           <TabsContent value="register">
-            {isAthleteRegistered ? (
+            {isDocumentRegistered ? (
               <Card>
                 <CardHeader>
                   <CardTitle>Atestado de Matrícula</CardTitle>
@@ -327,22 +277,6 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleAthleteRegistration} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="athletic">Atlética</Label>
-                      <Select onValueChange={setSelectedAthleticId} value={selectedAthleticId || undefined}>
-                        <SelectTrigger id="athletic">
-                          <SelectValue placeholder="Selecione sua atlética" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {athletics.map((athletic) => (
-                            <SelectItem key={athletic.id} value={athletic.id}>
-                              {athletic.name} - {athletic.university}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
                     <div className="space-y-2">
                       <Label htmlFor="photo">Foto com Documento (RG ou CNH)</Label>
                       <div className="flex items-center gap-4">
@@ -420,7 +354,6 @@ export default function ProfilePage() {
                         isSubmitting ||
                         !photoFile ||
                         !enrollmentFile ||
-                        !selectedAthleticId ||
                         selectedSports.length === 0
                       }
                     >
