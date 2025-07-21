@@ -102,6 +102,7 @@ export default function RegisterPage() {
   }
 
   const validateForm = () => {
+    // Validação de senhas
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Erro de validação",
@@ -111,15 +112,65 @@ export default function RegisterPage() {
       return false
     }
 
-    if (formData.password.length < 6) {
+    // Validação da força da senha
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/
+    if (!passwordRegex.test(formData.password)) {
       toast({
-        title: "Erro de validação",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        title: "Senha fraca",
+        description: "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula, uma minúscula e um número.",
         variant: "destructive",
       })
       return false
     }
 
+    // Validação do CPF (formato e dígitos verificadores)
+    const cpf = formData.cpf.replace(/[^\d]/g, "")
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+      toast({
+        title: "CPF inválido",
+        description: "O CPF deve conter 11 dígitos e não pode ter todos os números iguais.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    // Validação dos dígitos verificadores do CPF
+    let sum = 0
+    let remainder
+    for (let i = 1; i <= 9; i++) {
+      sum += parseInt(cpf.substring(i - 1, i)) * (11 - i)
+    }
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0
+    }
+    if (remainder !== parseInt(cpf.substring(9, 10))) {
+      toast({
+        title: "CPF inválido",
+        description: "O CPF informado não é válido. Verifique os dígitos.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    sum = 0
+    for (let i = 1; i <= 10; i++) {
+      sum += parseInt(cpf.substring(i - 1, i)) * (12 - i)
+    }
+    remainder = (sum * 10) % 11
+    if (remainder === 10 || remainder === 11) {
+      remainder = 0
+    }
+    if (remainder !== parseInt(cpf.substring(10, 11))) {
+      toast({
+        title: "CPF inválido",
+        description: "O CPF informado não é válido. Verifique os dígitos.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    // Validação de seleção de atlética e pacote
     if ((formData.role === "athlete" || formData.role === "buyer") && !formData.athletic_id) {
       toast({
         title: "Erro de validação",
@@ -268,11 +319,27 @@ export default function RegisterPage() {
       router.push("/login")
     } catch (error) {
       console.warn("Error signing up:", error)
-      toast({
-        title: "Erro ao criar conta",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao criar sua conta. Tente novamente.",
-        variant: "destructive",
-      })
+      if (error instanceof Error) {
+        if (error.message.includes("User already registered")) {
+          toast({
+            title: "Usuário já cadastrado",
+            description: "Este e-mail já está em uso. Por favor, tente fazer login ou use um e-mail diferente.",
+            variant: "destructive",
+          })
+        } else if (error.message.includes("violates unique constraint")) {
+          toast({
+            title: "CPF já cadastrado",
+            description: "O CPF informado já está associado a outra conta.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Erro ao criar conta",
+            description: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+            variant: "destructive",
+          })
+        }
+      }
     } finally {
       setIsLoading(false)
     }
