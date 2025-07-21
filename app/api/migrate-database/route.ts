@@ -5,7 +5,7 @@ import { createDatabaseTables } from "@/lib/database"
 async function executeRpc(name: string, rpc: () => Promise<any>) {
   const { error } = await rpc()
   if (error) {
-    console.error(`Error executing ${name}:`, error)
+    console.warn(`Error executing ${name}:`, error)
     throw new Error(`Error executing ${name}`)
   }
 }
@@ -31,7 +31,7 @@ export async function POST() {
       message: "Database migrated successfully",
     })
   } catch (error: any) {
-    console.error("Error migrating database:", error)
+    console.warn("Error migrating database:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

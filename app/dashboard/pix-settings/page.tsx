@@ -59,7 +59,7 @@ export default function PixSettingsPage() {
                     .maybeSingle()
 
                 if (athleticError) {
-                    console.error("Erro ao buscar dados da atlética:", athleticError)
+                    console.warn("Erro ao buscar dados da atlética:", athleticError)
                     throw athleticError
                 }
 
@@ -79,7 +79,7 @@ export default function PixSettingsPage() {
                     })
                 }
             } catch (error) {
-                console.error("Erro ao buscar dados da atlética:", error)
+                console.warn("Erro ao buscar dados da atlética:", error)
                 toast({
                     title: "Erro ao carregar dados",
                     description: "Não foi possível carregar os dados da sua atlética.",
@@ -132,7 +132,7 @@ export default function PixSettingsPage() {
                 .eq("id", athleticId)
 
             if (error) {
-                console.error("Erro ao salvar código PIX:", error)
+                console.warn("Erro ao salvar código PIX:", error)
                 throw error
             }
 
@@ -143,7 +143,7 @@ export default function PixSettingsPage() {
                 description: "Seu código PIX foi salvo e está aguardando aprovação da comissão organizadora.",
             })
         } catch (error) {
-            console.error("Erro ao salvar código PIX:", error)
+            console.warn("Erro ao salvar código PIX:", error)
             toast({
                 title: "Erro ao salvar código PIX",
                 description: "Não foi possível salvar seu código PIX. Por favor, tente novamente.",

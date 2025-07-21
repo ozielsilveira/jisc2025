@@ -104,7 +104,7 @@ export default function SportsPage() {
 
         setSports(sportsWithCounts as Sport[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar as modalidades.",
@@ -170,7 +170,7 @@ export default function SportsPage() {
       // Refresh the sports list
       window.location.reload()
     } catch (error) {
-      console.error("Error creating sport:", error)
+      console.warn("Error creating sport:", error)
       toast({
         title: "Erro ao criar modalidade",
         description: "Não foi possível adicionar a modalidade ao sistema.",

@@ -66,7 +66,7 @@ export default function RegisterPage() {
         if (packagesError) throw packagesError
         setPackages(packagesData || [])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar as atléticas e pacotes.",
@@ -265,7 +265,7 @@ export default function RegisterPage() {
 
       router.push("/login")
     } catch (error) {
-      console.error("Error signing up:", error)
+      console.warn("Error signing up:", error)
       toast({
         title: "Erro ao criar conta",
         description: error instanceof Error ? error.message : "Ocorreu um erro ao criar sua conta. Tente novamente.",

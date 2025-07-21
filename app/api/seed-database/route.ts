@@ -145,7 +145,7 @@ export async function POST() {
       },
     })
   } catch (error) {
-    console.error("Error seeding database:", error)
+    console.warn("Error seeding database:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -133,7 +133,7 @@ export default function PackagesPage() {
 
         setPackages(packagesWithCounts as PackageType[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os pacotes.",
@@ -287,7 +287,7 @@ export default function PackagesPage() {
 
       setPackages(packagesWithCounts as PackageType[])
     } catch (error) {
-      console.error("Error creating/updating package:", error)
+      console.warn("Error creating/updating package:", error)
       toast({
         title: "Erro ao salvar pacote",
         description: "Não foi possível salvar o pacote no sistema.",
@@ -333,7 +333,7 @@ export default function PackagesPage() {
       // Update packages list
       setPackages((prev) => prev.filter((pkg) => pkg.id !== selectedPackage.id))
     } catch (error) {
-      console.error("Error deleting package:", error)
+      console.warn("Error deleting package:", error)
       toast({
         title: "Erro ao excluir pacote",
         description: "Não foi possível excluir o pacote do sistema.",
@@ -402,7 +402,7 @@ export default function PackagesPage() {
       // Redirect to payment page
       router.push(`/dashboard/payments?package=${pkg.id}`)
     } catch (error) {
-      console.error("Error selecting package:", error)
+      console.warn("Error selecting package:", error)
       toast({
         title: "Erro ao selecionar pacote",
         description: "Não foi possível selecionar o pacote.",
@@ -446,7 +446,7 @@ export default function PackagesPage() {
       setTempSelectedPackage(null)
       setSelectedAthleticId("")
     } catch (error) {
-      console.error("Error handling athletic selection:", error)
+      console.warn("Error handling athletic selection:", error)
       toast({
         title: "Erro ao processar solicitação",
         description: "Não foi possível processar sua solicitação.",

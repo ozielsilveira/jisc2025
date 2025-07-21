@@ -157,7 +157,7 @@ export default function GamesPage() {
         if (athleticsError) throw athleticsError
         setAthletics(athleticsData as Athletic[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os jogos.",
@@ -265,7 +265,7 @@ export default function GamesPage() {
       // Refresh the games list
       window.location.reload()
     } catch (error) {
-      console.error("Error creating game:", error)
+      console.warn("Error creating game:", error)
       toast({
         title: "Erro ao criar jogo",
         description: "Não foi possível adicionar o jogo à agenda.",

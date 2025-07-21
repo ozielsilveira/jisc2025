@@ -112,7 +112,7 @@ export default function AthletesPage() {
             .maybeSingle()
 
           if (athleticError) {
-            console.error("Error fetching athletic data:", athleticError)
+            console.warn("Error fetching athletic data:", athleticError)
             toast({
               title: "Erro ao carregar dados da atlética",
               description: "Não foi possível carregar as informações da sua atlética.",
@@ -162,7 +162,7 @@ export default function AthletesPage() {
         if (sportsError) throw sportsError
         setSports(sportsData as Sport[])
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os atletas.",
@@ -278,7 +278,7 @@ export default function AthletesPage() {
         setAthletes((prev) => [newAthleteData as Athlete, ...prev])
       }
     } catch (error) {
-      console.error("Error registering athlete:", error)
+      console.warn("Error registering athlete:", error)
       toast({
         title: "Erro no cadastro",
         description: "Não foi possível completar o cadastro de atleta.",
@@ -305,7 +305,7 @@ export default function AthletesPage() {
         prev.map((athlete) => (athlete.id === athleteId ? { ...athlete, status: "approved" } : athlete)),
       )
     } catch (error) {
-      console.error("Error approving athlete:", error)
+      console.warn("Error approving athlete:", error)
       toast({
         title: "Erro na aprovação",
         description: "Não foi possível aprovar o atleta.",
@@ -330,7 +330,7 @@ export default function AthletesPage() {
         prev.map((athlete) => (athlete.id === athleteId ? { ...athlete, status: "rejected" } : athlete)),
       )
     } catch (error) {
-      console.error("Error rejecting athlete:", error)
+      console.warn("Error rejecting athlete:", error)
       toast({
         title: "Erro na rejeição",
         description: "Não foi possível rejeitar o atleta.",

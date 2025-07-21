@@ -126,7 +126,7 @@ export default function SettingsPage() {
           })
         }
       } catch (error) {
-        console.error("Error fetching user data:", error)
+        console.warn("Error fetching user data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar suas configurações.",
@@ -175,7 +175,7 @@ export default function SettingsPage() {
         description: "Suas informações de perfil foram atualizadas com sucesso.",
       })
     } catch (error) {
-      console.error("Error updating profile:", error)
+      console.warn("Error updating profile:", error)
       toast({
         title: "Erro ao atualizar perfil",
         description: "Não foi possível salvar suas alterações.",
@@ -244,7 +244,7 @@ export default function SettingsPage() {
         description: "Suas preferências foram atualizadas com sucesso.",
       })
     } catch (error) {
-      console.error("Error updating settings:", error)
+      console.warn("Error updating settings:", error)
       toast({
         title: "Erro ao atualizar configurações",
         description: "Não foi possível salvar suas alterações.",

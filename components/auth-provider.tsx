@@ -30,7 +30,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       } = await supabase.auth.getSession()
 
       if (error) {
-        console.error(error)
+        console.warn(error)
         setIsLoading(false)
         return
       }
@@ -54,7 +54,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })    
     if (error) throw error
   }
 

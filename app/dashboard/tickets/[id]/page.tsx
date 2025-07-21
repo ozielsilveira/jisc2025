@@ -78,7 +78,7 @@ export default function TicketDetailPage() {
 
         setTicketPurchase(data as TicketPurchase)
       } catch (error) {
-        console.error("Error fetching ticket:", error)
+        console.warn("Error fetching ticket:", error)
         toast({
           title: "Erro ao carregar ingresso",
           description: "Não foi possível carregar os detalhes do ingresso.",
@@ -120,7 +120,7 @@ export default function TicketDetailPage() {
           url: window.location.href,
         })
       } catch (error) {
-        console.error("Error sharing:", error)
+        console.warn("Error sharing:", error)
       }
     } else {
       // Fallback for browsers that don't support the Web Share API

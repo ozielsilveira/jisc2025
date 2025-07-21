@@ -41,7 +41,7 @@ export default function ProfilePage() {
         setProfile(data as UserProfile)
         setFormData(data as UserProfile)
       } catch (error) {
-        console.error("Error fetching profile:", error)
+        console.warn("Error fetching profile:", error)
         toast({
           title: "Erro ao carregar perfil",
           description: "Não foi possível carregar seus dados.",
@@ -83,7 +83,7 @@ export default function ProfilePage() {
         description: "Suas informações foram atualizadas com sucesso.",
       })
     } catch (error) {
-      console.error("Error updating profile:", error)
+      console.warn("Error updating profile:", error)
       toast({
         title: "Erro ao atualizar perfil",
         description: "Não foi possível salvar suas alterações.",

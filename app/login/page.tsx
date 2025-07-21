@@ -63,7 +63,7 @@ export default function LoginPage() {
       })
       router.push("/dashboard")
     } catch (error) {
-      console.error("Error signing in:", error)
+      console.warn("Error signing in:", error)
       toast({
         title: "Erro ao fazer login",
         description: "Verifique suas credenciais e tente novamente.",

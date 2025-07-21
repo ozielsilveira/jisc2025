@@ -210,7 +210,7 @@ export default function PaymentsPage() {
           })))
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os pacotes.",
@@ -293,7 +293,7 @@ export default function PaymentsPage() {
       // Refresh the page
       window.location.reload()
     } catch (error) {
-      console.error("Error assigning package:", error)
+      console.warn("Error assigning package:", error)
       toast({
         title: "Erro ao atribuir pacote",
         description: "Não foi possível atribuir o pacote ao atleta.",
@@ -335,7 +335,7 @@ export default function PaymentsPage() {
         ),
       )
     } catch (error) {
-      console.error("Error updating payment status:", error)
+      console.warn("Error updating payment status:", error)
       toast({
         title: "Erro ao atualizar pagamento",
         description: "Não foi possível atualizar o status do pagamento.",

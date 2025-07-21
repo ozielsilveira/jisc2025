@@ -39,7 +39,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao configurar banco de dados:", error)
+      console.warn("Erro ao configurar banco de dados:", error)
       toast({
         title: "Erro",
         description: "Erro ao configurar o banco de dados",
@@ -70,7 +70,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao configurar permissões:", error)
+      console.warn("Erro ao configurar permissões:", error)
       toast({
         title: "Erro",
         description: "Erro ao configurar permissões",
@@ -101,7 +101,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao criar trigger de usuário:", error)
+      console.warn("Erro ao criar trigger de usuário:", error)
       toast({
         title: "Erro",
         description: "Erro ao criar trigger de usuário",
@@ -132,7 +132,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao criar tabela de configurações:", error)
+      console.warn("Erro ao criar tabela de configurações:", error)
       toast({
         title: "Erro",
         description: "Erro ao criar tabela de configurações",
@@ -163,7 +163,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao atualizar tabela de pacotes:", error)
+      console.warn("Erro ao atualizar tabela de pacotes:", error)
       toast({
         title: "Erro",
         description: "Erro ao atualizar tabela de pacotes",
@@ -194,7 +194,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao criar procedimentos de pacotes:", error)
+      console.warn("Erro ao criar procedimentos de pacotes:", error)
       toast({
         title: "Erro",
         description: "Erro ao criar procedimentos de pacotes",
@@ -225,7 +225,7 @@ export default function DatabaseSetupPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao atualizar tabela de atléticas:", error)
+      console.warn("Erro ao atualizar tabela de atléticas:", error)
       toast({
         title: "Erro",
         description: "Erro ao atualizar tabela de atléticas",
