@@ -64,7 +64,7 @@ export default function DashboardSidebar() {
     {
       category: "Configurações",
       items: [
-        { label: "Configurações", icon: "Settings", href: "/dashboard/settings", roles: ["buyer", "athlete", "athletic", "admin"] },
+        { label: "Configurações", icon: "Settings", href: "/dashboard/settings", roles: ["athletic", "admin"] },
       ]
     }
   ]

@@ -150,24 +150,24 @@ export default function ProfilePage() {
 
           {profile?.role !== "athletic" && (
             <div className="space-y-2">
-              <Label htmlFor="gender">Gênero</Label>
+              {/* <Label htmlFor="gender">Gênero</Label>
               <div className="rounded-md border p-2">
                 {profile?.gender === "male" && "Masculino"}
                 {profile?.gender === "female" && "Feminino"}
                 {profile?.gender === "other" && "Outro"}
                 {profile?.gender === "prefer_not_to_say" && "Prefiro não informar"}
-              </div>
+              </div> */}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="role">Tipo de Usuário</Label>
+            {/* <Label htmlFor="role">Tipo de Usuário</Label>
             <div className="rounded-md border p-2">
               {profile?.role === "buyer" && "Comprador de Ingressos"}
               {profile?.role === "athlete" && "Atleta"}
               {profile?.role === "athletic" && "Representante de Atlética"}
               {profile?.role === "admin" && "Administrador"}
-            </div>
+            </div> */}
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
@@ -185,20 +185,6 @@ export default function ProfilePage() {
           )}
         </CardFooter>
       </Card>
-
-      {/* Additional sections based on user role */}
-      {profile?.role === "athlete" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações de Atleta</CardTitle>
-            <CardDescription>Seus dados como atleta no JISC.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Athlete-specific information would go here */}
-            <p>Informações específicas do atleta seriam exibidas aqui.</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

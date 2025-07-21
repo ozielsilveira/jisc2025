@@ -252,7 +252,7 @@ export default function AthleticsPage() {
                   <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Link de Referência para Atletas</Label>
                   <div className="flex items-center">
                     <Input
@@ -287,7 +287,7 @@ export default function AthleticsPage() {
                   <p className="text-xs text-gray-500">
                     Compartilhe este link para cadastro de novos membros da atlética.
                   </p>
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Link de Referência para Atléticas</Label>

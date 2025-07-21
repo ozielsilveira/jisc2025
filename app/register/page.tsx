@@ -226,7 +226,7 @@ export default function RegisterPage() {
 
       // If user is an athlete, create athlete record
       if (formData.role === "athlete") {
-        const { error: athleteError } = await supabase
+        const { data: athleteData, error: athleteError } = await supabase
           .from("athletes")
           .insert({
             user_id: authData.user.id,
@@ -234,6 +234,7 @@ export default function RegisterPage() {
             photo_url: "",
             enrollment_document_url: "",
             status: "pending",
+            id: authData.user.id,
           })
 
         if (athleteError) {
@@ -245,6 +246,7 @@ export default function RegisterPage() {
           const { error: packageError } = await supabase
             .from("athlete_packages")
             .insert({
+              
               athlete_id: authData.user.id,
               package_id: formData.package_id,
               payment_status: "pending",
