@@ -47,7 +47,7 @@ export default function AthleticsPage() {
           .single()
 
         if (userError) {
-          console.error("Error fetching user role:", userError)
+          console.warn("Error fetching user role:", userError)
           throw userError
         }
 
@@ -89,7 +89,7 @@ export default function AthleticsPage() {
         })
         setReferralLinks(links)
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar as atléticas.",
@@ -129,7 +129,7 @@ export default function AthleticsPage() {
         description: "Link de registro para atléticas copiado para a área de transferência.",
       });
     } catch (err) {
-      console.error("Erro ao copiar link", err);
+      console.warn("Erro ao copiar link", err);
       toast({
         title: "Erro ao copiar link",
         description: "Não foi possível copiar o link para a área de transferência.",
@@ -252,7 +252,7 @@ export default function AthleticsPage() {
                   <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label>Link de Referência para Atletas</Label>
                   <div className="flex items-center">
                     <Input
@@ -272,7 +272,7 @@ export default function AthleticsPage() {
                             description: "Link de referência para atlética copiado para a área de transferência.",
                           })
                         } else {
-                          console.error("Clipboard API não suportada ou indisponível")
+                          console.warn("Clipboard API não suportada ou indisponível")
                           toast({
                             title: "Erro ao copiar link",
                             description: "A API de área de transferência não é suportada ou está indisponível neste navegador.",
@@ -287,7 +287,7 @@ export default function AthleticsPage() {
                   <p className="text-xs text-gray-500">
                     Compartilhe este link para cadastro de novos membros da atlética.
                   </p>
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label>Link de Referência para Atléticas</Label>
@@ -309,7 +309,7 @@ export default function AthleticsPage() {
                             description: "Link de referência para atlética copiado para a área de transferência.",
                           })
                         } else {
-                          console.error("Clipboard API não suportada ou indisponível")
+                          console.warn("Clipboard API não suportada ou indisponível")
                           toast({
                             title: "Erro ao copiar link",
                             description: "A API de área de transferência não é suportada ou está indisponível neste navegador.",

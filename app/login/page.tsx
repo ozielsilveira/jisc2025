@@ -63,12 +63,22 @@ export default function LoginPage() {
       })
       router.push("/dashboard")
     } catch (error) {
-      console.error("Error signing in:", error)
-      toast({
-        title: "Erro ao fazer login",
-        description: "Verifique suas credenciais e tente novamente.",
-        variant: "destructive",
-      })
+      console.warn("Error signing in:", error)
+      if (error instanceof Error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Credenciais inválidas",
+            description: "E-mail ou senha incorretos. Por favor, verifique e tente novamente.",
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Erro ao fazer login",
+            description: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+            variant: "destructive",
+          })
+        }
+      }
     } finally {
       setIsLoading(false)
     }

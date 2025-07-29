@@ -92,7 +92,7 @@ export default function TicketsPage() {
         if (ticketsError) throw ticketsError
         setMyTickets(tickets as unknown as TicketPurchase[])
       } catch (error) {
-        console.error("Error fetching tickets data:", error)
+        console.warn("Error fetching tickets data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os ingressos.",
@@ -174,7 +174,7 @@ export default function TicketsPage() {
       // Refresh the data
       window.location.reload()
     } catch (error) {
-      console.error("Error purchasing ticket:", error)
+      console.warn("Error purchasing ticket:", error)
       toast({
         title: "Erro na compra",
         description: "Não foi possível completar a compra do ingresso.",
@@ -217,7 +217,7 @@ export default function TicketsPage() {
       // Refresh the data
       window.location.reload()
     } catch (error) {
-      console.error("Error creating event:", error)
+      console.warn("Error creating event:", error)
       toast({
         title: "Erro ao criar evento",
         description: "Não foi possível criar o novo evento.",

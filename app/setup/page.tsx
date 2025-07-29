@@ -40,7 +40,7 @@ export default function SetupPage() {
         description: "As tabelas do banco de dados foram criadas com sucesso.",
       })
     } catch (error) {
-      console.error("Error creating tables:", error)
+      console.warn("Error creating tables:", error)
       toast({
         title: "Erro ao criar tabelas",
         description: "Ocorreu um erro ao criar as tabelas do banco de dados.",
@@ -72,7 +72,7 @@ export default function SetupPage() {
         description: "Os dados de exemplo foram inseridos no banco de dados.",
       })
     } catch (error) {
-      console.error("Error seeding data:", error)
+      console.warn("Error seeding data:", error)
       toast({
         title: "Erro ao inserir dados",
         description: "Ocorreu um erro ao inserir os dados de exemplo.",
@@ -103,7 +103,7 @@ export default function SetupPage() {
         description: "As permissões do banco de dados foram configuradas corretamente.",
       })
     } catch (error) {
-      console.error("Erro ao configurar permissões:", error)
+      console.warn("Erro ao configurar permissões:", error)
       toast({
         title: "Erro ao configurar permissões",
         description: "Ocorreu um erro ao configurar as permissões do banco de dados.",
@@ -134,7 +134,7 @@ export default function SetupPage() {
         description: "O trigger para sincronização de usuários foi criado com sucesso.",
       })
     } catch (error) {
-      console.error("Erro ao criar trigger:", error)
+      console.warn("Erro ao criar trigger:", error)
       toast({
         title: "Erro ao criar trigger",
         description: "Ocorreu um erro ao criar o trigger de sincronização de usuários.",
@@ -165,7 +165,7 @@ export default function SetupPage() {
         description: "A tabela de configurações do usuário foi criada com sucesso.",
       })
     } catch (error) {
-      console.error("Erro ao criar tabela de configurações:", error)
+      console.warn("Erro ao criar tabela de configurações:", error)
       toast({
         title: "Erro ao criar tabela de configurações",
         description: "Ocorreu um erro ao criar a tabela de configurações do usuário.",

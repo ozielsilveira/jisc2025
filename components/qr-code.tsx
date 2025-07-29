@@ -29,7 +29,7 @@ export function QRCodeDisplay({ value, size = 200, level = "M", includeMargin = 
           },
         },
         (error) => {
-          if (error) console.error("Error generating QR code:", error)
+          if (error) console.warn("Error generating QR code:", error)
         },
       )
     }

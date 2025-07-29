@@ -61,7 +61,7 @@ export default function ApprovePixPage() {
 
                 setAthletics(data || [])
             } catch (error) {
-                console.error("Erro ao buscar atléticas:", error)
+                console.warn("Erro ao buscar atléticas:", error)
                 toast({
                     title: "Erro ao carregar dados",
                     description: "Não foi possível carregar as atléticas.",
@@ -92,7 +92,7 @@ export default function ApprovePixPage() {
                 description: "O código PIX foi aprovado com sucesso.",
             })
         } catch (error) {
-            console.error("Erro ao aprovar código PIX:", error)
+            console.warn("Erro ao aprovar código PIX:", error)
             toast({
                 title: "Erro ao aprovar código PIX",
                 description: "Não foi possível aprovar o código PIX.",
@@ -120,7 +120,7 @@ export default function ApprovePixPage() {
                 description: "O código PIX foi rejeitado com sucesso.",
             })
         } catch (error) {
-            console.error("Erro ao rejeitar código PIX:", error)
+            console.warn("Erro ao rejeitar código PIX:", error)
             toast({
                 title: "Erro ao rejeitar código PIX",
                 description: "Não foi possível rejeitar o código PIX.",

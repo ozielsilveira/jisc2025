@@ -45,7 +45,7 @@ export default function DashboardPage() {
           await fetchBuyerStats(data.id)
         }
       } catch (error) {
-        console.error("Error fetching user data:", error)
+        console.warn("Error fetching user data:", error)
       } finally {
         setIsLoading(false)
       }
@@ -80,7 +80,7 @@ export default function DashboardPage() {
         ticketsSold: ticketsCount || 0,
       })
     } catch (error) {
-      console.error("Error fetching admin stats:", error)
+      console.warn("Error fetching admin stats:", error)
     }
   }
 
@@ -111,7 +111,7 @@ export default function DashboardPage() {
         ticketsSold: ticketsCount || 0,
       })
     } catch (error) {
-      console.error("Error fetching athletic stats:", error)
+      console.warn("Error fetching athletic stats:", error)
     }
   }
 
@@ -152,7 +152,7 @@ export default function DashboardPage() {
         ticketsSold: 0,
       })
     } catch (error) {
-      console.error("Error fetching athlete stats:", error)
+      console.warn("Error fetching athlete stats:", error)
     }
   }
 
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         ticketsSold: ticketsCount || 0,
       })
     } catch (error) {
-      console.error("Error fetching buyer stats:", error)
+      console.warn("Error fetching buyer stats:", error)
     }
   }
 

@@ -111,7 +111,7 @@ export default function AssignPackagesPage() {
           .single()
 
         if (userError) {
-          console.error("Error fetching user role:", userError)
+          console.warn("Error fetching user role:", userError)
           throw userError
         }
 
@@ -125,7 +125,7 @@ export default function AssignPackagesPage() {
         const { data: packagesData, error: packagesError } = await supabase.from("packages").select("*").order("price")
 
         if (packagesError) {
-          console.error("Error fetching packages:", packagesError)
+          console.warn("Error fetching packages:", packagesError)
           throw packagesError
         }
 
@@ -155,7 +155,7 @@ export default function AssignPackagesPage() {
         const { data: athletesData, error: athletesError } = await athletesQuery
 
         if (athletesError) {
-          console.error("Error fetching athletes:", athletesError)
+          console.warn("Error fetching athletes:", athletesError)
           throw athletesError
         }
 
@@ -192,7 +192,7 @@ export default function AssignPackagesPage() {
         const { data: athletePackagesData, error: athletePackagesError } = await packagesQuery
 
         if (athletePackagesError) {
-          console.error("Error fetching athlete packages:", athletePackagesError)
+          console.warn("Error fetching athlete packages:", athletePackagesError)
           throw athletePackagesError
         }
 
@@ -203,7 +203,7 @@ export default function AssignPackagesPage() {
         setAthletePackages(athletePackagesData)
 
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.warn("Error fetching data:", error)
         toast({
           title: "Erro ao carregar dados",
           description: error instanceof Error ? error.message : "Não foi possível carregar os dados necessários.",
@@ -304,7 +304,7 @@ export default function AssignPackagesPage() {
       // Update the athlete packages list
       setAthletePackages((prev) => [newPackageData as unknown as AthletePackage, ...prev])
     } catch (error) {
-      console.error("Error assigning package:", error)
+      console.warn("Error assigning package:", error)
       toast({
         title: "Erro ao atribuir pacote",
         description: "Não foi possível atribuir o pacote ao atleta.",
@@ -343,7 +343,7 @@ export default function AssignPackagesPage() {
       // Update the athlete packages list
       setAthletePackages((prev) => prev.filter((pkg) => pkg.id !== selectedAthletePackage.id))
     } catch (error) {
-      console.error("Error canceling package:", error)
+      console.warn("Error canceling package:", error)
       toast({
         title: "Erro ao cancelar pacote",
         description: "Não foi possível cancelar a atribuição do pacote.",
@@ -386,7 +386,7 @@ export default function AssignPackagesPage() {
         ),
       )
     } catch (error) {
-      console.error("Error updating payment status:", error)
+      console.warn("Error updating payment status:", error)
       toast({
         title: "Erro ao atualizar pagamento",
         description: "Não foi possível atualizar o status do pagamento.",
