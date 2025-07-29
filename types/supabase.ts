@@ -45,6 +45,7 @@ export interface Database {
           athletic_id: string
           photo_url: string
           enrollment_document_url: string
+          cnh_cpf_document_url: string
           status: "pending" | "approved" | "rejected"
           created_at: string
           updated_at: string
@@ -55,6 +56,7 @@ export interface Database {
           athletic_id: string
           photo_url: string
           enrollment_document_url: string
+          cnh_cpf_document_url: string
           status?: "pending" | "approved" | "rejected"
           created_at?: string
           updated_at?: string
@@ -65,6 +67,7 @@ export interface Database {
           athletic_id?: string
           photo_url?: string
           enrollment_document_url?: string
+          cnh_cpf_document_url?: string
           status?: "pending" | "approved" | "rejected"
           created_at?: string
           updated_at?: string
