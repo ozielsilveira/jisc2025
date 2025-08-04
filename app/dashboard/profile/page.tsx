@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [sports, setSports] = useState<Sport[]>([])
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [selectedSports, setSelectedSports] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -160,6 +161,12 @@ export default function ProfilePage() {
     }
   }
 
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setDocumentFile(e.target.files[0])
+    }
+  }
+
   const handleSportToggle = (sportId: string) => {
     setSelectedSports((prev) =>
       prev.includes(sportId) ? prev.filter((id) => id !== sportId) : [...prev, sportId]
@@ -168,7 +175,7 @@ export default function ProfilePage() {
 
   const handleAthleteRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user || !photoFile || !enrollmentFile || selectedSports.length === 0) {
+    if (!user || !photoFile || !enrollmentFile || !documentFile || selectedSports.length === 0) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos do formulário.",
@@ -182,27 +189,34 @@ export default function ProfilePage() {
     try {
       // 1. Upload Photo
       const photoPath = `${user.id}/document_${photoFile.name}`
-      const { error: photoError } = await supabase.storage.from("athlete-documents").upload(photoPath, photoFile)
+      const { error: photoError } = await supabase.storage.from("documents").upload(photoPath, photoFile)
       if (photoError) throw photoError
 
       // 2. Upload Enrollment
       const enrollmentPath = `${user.id}/enrollment_${enrollmentFile.name}`
       const { error: enrollmentError } = await supabase.storage
-        .from("athlete-documents")
+        .from("documents")
         .upload(enrollmentPath, enrollmentFile)
       if (enrollmentError) throw enrollmentError
 
-      // 3. Get public URLs
-      const { data: photoUrlData } = supabase.storage.from("athlete-documents").getPublicUrl(photoPath)
-      const { data: enrollmentUrlData } = supabase.storage.from("athlete-documents").getPublicUrl(enrollmentPath)
+      // 3. Upload CNH/CPF
+      const documentPath = `${user.id}/document_${documentFile.name}`
+      const { error: documentError } = await supabase.storage.from("documents").upload(documentPath, documentFile)
+      if (documentError) throw documentError
 
-      // 4. Create Athlete Record
+      // 4. Get public URLs
+      const { data: photoUrlData } = supabase.storage.from("documents").getPublicUrl(photoPath)
+      const { data: enrollmentUrlData } = supabase.storage.from("documents").getPublicUrl(enrollmentPath)
+      const { data: documentUrlData } = supabase.storage.from("documents").getPublicUrl(documentPath)
+
+      // 5. Create Athlete Record
       const { data: athleteData, error: athleteInsertError } = await supabase
         .from("athletes")
         .insert({
           user_id: user.id,
           document_photo_url: photoUrlData.publicUrl,
           enrollment_proof_url: enrollmentUrlData.publicUrl,
+          cnh_cpf_document_url: documentUrlData.publicUrl,
           status: "pending", // or 'approved' depending on your workflow
         })
         .select("id")
@@ -273,99 +287,117 @@ export default function ProfilePage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Cadastro de Atleta</CardTitle>
-                  <CardDescription>Preencha o formulário abaixo para se cadastrar como atleta no JISC.</CardDescription>
+                  <CardDescription>
+                    Para concluir seu cadastro como atleta, precisamos de alguns documentos. Envie os arquivos abaixo para
+                    análise.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleAthleteRegistration} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="photo">Foto com Documento (RG ou CNH)</Label>
-                      <div className="flex items-center gap-4">
-                        <Input id="photo" type="file" accept="image/*" onChange={handlePhotoChange} required />
-                        {photoFile && (
-                          <div className="text-sm text-green-600 flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Arquivo selecionado
-                          </div>
-                        )}
+                  <form onSubmit={handleAthleteRegistration} className="space-y-8">
+                    <div className="space-y-4 rounded-lg border p-4">
+                      <h3 className="text-lg font-semibold">Documento com Foto (CNH ou CPF)</h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="document">Arquivo do Documento</Label>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            id="document"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={handleDocumentChange}
+                            required
+                          />
+                          {documentFile && (
+                            <div className="text-sm text-green-600 flex items-center">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Arquivo selecionado
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Envie uma foto ou PDF do seu documento de identidade (frente e verso).
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500">Envie uma foto sua segurando seu documento de identidade.</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="enrollment">Atestado de Matrícula</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          id="enrollment"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={handleEnrollmentChange}
-                          required
-                        />
-                        {enrollmentFile && (
-                          <div className="text-sm text-green-600 flex items-center">
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Arquivo selecionado
-                          </div>
-                        )}
+                    <div className="space-y-4 rounded-lg border p-4">
+                      <h3 className="text-lg font-semibold">Atestado de Matrícula</h3>
+                      <div className="space-y-2">
+                        <Label htmlFor="enrollment">Arquivo do Atestado</Label>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            id="enrollment"
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={handleEnrollmentChange}
+                            required
+                          />
+                          {enrollmentFile && (
+                            <div className="text-sm text-green-600 flex items-center">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Arquivo selecionado
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          O atestado deve ser recente e comprovar sua matrícula na instituição de ensino.
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500">
-                        Envie um documento que comprove sua matrícula na instituição de ensino.
-                      </p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Modalidades</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-4 rounded-lg border p-4">
+                      <h3 className="text-lg font-semibold">Modalidades</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {sports.map((sport) => (
                           <div
                             key={sport.id}
                             className={`
-                              flex items-center p-2 rounded-md border cursor-pointer
-                              ${selectedSports.includes(sport.id) ? "border-[#0456FC] bg-blue-50" : "border-gray-200"}
+                              flex items-center p-3 rounded-lg border cursor-pointer transition-all
+                              ${
+                                selectedSports.includes(sport.id)
+                                  ? "border-[#0456FC] bg-blue-50 shadow-md"
+                                  : "border-gray-200 hover:bg-gray-50"
+                              }
                             `}
                             onClick={() => handleSportToggle(sport.id)}
                           >
                             <div
                               className={`
-                              w-4 h-4 rounded-sm mr-2 flex items-center justify-center
-                              ${selectedSports.includes(sport.id) ? "bg-[#0456FC]" : "border border-gray-300"}
-                            `}
+                                w-5 h-5 rounded-md mr-3 flex items-center justify-center
+                                ${selectedSports.includes(sport.id) ? "bg-[#0456FC]" : "border border-gray-300"}
+                              `}
                             >
-                              {selectedSports.includes(sport.id) && <CheckCircle className="h-3 w-3 text-white" />}
+                              {selectedSports.includes(sport.id) && <CheckCircle className="h-4 w-4 text-white" />}
                             </div>
-                            <span className="text-sm">
-                              {sport.name}
-                              <span className="text-xs text-gray-500 ml-1">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{sport.name}</span>
+                              <span className="text-xs text-gray-500">
                                 ({sport.type === "sport" ? "Esporte" : "Boteco"})
                               </span>
-                            </span>
+                            </div>
                           </div>
                         ))}
                       </div>
                       {selectedSports.length === 0 && (
-                        <p className="text-xs text-red-500">Selecione pelo menos uma modalidade.</p>
+                        <p className="text-xs text-red-500 mt-2">Selecione pelo menos uma modalidade.</p>
                       )}
                     </div>
 
                     <Button
                       type="submit"
-                      className="w-full bg-[#0456FC]"
+                      className="w-full bg-[#0456FC] hover:bg-[#0345D1] text-white font-bold py-3"
                       disabled={
-                        isSubmitting ||
-                        !photoFile ||
-                        !enrollmentFile ||
-                        selectedSports.length === 0
+                        isSubmitting || !documentFile || !enrollmentFile || selectedSports.length === 0
                       }
                     >
                       {isSubmitting ? (
                         <>
-                          <Clock className="h-4 w-4 mr-2 animate-spin" />
-                          Enviando...
+                          <Clock className="h-5 w-5 mr-2 animate-spin" />
+                          Enviando Documentos...
                         </>
                       ) : (
                         <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Enviar Cadastro
+                          <Upload className="h-5 w-5 mr-2" />
+                          Enviar e Finalizar Cadastro
                         </>
                       )}
                     </Button>
