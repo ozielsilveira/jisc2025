@@ -49,8 +49,9 @@ export default function LoginPage() {
 
         if (!athleticData.university || !athleticData.logo_url) {
           toast({
-            title: "Login realizado com sucesso",
+            title: "Login bem-sucedido!",
             description: "Por favor, complete o cadastro da sua atlética nas configurações.",
+            variant: "success",
           })
           router.push("/dashboard/settings")
           return
@@ -58,8 +59,9 @@ export default function LoginPage() {
       }
 
       toast({
-        title: "Login realizado com sucesso",
-        description: "Você será redirecionado para o dashboard.",
+        title: "Login bem-sucedido!",
+        description: "Você será redirecionado para o painel.",
+        variant: "success",
       })
       router.push("/dashboard")
     } catch (error) {
