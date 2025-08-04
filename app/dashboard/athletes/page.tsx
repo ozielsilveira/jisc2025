@@ -19,18 +19,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
-import { CheckCircle, Copy, FileText, Share2, User, X } from "lucide-react"
+import { CheckCircle, Copy, FileText, Share2, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type Athlete = {
   id: string
   user_id: string
   athletic_id: string
-  photo_url: string
   enrollment_document_url: string
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "sent" | "approved" | "rejected"
   created_at: string
-  updated_at: string
+  cnh_cpf_document_url: string
   user: {
     name: string
     email: string
@@ -41,6 +40,11 @@ type Athlete = {
   athletic: {
     name: string
   }
+  sports: Array<{
+    id: string
+    name: string
+    type: "sport" | "bar_game"
+  }>
 }
 
 type Athletic = {
@@ -70,12 +74,12 @@ export default function AthletesPage() {
   const [athleticLink, setAthleticLink] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedAthleticFilter, setSelectedAthleticFilter] = useState("all")
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("all")
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false)
   const [documentUrl, setDocumentUrl] = useState("")
-  const [documentType, setDocumentType] = useState<"photo" | "enrollment" | null>(null)
+  const [documentType, setDocumentType] = useState<"enrollment" | null>(null)
 
   // For athlete registration
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
   const [selectedSports, setSelectedSports] = useState<string[]>([])
   const [selectedAthleticId, setSelectedAthleticId] = useState<string>("")
@@ -129,7 +133,14 @@ export default function AthletesPage() {
 
         const athletesQuery = supabase
           .from("athletes")
-          .select(`*, user:users(name, email, cpf, phone, gender), athletic:athletics(name)`)
+          .select(`
+            *,
+            user:users(name, email, cpf, phone, gender),
+            athletic:athletics(name),
+            athlete_sports(
+              sport:sports(id, name, type)
+            )
+          `)
           .order("created_at", { ascending: false })
 
         if (userData.role === "admin") {
@@ -143,7 +154,14 @@ export default function AthletesPage() {
 
         const { data: athletesData, error: athletesError } = await athletesQuery
         if (athletesError) throw athletesError
-        setAthletes(athletesData as Athlete[])
+        
+        // Map the data to match our Athlete type
+        const formattedAthletes = athletesData.map(athlete => ({
+          ...athlete,
+          sports: (athlete.athlete_sports as Array<{sport: {id: string, name: string, type: 'sport' | 'bar_game'}}> | null)?.map(as => as.sport) || []
+        }))
+        
+        setAthletes(formattedAthletes as Athlete[])
 
         if (userData.role === "admin") {
           const { data: athleticsData, error: athleticsError } = await supabase
@@ -177,12 +195,6 @@ export default function AthletesPage() {
     fetchData()
   }, [user, toast, searchParams])
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setPhotoFile(e.target.files[0])
-    }
-  }
-
   const handleEnrollmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setEnrollmentFile(e.target.files[0])
@@ -196,7 +208,7 @@ export default function AthletesPage() {
   const handleAthleteRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!user || !photoFile || !enrollmentFile || !selectedAthleticId || selectedSports.length === 0) {
+    if (!user || !enrollmentFile || !selectedAthleticId || selectedSports.length === 0) {
       toast({
         title: "Formulário incompleto",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -208,15 +220,6 @@ export default function AthletesPage() {
     setIsSubmitting(true)
 
     try {
-      // Upload photo
-      const photoFileName = `${user.id}-photo-${Date.now()}`
-      const { error: photoError } = await supabase.storage.from("athlete-documents").upload(photoFileName, photoFile)
-
-      if (photoError) throw photoError
-
-      // Get photo URL
-      const { data: photoUrl } = supabase.storage.from("athlete-documents").getPublicUrl(photoFileName)
-
       // Upload enrollment document
       const enrollmentFileName = `${user.id}-enrollment-${Date.now()}`
       const { error: enrollmentError } = await supabase.storage
@@ -234,8 +237,8 @@ export default function AthletesPage() {
         .insert({
           user_id: user.id,
           athletic_id: selectedAthleticId,
-          photo_url: photoUrl.publicUrl,
           enrollment_document_url: enrollmentUrl.publicUrl,
+          cnh_cpf_document_url: enrollmentUrl.publicUrl,
           status: "pending",
         })
         .select()
@@ -397,15 +400,19 @@ export default function AthletesPage() {
     window.dispatchEvent(new PopStateEvent("popstate"))
   }
 
-  const handleOpenDocumentDialog = (url: string, type: "photo" | "enrollment") => {
+  const handleOpenDocumentDialog = (url: string) => {
     setDocumentUrl(url)
-    setDocumentType(type)
+    setDocumentType("enrollment")
     setDocumentDialogOpen(true)
   }
 
-  const filteredAthletes = athletes.filter((athlete) =>
-    athlete.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredAthletes = athletes.filter((athlete) => {
+    const matchesSearch = athlete.user.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesAthletic = selectedAthleticFilter === "all" || athlete.athletic_id === selectedAthleticFilter
+    const matchesStatus = selectedStatusFilter === "all" || athlete.status === selectedStatusFilter
+    
+    return matchesSearch && matchesAthletic && matchesStatus
+  })
 
   if (isLoading) {
     return (
@@ -417,10 +424,10 @@ export default function AthletesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Atletas</h1>
-          <p className="text-gray-500">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-bold">Atletas</h1>
+          <p className="text-sm md:text-base text-gray-500">
             {userRole === "admin"
               ? "Gerencie todos os atletas do campeonato."
               : userRole === "athletic"
@@ -429,15 +436,18 @@ export default function AthletesPage() {
           </p>
         </div>
         {userRole === "athletic" && (
-          <div className="flex gap-2">
+          <div className="flex justify-end">
             <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => handleShareLink(athleticId!)} className="bg-[#0456FC]">
+                <Button 
+                  onClick={() => handleShareLink(athleticId!)} 
+                  className="bg-[#0456FC] w-full md:w-auto"
+                >
                   <Share2 className="h-4 w-4 mr-2" />
-                  Compartilhar Link
+                  <span className="whitespace-nowrap">Compartilhar Link</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-white">
+              <DialogContent className="bg-white sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>Link de Cadastro</DialogTitle>
                   <DialogDescription>
@@ -463,109 +473,162 @@ export default function AthletesPage() {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          <div className="flex gap-4">
-            <Input placeholder="Buscar por nome..." value={searchTerm} onChange={handleSearchChange} />
-            {userRole === "admin" && (
-              <Select onValueChange={handleAthleticFilterChange} value={selectedAthleticFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por atlética" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Atléticas</SelectItem>
-                  {athletics.map((athletic) => (
-                    <SelectItem key={athletic.id} value={athletic.id}>
-                      {athletic.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {/* Search Input */}
+              <div className="w-full">
+                <Input 
+                  placeholder="Buscar por nome..." 
+                  value={searchTerm} 
+                  onChange={handleSearchChange} 
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Filters Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Athletic Filter - Only for Admin */}
+                {userRole === "admin" && (
+                  <div className="w-full">
+                    <Select 
+                      onValueChange={handleAthleticFilterChange} 
+                      value={selectedAthleticFilter}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filtrar por atlética" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as Atléticas</SelectItem>
+                        {athletics.map((athletic) => (
+                          <SelectItem key={athletic.id} value={athletic.id}>
+                            {athletic.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
+                {/* Status Filter */}
+                <div className="w-full">
+                  <Select 
+                    onValueChange={(value) => setSelectedStatusFilter(value)} 
+                    value={selectedStatusFilter}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="sent">Aguardando Aprovação</SelectItem>
+                      <SelectItem value="approved">Aprovados</SelectItem>
+                      <SelectItem value="rejected">Rejeitados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
           </div>
+            {filteredAthletes.length === 0 ? (
+              <Card className="mt-4">
+                <CardContent className="pt-6">
+                  <p className="text-center text-gray-500">
+                    {userRole === "athletic"
+                      ? "Sua atlética ainda não possui atletas cadastrados."
+                      : "Nenhum atleta encontrado."}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 sm:gap-5 grid-cols-1 lg:grid-cols-2">
+                {filteredAthletes.map((athlete) => (
+                  <Card key={athlete.id}>
+                    <CardHeader className="pb-3 sm:pb-4 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                        <CardTitle className="text-lg sm:text-xl break-words pr-2">
+                          {athlete.user.name}
+                        </CardTitle>
+                        <Badge
+                          className={
+                            `text-xs sm:text-sm whitespace-nowrap ${
+                              athlete.status === "approved"
+                                ? "bg-green-500"
+                                : athlete.status === "rejected"
+                                    ? "bg-red-500"
+                                  : athlete.status === "pending"
+                                    ? "bg-yellow-500"
+                                    : athlete.status === "sent"
+                                      ? "bg-blue-500"
+                                      : "bg-gray-500"
+                            }`
+                          }
+                        >
+                          {athlete.status === "approved" ? "Aprovado"
+                            : athlete.status === "rejected" ? "Rejeitado"
+                            : athlete.status === "pending" ? "Pendente"
+                            : athlete.status === "sent" ? "Aguardando aprovação"
+                            : ""}
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-sm sm:text-base">
+                        <span className="font-medium">Atlética:</span> {athlete.athletic.name}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 sm:space-y-4">
+                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="space-y-1">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">E-mail</p>
+                          <p className="text-sm sm:text-base break-all">{athlete.user.email}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">CPF</p>
+                          <p className="text-sm sm:text-base">{athlete.user.cpf}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Telefone</p>
+                          <p className="text-sm sm:text-base">{athlete.user.phone}</p>
+                        </div>
+                        {athlete.sports && athlete.sports.length > 0 && (
+                          <div className="col-span-2 space-y-1">
+                            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Esportes</p>
+                            <div className="flex flex-wrap gap-1.5 mt-0.5">
+                              {athlete.sports.map((sport) => (
+                                <Badge 
+                                  key={sport.id} 
+                                  variant="outline" 
+                                  className="text-xs sm:text-sm py-0.5 px-2"
+                                >
+                                  {sport.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-          {filteredAthletes.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-center text-gray-500">
-                  {userRole === "athletic"
-                    ? "Sua atlética ainda não possui atletas cadastrados."
-                    : "Nenhum atleta encontrado."}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-              {filteredAthletes.map((athlete) => (
-                <Card key={athlete.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle>{athlete.user.name}</CardTitle>
-                      <Badge
-                        className={
-                          athlete.status === "approved"
-                            ? "bg-green-500"
-                            : athlete.status === "rejected"
-                              ? "bg-red-500"
-                              : "bg-yellow-500"
-                        }
-                      >
-                        {athlete.status === "approved"
-                          ? "Aprovado"
-                          : athlete.status === "rejected"
-                            ? "Rejeitado"
-                            : "Pendente"}
-                      </Badge>
-                    </div>
-                    <CardDescription>Atlética: {athlete.athletic.name}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium">E-mail:</p>
-                        <p className="text-sm">{athlete.user.email}</p>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto"
+                          onClick={() => handleOpenDocumentDialog(athlete.cnh_cpf_document_url)}
+                          disabled={!athlete.cnh_cpf_document_url}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Ver Documento
+                        </Button>
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto"
+                          onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url)}
+                          disabled={!athlete.enrollment_document_url}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          Ver Matrícula
+                        </Button>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">CPF:</p>
-                        <p className="text-sm">{athlete.user.cpf}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Telefone:</p>
-                        <p className="text-sm">{athlete.user.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Gênero:</p>
-                        <p className="text-sm capitalize">
-                          {athlete.user.gender === "male"
-                            ? "Masculino"
-                            : athlete.user.gender === "female"
-                              ? "Feminino"
-                              : athlete.user.gender === "other"
-                                ? "Outro"
-                                : "Prefiro não informar"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-4 pt-2">
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto"
-                        onClick={() => handleOpenDocumentDialog(athlete.photo_url, "photo")}
-                      >
-                        <User className="h-4 w-4 mr-1" />
-                        Ver Foto
-                      </Button>
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto"
-                        onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url, "enrollment")}
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        Ver Atestado
-                      </Button>
-                    </div>
                   </CardContent>
-
-                  {(userRole === "admin" || userRole === "athletic") && athlete.status === "pending" && (
+                  {(userRole === "admin" || userRole === "athletic") && athlete.status === "sent" && (
                     <CardFooter className="flex justify-between">
                       <Button
                         variant="outline"
@@ -593,12 +656,20 @@ export default function AthletesPage() {
       <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
         <DialogContent className="bg-white max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
-              {documentType === "photo" ? "Foto do Atleta" : "Atestado de Matrícula"}
-            </DialogTitle>
+            <DialogTitle>Atestado de Matrícula</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <img src={documentUrl} alt="Documento" className="w-full h-auto" />
+            {documentUrl ? (
+              <div className="flex justify-center">
+                <iframe 
+                  src={documentUrl} 
+                  className="w-full h-[70vh] border rounded-md"
+                  title="Atestado de Matrícula"
+                />
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">Documento não encontrado</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
