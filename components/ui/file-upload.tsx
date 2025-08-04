@@ -42,17 +42,22 @@ export function FileUpload({ id, label, description, existingFileUrl, onFileChan
           <div className="flex items-center justify-between gap-4 rounded-md border p-3">
             <div className="flex items-center gap-3">
               {isImage ? (
-                <Image src={existingFileUrl} alt="Preview" width={40} height={40} className="rounded-md object-cover" />
+                <div className="w-full">
+                  <Image
+                    src={existingFileUrl}
+                    alt="Preview"
+                    width={200}
+                    height={200}
+                    className="rounded-md object-contain"
+                  />
+                </div>
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-500">
-                  PDF
+                <div className="w-full">
+                  <iframe src={existingFileUrl} className="h-96 w-full rounded-md border" />
                 </div>
               )}
-              <span className="text-sm font-medium text-gray-700 truncate max-w-xs">
-                {existingFileUrl.split("/").pop()?.split("?")[0]}
-              </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-4">
               <a href={existingFileUrl} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="sm">
                   <Eye className="h-4 w-4 mr-1" />
