@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/lib/supabase"
-import { CheckCircle, Clock, Copy, FileText, Share2, Upload, User, X } from "lucide-react"
+import { CheckCircle, Copy, FileText, Share2, User, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type Athlete = {
@@ -59,6 +59,7 @@ type Sport = {
 export default function AthletesPage() {
   const { user } = useAuth()
   const { toast } = useToast()
+  const searchParams = useSearchParams()
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [athletics, setAthletics] = useState<Athletic[]>([])
   const [sports, setSports] = useState<Sport[]>([])
@@ -68,6 +69,11 @@ export default function AthletesPage() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [shareLink, setShareLink] = useState("")
   const [athleticLink, setAthleticLink] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedAthleticFilter, setSelectedAthleticFilter] = useState("all")
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false)
+  const [documentUrl, setDocumentUrl] = useState("")
+  const [documentType, setDocumentType] = useState<"photo" | "enrollment" | null>(null)
 
   // For athlete registration
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -80,9 +86,9 @@ export default function AthletesPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return
+      setIsLoading(true)
 
       try {
-        // Get user role
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("role")
@@ -92,18 +98,20 @@ export default function AthletesPage() {
         if (userError) throw userError
         setUserRole(userData.role)
 
-        // Check if user is already an athlete
         const { data: athleteData, error: athleteCheckError } = await supabase
           .from("athletes")
           .select("id")
           .eq("user_id", user.id)
           .maybeSingle()
 
-        if (!athleteCheckError) {
+        if (athleteCheckError) {
+          console.warn("Error checking athlete status:", athleteCheckError)
+        } else {
           setIsUserAthlete(!!athleteData)
         }
 
-        // If user is athletic, get their athletic ID
+        let athleticIdForQuery: string | null = null
+
         if (userData.role === "athletic") {
           const { data: athleticData, error: athleticError } = await supabase
             .from("athletics")
@@ -113,47 +121,41 @@ export default function AthletesPage() {
 
           if (athleticError) {
             console.warn("Error fetching athletic data:", athleticError)
-            toast({
-              title: "Erro ao carregar dados da atlética",
-              description: "Não foi possível carregar as informações da sua atlética.",
-              variant: "destructive",
-            })
           } else if (athleticData) {
+            athleticIdForQuery = athleticData.id
             setAthleticId(athleticData.id)
-            // Generate athletic registration link
             setAthleticLink(`${window.location.origin}/register/athletic/${athleticData.id}`)
           }
         }
 
-        // Fetch athletes based on role
-        let query = supabase
+        const athletesQuery = supabase
           .from("athletes")
-          .select(`
-            *,
-            user:users(name, email, cpf, phone, gender),
-            athletic:athletics(name)
-          `)
+          .select(`*, user:users(name, email, cpf, phone, gender), athletic:athletics(name)`)
           .order("created_at", { ascending: false })
 
-        if (userData.role === "athletic" && athleticId) {
-          query = query.eq("athletic_id", athleticId)
+        if (userData.role === "admin") {
+          const athleticFilter = searchParams.get("athletic")
+          if (athleticFilter && athleticFilter !== "all") {
+            athletesQuery.eq("athletic_id", athleticFilter)
+          }
+        } else if (userData.role === "athletic" && athleticIdForQuery) {
+          athletesQuery.eq("athletic_id", athleticIdForQuery)
         }
 
-        const { data: athletesData, error: athletesError } = await query
-
+        const { data: athletesData, error: athletesError } = await athletesQuery
         if (athletesError) throw athletesError
         setAthletes(athletesData as Athlete[])
 
-        // Fetch athletics for dropdown
-        const { data: athleticsData, error: athleticsError } = await supabase
-          .from("athletics")
-          .select("id, name, university")
-          .order("name")
+        if (userData.role === "admin") {
+          const { data: athleticsData, error: athleticsError } = await supabase
+            .from("athletics")
+            .select("id, name, university")
+            .order("name")
 
-        if (athleticsError) throw athleticsError
-        setAthletics(athleticsData as Athletic[])
+          if (athleticsError) throw athleticsError
+          setAthletics(athleticsData as Athletic[])
+        }
 
-        // Fetch sports for selection
         const { data: sportsData, error: sportsError } = await supabase
           .from("sports")
           .select("id, name, type")
@@ -174,7 +176,7 @@ export default function AthletesPage() {
     }
 
     fetchData()
-  }, [user, toast, athleticId])
+  }, [user, toast, searchParams])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -377,6 +379,35 @@ export default function AthletesPage() {
     }
   }
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }
+
+  const handleAthleticFilterChange = (athleticId: string) => {
+    setSelectedAthleticFilter(athleticId)
+    const params = new URLSearchParams(window.location.search)
+    if (athleticId === "all") {
+      params.delete("athletic")
+    } else {
+      params.set("athletic", athleticId)
+    }
+    window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`)
+    // Manually trigger a re-fetch by updating a dependency in useEffect
+    // A better way might be to use Next.js router to navigate
+    // For now, we rely on searchParams dependency in useEffect
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }
+
+  const handleOpenDocumentDialog = (url: string, type: "photo" | "enrollment") => {
+    setDocumentUrl(url)
+    setDocumentType(type)
+    setDocumentDialogOpen(true)
+  }
+
+  const filteredAthletes = athletes.filter((athlete) =>
+    athlete.user.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -433,19 +464,38 @@ export default function AthletesPage() {
         </TabsList>
 
         <TabsContent value="list" className="space-y-4">
-          {athletes.length === 0 ? (
+          <div className="flex gap-4">
+            <Input placeholder="Buscar por nome..." value={searchTerm} onChange={handleSearchChange} />
+            {userRole === "admin" && (
+              <Select onValueChange={handleAthleticFilterChange} value={selectedAthleticFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por atlética" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Atléticas</SelectItem>
+                  {athletics.map((athletic) => (
+                    <SelectItem key={athletic.id} value={athletic.id}>
+                      {athletic.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {filteredAthletes.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
                 <p className="text-center text-gray-500">
                   {userRole === "athletic"
                     ? "Sua atlética ainda não possui atletas cadastrados."
-                    : "Não há atletas cadastrados."}
+                    : "Nenhum atleta encontrado."}
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-              {athletes.map((athlete) => (
+              {filteredAthletes.map((athlete) => (
                 <Card key={athlete.id}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -497,24 +547,22 @@ export default function AthletesPage() {
                     </div>
 
                     <div className="flex space-x-4 pt-2">
-                      <a
-                        href={athlete.photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:underline"
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto"
+                        onClick={() => handleOpenDocumentDialog(athlete.photo_url, "photo")}
                       >
                         <User className="h-4 w-4 mr-1" />
                         Ver Foto
-                      </a>
-                      <a
-                        href={athlete.enrollment_document_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-sm text-blue-600 hover:underline"
+                      </Button>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto"
+                        onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url, "enrollment")}
                       >
                         <FileText className="h-4 w-4 mr-1" />
                         Ver Atestado
-                      </a>
+                      </Button>
                     </div>
                   </CardContent>
 
@@ -543,6 +591,18 @@ export default function AthletesPage() {
           )}
         </TabsContent>
       </Tabs>
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className="bg-white max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {documentType === "photo" ? "Foto do Atleta" : "Atestado de Matrícula"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <img src={documentUrl} alt="Documento" className="w-full h-auto" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
