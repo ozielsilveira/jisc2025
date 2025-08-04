@@ -53,12 +53,26 @@ export function FileUpload({ id, label, description, existingFileUrl, onFileChan
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <a href={existingFileUrl} target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="sm">
-                  <Eye className="h-4 w-4 mr-1" />
-                  Ver
-                </Button>
-              </a>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                type="button"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (existingFileUrl) {
+                      const url = new URL(existingFileUrl);
+                    if (url) {
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                      } else {
+                      console.error('Não foi possível extrair o caminho do documento da URL');
+                    }
+                  }
+                }}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                Ver
+              </Button>
               <Button variant="destructive" size="sm" onClick={handleRemoveExistingFile}>
                 <Trash2 className="h-4 w-4 mr-1" />
                 Remover

@@ -188,7 +188,7 @@ export default function ProfilePage() {
     if (hasValidation) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos do formulário.",
+        description: "Por favor, preencha todos os campos do formulário antes de enviar.",
         variant: "destructive",
       })
       return
@@ -197,10 +197,28 @@ export default function ProfilePage() {
     setIsSubmitting(true)
 
     const uploadFile = async (file: File, name: string) => {
-      const path = `${user.id}/${name}_${file.name}`
-      const { error } = await supabase.storage.from("documents").upload(path, file, { upsert: true })
-      if (error) throw error
-      return supabase.storage.from("documents").getPublicUrl(path).data.publicUrl
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${user.id}/${name}_${Date.now()}.${fileExt}`
+      
+      // Upload do arquivo usando o cliente autenticado
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (uploadError) {
+        console.error('Erro ao fazer upload do arquivo:', uploadError)
+        throw uploadError
+      }
+      
+      // Obtém a URL pública do arquivo
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath)
+      
+      return publicUrl
     }
 
     try {

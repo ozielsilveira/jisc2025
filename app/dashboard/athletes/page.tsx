@@ -28,7 +28,7 @@ type Athlete = {
   athletic_id: string
   photo_url: string
   enrollment_document_url: string
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "sent" | "approved" | "rejected"
   created_at: string
   updated_at: string
   user: {
@@ -565,7 +565,7 @@ export default function AthletesPage() {
                     </div>
                   </CardContent>
 
-                  {(userRole === "admin" || userRole === "athletic") && athlete.status === "pending" && (
+                  {(userRole === "admin" || userRole === "athletic") && (athlete.status === "pending" || athlete.status === "sent") && (
                     <CardFooter className="flex justify-between">
                       <Button
                         variant="outline"
