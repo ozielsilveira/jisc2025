@@ -213,40 +213,6 @@ export default function Home() {
                   </div>
                 </div>
               </AnimatedSection>
-
-
-              {/* Mini player de vídeo */}
-
-              <video
-                ref={videoRef}
-                src="/jisc2024.MP4"
-                className="w-full h-full object-cover pointer-events-auto"
-                controls
-                loop
-              />
-
-              {/* <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-white/80 text-sm mb-1">Próximo Evento</p>
-                        <h3 className="text-white text-xl font-bold">JISC 2025 - São Paulo</h3>
-                      </div>
-                      <div className="bg-[#07F2F2] text-black px-4 py-2 rounded-lg font-medium text-sm">
-                        03 Out 2025
-                      </div>
-                    </div>
-
-                    <Link href="/videos/jisc-completo">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4 bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm"
-                        aria-label="Assistir vídeo completo do evento"
-                      >
-                        <Play className="w-4 h-4 mr-2" /> Assistir vídeo completo
-                      </Button>
-                    </Link>
-                  </div> */}
             </div>
           </div>
 
@@ -498,7 +464,7 @@ export default function Home() {
               </div>
             </AnimatedSection>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <AnimatedSection delay={0.1}>
                 <div className="rounded-xl overflow-hidden shadow-lg group relative">
                   <Image
@@ -511,24 +477,6 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                     <div className="p-6">
                       <h3 className="text-white font-bold">Competições Esportivas</h3>
-                      <p className="text-white/80 text-sm">JISC 2024</p>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-
-              <AnimatedSection delay={0.2}>
-                <div className="rounded-xl overflow-hidden shadow-lg group relative">
-                  <Image
-                    src="/gallery-2.jpg"
-                    alt="Estudantes participando de jogos de boteco durante o JISC 2024"
-                    width={400}
-                    height={800}
-                    className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                    <div className="p-6">
-                      <h3 className="text-white font-bold">Jogos de Boteco</h3>
                       <p className="text-white/80 text-sm">JISC 2024</p>
                     </div>
                   </div>

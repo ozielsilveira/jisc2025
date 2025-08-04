@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { detectPixKeyType, formatPixKey, getPixKeyTypeLabel } from "@/lib/pix-validator"
 import { Check, Copy, QrCode } from "lucide-react"
 import { useState } from "react"

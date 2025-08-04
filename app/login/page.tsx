@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import Image from "next/image"
 import Link from "next/link"
@@ -49,8 +49,9 @@ export default function LoginPage() {
 
         if (!athleticData.university || !athleticData.logo_url) {
           toast({
-            title: "Login realizado com sucesso",
+            title: "Login bem-sucedido!",
             description: "Por favor, complete o cadastro da sua atlética nas configurações.",
+            variant: "success",
           })
           router.push("/dashboard/settings")
           return
@@ -58,8 +59,9 @@ export default function LoginPage() {
       }
 
       toast({
-        title: "Login realizado com sucesso",
-        description: "Você será redirecionado para o dashboard.",
+        title: "Login bem-sucedido!",
+        description: "Você será redirecionado para o painel.",
+        variant: "success",
       })
       router.push("/dashboard")
     } catch (error) {
