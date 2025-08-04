@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import { AlertTriangle, DollarSign, Edit, Percent, Plus, Trash2, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
