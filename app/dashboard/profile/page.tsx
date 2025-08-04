@@ -70,7 +70,7 @@ export default function ProfilePage() {
             throw athleteError
           }
 
-          if (athleteData && athleteData.status === "approved") {
+          if ((athleteData && athleteData.status === "approved") || (athleteData && athleteData.status === "send")) {
             setIsDocumentRegistered(true)
           } else {
             fetchSports()
@@ -175,7 +175,8 @@ export default function ProfilePage() {
 
   const handleAthleteRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user || !photoFile || !enrollmentFile || !documentFile || selectedSports.length === 0) {
+    console.log("user:", user, "photoFile:", photoFile, "enrollmentFile:", enrollmentFile, "documentFile:", documentFile, "selectedSports:", selectedSports)
+    if (!user || !enrollmentFile || !documentFile || selectedSports.length === 0) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos do formulário.",
@@ -187,10 +188,10 @@ export default function ProfilePage() {
     setIsSubmitting(true)
 
     try {
-      // 1. Upload Photo
-      const photoPath = `${user.id}/document_${photoFile.name}`
-      const { error: photoError } = await supabase.storage.from("documents").upload(photoPath, photoFile)
-      if (photoError) throw photoError
+      // // 1. Upload Photo
+      // const photoPath = `${user.id}/document_${photoFile.name}`
+      // const { error: photoError } = await supabase.storage.from("documents").upload(photoPath, photoFile)
+      // if (photoError) throw photoError
 
       // 2. Upload Enrollment
       const enrollmentPath = `${user.id}/enrollment_${enrollmentFile.name}`
@@ -205,20 +206,20 @@ export default function ProfilePage() {
       if (documentError) throw documentError
 
       // 4. Get public URLs
-      const { data: photoUrlData } = supabase.storage.from("documents").getPublicUrl(photoPath)
+      // const { data: photoUrlData } = supabase.storage.from("documents").getPublicUrl(photoPath)
       const { data: enrollmentUrlData } = supabase.storage.from("documents").getPublicUrl(enrollmentPath)
       const { data: documentUrlData } = supabase.storage.from("documents").getPublicUrl(documentPath)
 
-      // 5. Create Athlete Record
+      // 5. Update Athlete Record
       const { data: athleteData, error: athleteInsertError } = await supabase
         .from("athletes")
-        .insert({
-          user_id: user.id,
-          document_photo_url: photoUrlData.publicUrl,
-          enrollment_proof_url: enrollmentUrlData.publicUrl,
+        .update({
+          enrollment_document_url: enrollmentUrlData.publicUrl,
           cnh_cpf_document_url: documentUrlData.publicUrl,
-          status: "pending", // or 'approved' depending on your workflow
+          status: "send", // or 'approved' depending on your workflow
+          updated_at: new Date().toISOString()
         })
+        .eq('id', user.id) // Update the record where user_id matches
         .select("id")
         .single()
 

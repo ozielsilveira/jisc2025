@@ -38,7 +38,7 @@ export default function DashboardSidebar() {
     {
       category: "Gestão",
       items: [
-        { label: "Ingressos", icon: "Ticket", href: "/dashboard/tickets", roles: ["buyer", "athlete", "athletic", "admin"] },
+        { label: "Ingressos", icon: "Ticket", href: "/dashboard/tickets", roles: [ "athletic", "admin"] },
         { label: "Atletas", icon: "Medal", href: "/dashboard/athletes", roles: ["athletic", "admin"] },
         { label: "Atléticas", icon: "Trophy", href: "/dashboard/athletics", roles: ["admin"] },
         { label: "Modalidades", icon: "Users", href: "/dashboard/sports", roles: ["admin"] },
@@ -47,7 +47,7 @@ export default function DashboardSidebar() {
     {
       category: "Competição",
       items: [
-        { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["athlete", "athletic", "admin"] },
+        { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["athletic", "admin"] },
         { label: "Pacotes", icon: "Package", href: "/dashboard/packages", roles: ["athletic", "admin"] },
         //{ label: "Atribuir Pacotes", icon: "Tag", href: "/dashboard/assign-packages", roles: ["athletic", "admin"] },
       ]
@@ -55,7 +55,7 @@ export default function DashboardSidebar() {
     {
       category: "Financeiro",
       items: [
-        { label: "Pagamentos", icon: "CreditCard", href: "/dashboard/payments", roles: ["athlete", "athletic", "admin"] },
+        { label: "Pagamentos", icon: "CreditCard", href: "/dashboard/payments", roles: ["admin"] },
         { label: "Aprovar PIX", icon: "QrCode", href: "/dashboard/approve-pix", roles: ["admin"] },
         { label: "Configurar PIX", icon: "QrCode", href: "/dashboard/pix-settings", roles: ["athletic"] },
       ]
