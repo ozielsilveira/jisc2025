@@ -33,10 +33,9 @@ type Sport = {
 type Athlete = {
   id: string
   user_id: string
-  photo_url: string
   enrollment_document_url: string
   cnh_cpf_document_url: string
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "sent" | "approved" | "rejected"
 }
 
 export default function ProfilePage() {
@@ -48,11 +47,10 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [athlete, setAthlete] = useState<Athlete | null>(null)
-  const [athleteStatus, setAthleteStatus] = useState<"pending" | "approved" | "rejected" | null>(null)
+  const [athleteStatus, setAthleteStatus] = useState<"pending" | "sent" | "approved" | "rejected" | null>(null)
 
   // Athlete registration state
   const [sports, setSports] = useState<Sport[]>([])
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [selectedSports, setSelectedSports] = useState<string[]>([])
@@ -164,10 +162,6 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
-  const handlePhotoChange = (file: File | null) => {
-    setPhotoFile(file)
-  }
-
   const handleEnrollmentChange = (file: File | null) => {
     setEnrollmentFile(file)
   }
@@ -189,7 +183,6 @@ export default function ProfilePage() {
     const hasValidation =
       (!documentFile && !athlete?.cnh_cpf_document_url) ||
       (!enrollmentFile && !athlete?.enrollment_document_url) ||
-      (!photoFile && !athlete?.photo_url) ||
       selectedSports.length === 0
 
     if (hasValidation) {
@@ -221,11 +214,6 @@ export default function ProfilePage() {
         enrollmentUrl = await uploadFile(enrollmentFile, "enrollment")
       }
 
-      let photoUrl = athlete?.photo_url
-      if (photoFile) {
-        photoUrl = await uploadFile(photoFile, "photo")
-      }
-
       if (athlete) {
         // Update existing athlete
         const { data: updatedAthlete, error: updateError } = await supabase
@@ -233,8 +221,7 @@ export default function ProfilePage() {
           .update({
             cnh_cpf_document_url: documentUrl,
             enrollment_document_url: enrollmentUrl,
-            photo_url: photoUrl,
-            status: "pending",
+            status: "sent",
           })
           .eq("id", athlete.id)
           .select()
@@ -242,7 +229,7 @@ export default function ProfilePage() {
 
         if (updateError) throw updateError
         setAthlete(updatedAthlete)
-        setAthleteStatus("pending")
+        setAthleteStatus("sent")
       } else {
         // Create new athlete
         const { data: newAthlete, error: insertError } = await supabase
@@ -251,8 +238,7 @@ export default function ProfilePage() {
             user_id: user.id,
             cnh_cpf_document_url: documentUrl!,
             enrollment_document_url: enrollmentUrl!,
-            photo_url: photoUrl!,
-            status: "pending",
+            status: "sent",
           })
           .select()
           .single()
@@ -268,7 +254,7 @@ export default function ProfilePage() {
         if (sportsError) throw sportsError
 
         setAthlete(newAthlete)
-        setAthleteStatus("pending")
+        setAthleteStatus("sent")
       }
 
       toast({
@@ -320,7 +306,7 @@ export default function ProfilePage() {
               </Card>
             )}
 
-            {athleteStatus === "pending" && (
+            {(athleteStatus === "pending" || athleteStatus === "sent") && (
               <Card>
                 <CardHeader>
                   <CardTitle>Documentos em Análise</CardTitle>
@@ -343,7 +329,7 @@ export default function ProfilePage() {
                   <CardTitle>Cadastro de Atleta</CardTitle>
                   <CardDescription>
                     {athleteStatus === "rejected" && (
-                      <p className="text-red-500">
+                      <p className="text-red-700 bg-red-100 border border-red-400 rounded-md p-3 my-4">
                         Seu cadastro foi rejeitado. Por favor, verifique os arquivos e envie-os novamente.
                       </p>
                     )}
@@ -369,15 +355,6 @@ export default function ProfilePage() {
                       existingFileUrl={athlete?.enrollment_document_url}
                       onFileChange={handleEnrollmentChange}
                       required={!athlete?.enrollment_document_url}
-                    />
-
-                    <FileUpload
-                      id="photo"
-                      label="Foto de Perfil"
-                      description="Envie uma foto sua para o perfil."
-                      existingFileUrl={athlete?.photo_url}
-                      onFileChange={handlePhotoChange}
-                      required={!athlete?.photo_url}
                     />
 
                     <div className="space-y-4 rounded-lg border p-4">
@@ -425,7 +402,6 @@ export default function ProfilePage() {
                         isSubmitting ||
                         (!documentFile && !athlete?.cnh_cpf_document_url) ||
                         (!enrollmentFile && !athlete?.enrollment_document_url) ||
-                        (!photoFile && !athlete?.photo_url) ||
                         selectedSports.length === 0
                       }
                     >
