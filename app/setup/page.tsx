@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, Database, Loader2, Play, RefreshCw, Settings, Shield, Zap } from "lucide-react"
 
 export default function SetupPage() {

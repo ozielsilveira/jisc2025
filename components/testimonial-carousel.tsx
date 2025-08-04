@@ -127,7 +127,7 @@ export function TestimonialCarousel() {
                                         </div>
 
                                         <p className="text-gray-700 dark:text-gray-300 text-lg italic mb-6">
-                                            "{testimonials[currentIndex].content}"
+                                            &quot;{testimonials[currentIndex].content}&quot;
                                         </p>
 
                                         <div>
