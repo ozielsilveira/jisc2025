@@ -6,6 +6,7 @@ import { CheckCircle, Clock, Upload } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileUpload } from "@/components/ui/file-upload"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -29,6 +30,15 @@ type Sport = {
   type: "sport" | "boteco"
 }
 
+type Athlete = {
+  id: string
+  user_id: string
+  photo_url: string
+  enrollment_document_url: string
+  cnh_cpf_document_url: string
+  status: "pending" | "approved" | "rejected"
+}
+
 export default function ProfilePage() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -37,7 +47,8 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<Partial<UserProfile>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isDocumentRegistered, setIsDocumentRegistered] = useState(false)
+  const [athlete, setAthlete] = useState<Athlete | null>(null)
+  const [athleteStatus, setAthleteStatus] = useState<"pending" | "approved" | "rejected" | null>(null)
 
   // Athlete registration state
   const [sports, setSports] = useState<Sport[]>([])
@@ -61,18 +72,22 @@ export default function ProfilePage() {
         if (data.role === "athlete") {
           const { data: athleteData, error: athleteError } = await supabase
             .from("athletes")
-            .select("id, status")
+            .select("*")
             .eq("user_id", user.id)
             .single()
 
           if (athleteError && athleteError.code !== "PGRST116") {
-            // PGRST116: "No rows found"
             throw athleteError
           }
 
-          if (athleteData && athleteData.status === "approved") {
-            setIsDocumentRegistered(true)
+          if (athleteData) {
+            setAthlete(athleteData)
+            setAthleteStatus(athleteData.status)
+            if (athleteData.status === "rejected" || !athleteData.status) {
+              fetchSports()
+            }
           } else {
+            setAthleteStatus(null)
             fetchSports()
           }
         }
@@ -149,22 +164,16 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setPhotoFile(e.target.files[0])
-    }
+  const handlePhotoChange = (file: File | null) => {
+    setPhotoFile(file)
   }
 
-  const handleEnrollmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setEnrollmentFile(e.target.files[0])
-    }
+  const handleEnrollmentChange = (file: File | null) => {
+    setEnrollmentFile(file)
   }
 
-  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setDocumentFile(e.target.files[0])
-    }
+  const handleDocumentChange = (file: File | null) => {
+    setDocumentFile(file)
   }
 
   const handleSportToggle = (sportId: string) => {
@@ -175,7 +184,15 @@ export default function ProfilePage() {
 
   const handleAthleteRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!user || !photoFile || !enrollmentFile || !documentFile || selectedSports.length === 0) {
+    if (!user) return
+
+    const hasValidation =
+      (!documentFile && !athlete?.cnh_cpf_document_url) ||
+      (!enrollmentFile && !athlete?.enrollment_document_url) ||
+      (!photoFile && !athlete?.photo_url) ||
+      selectedSports.length === 0
+
+    if (hasValidation) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos do formulário.",
@@ -186,58 +203,78 @@ export default function ProfilePage() {
 
     setIsSubmitting(true)
 
+    const uploadFile = async (file: File, name: string) => {
+      const path = `${user.id}/${name}_${file.name}`
+      const { error } = await supabase.storage.from("documents").upload(path, file, { upsert: true })
+      if (error) throw error
+      return supabase.storage.from("documents").getPublicUrl(path).data.publicUrl
+    }
+
     try {
-      // 1. Upload Photo
-      const photoPath = `${user.id}/document_${photoFile.name}`
-      const { error: photoError } = await supabase.storage.from("documents").upload(photoPath, photoFile)
-      if (photoError) throw photoError
+      let documentUrl = athlete?.cnh_cpf_document_url
+      if (documentFile) {
+        documentUrl = await uploadFile(documentFile, "document")
+      }
 
-      // 2. Upload Enrollment
-      const enrollmentPath = `${user.id}/enrollment_${enrollmentFile.name}`
-      const { error: enrollmentError } = await supabase.storage
-        .from("documents")
-        .upload(enrollmentPath, enrollmentFile)
-      if (enrollmentError) throw enrollmentError
+      let enrollmentUrl = athlete?.enrollment_document_url
+      if (enrollmentFile) {
+        enrollmentUrl = await uploadFile(enrollmentFile, "enrollment")
+      }
 
-      // 3. Upload CNH/CPF
-      const documentPath = `${user.id}/document_${documentFile.name}`
-      const { error: documentError } = await supabase.storage.from("documents").upload(documentPath, documentFile)
-      if (documentError) throw documentError
+      let photoUrl = athlete?.photo_url
+      if (photoFile) {
+        photoUrl = await uploadFile(photoFile, "photo")
+      }
 
-      // 4. Get public URLs
-      const { data: photoUrlData } = supabase.storage.from("documents").getPublicUrl(photoPath)
-      const { data: enrollmentUrlData } = supabase.storage.from("documents").getPublicUrl(enrollmentPath)
-      const { data: documentUrlData } = supabase.storage.from("documents").getPublicUrl(documentPath)
+      if (athlete) {
+        // Update existing athlete
+        const { data: updatedAthlete, error: updateError } = await supabase
+          .from("athletes")
+          .update({
+            cnh_cpf_document_url: documentUrl,
+            enrollment_document_url: enrollmentUrl,
+            photo_url: photoUrl,
+            status: "pending",
+          })
+          .eq("id", athlete.id)
+          .select()
+          .single()
 
-      // 5. Create Athlete Record
-      const { data: athleteData, error: athleteInsertError } = await supabase
-        .from("athletes")
-        .insert({
-          user_id: user.id,
-          document_photo_url: photoUrlData.publicUrl,
-          enrollment_proof_url: enrollmentUrlData.publicUrl,
-          cnh_cpf_document_url: documentUrlData.publicUrl,
-          status: "pending", // or 'approved' depending on your workflow
-        })
-        .select("id")
-        .single()
+        if (updateError) throw updateError
+        setAthlete(updatedAthlete)
+        setAthleteStatus("pending")
+      } else {
+        // Create new athlete
+        const { data: newAthlete, error: insertError } = await supabase
+          .from("athletes")
+          .insert({
+            user_id: user.id,
+            cnh_cpf_document_url: documentUrl!,
+            enrollment_document_url: enrollmentUrl!,
+            photo_url: photoUrl!,
+            status: "pending",
+          })
+          .select()
+          .single()
 
-      if (athleteInsertError) throw athleteInsertError
+        if (insertError) throw insertError
 
-      // 5. Link Sports to Athlete
-      const athleteSports = selectedSports.map((sportId) => ({
-        athlete_id: athleteData.id,
-        sport_id: sportId,
-      }))
+        const athleteSports = selectedSports.map((sportId) => ({
+          athlete_id: newAthlete.id,
+          sport_id: sportId,
+        }))
 
-      const { error: sportsError } = await supabase.from("athlete_sports").insert(athleteSports)
-      if (sportsError) throw sportsError
+        const { error: sportsError } = await supabase.from("athlete_sports").insert(athleteSports)
+        if (sportsError) throw sportsError
+
+        setAthlete(newAthlete)
+        setAthleteStatus("pending")
+      }
 
       toast({
         title: "Cadastro enviado com sucesso!",
         description: "Seu cadastro de atleta foi enviado e está aguardando aprovação.",
       })
-      setIsDocumentRegistered(true)
     } catch (error: any) {
       console.error("Error during athlete registration:", error)
       toast({
@@ -268,81 +305,80 @@ export default function ProfilePage() {
       {profile?.role === "athlete" && (
         <Tabs defaultValue="register" className="w-full">
           <TabsContent value="register">
-            {isDocumentRegistered ? (
+            {athleteStatus === "approved" && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Atestado de Matrícula</CardTitle>
+                  <CardTitle>Documentos Aprovados</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col items-center justify-center space-y-4 rounded-md border border-dashed p-8 text-center">
                     <CheckCircle className="h-16 w-16 text-green-500" />
                     <h3 className="text-2xl font-bold">Tudo Certo!</h3>
+                    <p className="text-gray-500">Seus documentos foram aprovados. Bem-vindo ao time!</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {athleteStatus === "pending" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documentos em Análise</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center justify-center space-y-4 rounded-md border border-dashed p-8 text-center">
+                    <Clock className="h-16 w-16 text-yellow-500" />
+                    <h3 className="text-2xl font-bold">Aguardando Aprovação</h3>
                     <p className="text-gray-500">
-                      Seu atestado de matrícula foi enviado com sucesso e está em análise.
+                      Seus documentos foram enviados e estão em análise. Avisaremos quando o processo for concluído.
                     </p>
                   </div>
                 </CardContent>
               </Card>
-            ) : (
+            )}
+
+            {(athleteStatus === "rejected" || athleteStatus === null) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Cadastro de Atleta</CardTitle>
                   <CardDescription>
+                    {athleteStatus === "rejected" && (
+                      <p className="text-red-500">
+                        Seu cadastro foi rejeitado. Por favor, verifique os arquivos e envie-os novamente.
+                      </p>
+                    )}
                     Para concluir seu cadastro como atleta, precisamos de alguns documentos. Envie os arquivos abaixo para
                     análise.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleAthleteRegistration} className="space-y-8">
-                    <div className="space-y-4 rounded-lg border p-4">
-                      <h3 className="text-lg font-semibold">Documento com Foto (CNH ou CPF)</h3>
-                      <div className="space-y-2">
-                        <Label htmlFor="document">Arquivo do Documento</Label>
-                        <div className="flex items-center gap-4">
-                          <Input
-                            id="document"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={handleDocumentChange}
-                            required
-                          />
-                          {documentFile && (
-                            <div className="text-sm text-green-600 flex items-center">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Arquivo selecionado
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Envie uma foto ou PDF do seu documento de identidade (frente e verso).
-                        </p>
-                      </div>
-                    </div>
+                    <FileUpload
+                      id="document"
+                      label="Documento com Foto (CNH ou CPF)"
+                      description="Envie uma foto ou PDF do seu documento de identidade (frente e verso)."
+                      existingFileUrl={athlete?.cnh_cpf_document_url}
+                      onFileChange={handleDocumentChange}
+                      required={!athlete?.cnh_cpf_document_url}
+                    />
 
-                    <div className="space-y-4 rounded-lg border p-4">
-                      <h3 className="text-lg font-semibold">Atestado de Matrícula</h3>
-                      <div className="space-y-2">
-                        <Label htmlFor="enrollment">Arquivo do Atestado</Label>
-                        <div className="flex items-center gap-4">
-                          <Input
-                            id="enrollment"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={handleEnrollmentChange}
-                            required
-                          />
-                          {enrollmentFile && (
-                            <div className="text-sm text-green-600 flex items-center">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Arquivo selecionado
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          O atestado deve ser recente e comprovar sua matrícula na instituição de ensino.
-                        </p>
-                      </div>
-                    </div>
+                    <FileUpload
+                      id="enrollment"
+                      label="Atestado de Matrícula"
+                      description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino."
+                      existingFileUrl={athlete?.enrollment_document_url}
+                      onFileChange={handleEnrollmentChange}
+                      required={!athlete?.enrollment_document_url}
+                    />
+
+                    <FileUpload
+                      id="photo"
+                      label="Foto de Perfil"
+                      description="Envie uma foto sua para o perfil."
+                      existingFileUrl={athlete?.photo_url}
+                      onFileChange={handlePhotoChange}
+                      required={!athlete?.photo_url}
+                    />
 
                     <div className="space-y-4 rounded-lg border p-4">
                       <h3 className="text-lg font-semibold">Modalidades</h3>
@@ -386,7 +422,11 @@ export default function ProfilePage() {
                       type="submit"
                       className="w-full bg-[#0456FC] hover:bg-[#0345D1] text-white font-bold py-3"
                       disabled={
-                        isSubmitting || !documentFile || !enrollmentFile || selectedSports.length === 0
+                        isSubmitting ||
+                        (!documentFile && !athlete?.cnh_cpf_document_url) ||
+                        (!enrollmentFile && !athlete?.enrollment_document_url) ||
+                        (!photoFile && !athlete?.photo_url) ||
+                        selectedSports.length === 0
                       }
                     >
                       {isSubmitting ? (
