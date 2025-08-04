@@ -628,7 +628,6 @@ export default function AthletesPage() {
                         </Button>
                       </div>
                   </CardContent>
-
                   {(userRole === "admin" || userRole === "athletic") && athlete.status === "sent" && (
                     <CardFooter className="flex justify-between">
                       <Button
