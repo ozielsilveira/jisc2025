@@ -195,43 +195,17 @@ export default function PixSettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="pixKeyType">Tipo de Chave PIX</Label>
-                            <Select value={selectedKeyType} onValueChange={handleKeyTypeChange}>
-                                <SelectTrigger id="pixKeyType">
-                                    <SelectValue placeholder="Selecione o tipo de chave" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="cpf">CPF</SelectItem>
-                                    <SelectItem value="cnpj">CNPJ</SelectItem>
-                                    <SelectItem value="email">E-mail</SelectItem>
-                                    <SelectItem value="phone">Telefone</SelectItem>
-                                    <SelectItem value="random">Chave Aleatória</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="pixCode">Chave PIX ({getPixKeyTypeLabel(selectedKeyType)})</Label>
+                            <Label htmlFor="pixCode">Código PIX</Label>
                             <Input
                                 id="pixCode"
                                 value={pixCode}
                                 onChange={handlePixCodeChange}
-                                placeholder={
-                                    selectedKeyType === "cpf"
-                                        ? "000.000.000-00"
-                                        : selectedKeyType === "cnpj"
-                                            ? "00.000.000/0000-00"
-                                            : selectedKeyType === "email"
-                                                ? "exemplo@atletica.com"
-                                                : selectedKeyType === "phone"
-                                                    ? "(00) 00000-0000"
-                                                    : "32 caracteres alfanuméricos"
-                                }
+                                placeholder="32 caracteres alfanuméricos"
                                 className={!isValid && pixCode ? "border-red-500" : ""}
                             />
                             {!isValid && pixCode && (
                                 <p className="text-xs text-red-500">
-                                    Chave PIX inválida. Verifique se o formato está correto para o tipo selecionado.
+                                    Chave PIX inválida. Verifique se o formato está correto.
                                 </p>
                             )}
                         </div>

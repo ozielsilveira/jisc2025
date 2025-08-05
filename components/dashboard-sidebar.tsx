@@ -55,7 +55,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
     {
       category: "Competição",
       items: [
-        { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["athletic", "admin"] },
+        // { label: "Jogos", icon: "Calendar", href: "/dashboard/games", roles: ["admin"] },
         { label: "Pacotes", icon: "Package", href: "/dashboard/packages", roles: ["athletic", "admin"] },
         //{ label: "Atribuir Pacotes", icon: "Tag", href: "/dashboard/assign-packages", roles: ["athletic", "admin"] },
       ]

@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
-import { CheckCircle, Copy, FileText, Share2, X } from "lucide-react"
+import { CheckCircle, Copy, FileText, Share2, Users as UsersIcon, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 type Athlete = {
@@ -425,7 +425,7 @@ export default function AthletesPage() {
   const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center text-center px-4 py-10">
       <div className="p-4 bg-gray-100 rounded-full">
-        <Users className="h-12 w-12 text-gray-400" />
+        <UsersIcon className="h-12 w-12 text-gray-400" />
       </div>
       <h2 className="mt-6 text-2xl font-bold">Nenhum atleta cadastrado</h2>
       <p className="mt-2 text-base text-gray-500">
