@@ -422,6 +422,222 @@ export default function AthletesPage() {
     )
   }
 
+  const renderEmptyState = () => (
+    <div className="flex flex-col items-center justify-center text-center px-4 py-10">
+      <div className="p-4 bg-gray-100 rounded-full">
+        <Users className="h-12 w-12 text-gray-400" />
+      </div>
+      <h2 className="mt-6 text-2xl font-bold">Nenhum atleta cadastrado</h2>
+      <p className="mt-2 text-base text-gray-500">
+        Parece que sua atlética ainda não tem atletas.
+        <br />
+        Compartilhe o link de cadastro para começar a montar sua equipe!
+      </p>
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogTrigger asChild>
+          <Button onClick={() => handleShareLink(athleticId!)} className="mt-6 bg-[#0456FC] w-full md:w-auto">
+            <Share2 className="h-4 w-4 mr-2" />
+            Compartilhar Link de Cadastro
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="bg-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Link de Cadastro</DialogTitle>
+            <DialogDescription>
+              Compartilhe este link com os atletas da sua atlética para que eles possam se cadastrar diretamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <Input value={shareLink} readOnly className="flex-1" />
+            <Button onClick={handleCopyLink} variant="outline" size="icon">
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+  const renderNoResults = () => (
+    <div className="text-center py-10">
+      <p className="text-gray-500">Nenhum atleta encontrado com os filtros aplicados.</p>
+    </div>
+  )
+
+const AthleteCard = ({
+  athlete,
+  userRole,
+  handleOpenDocumentDialog,
+  handleRejectAthlete,
+  handleApproveAthlete,
+}: {
+  athlete: Athlete
+  userRole: string | null
+  handleOpenDocumentDialog: (url: string) => void
+  handleRejectAthlete: (id: string) => void
+  handleApproveAthlete: (id: string) => void
+}) => (
+  <Card>
+    <CardHeader className="pb-3 sm:pb-4 space-y-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+        <CardTitle className="text-lg sm:text-xl break-words pr-2">{athlete.user.name}</CardTitle>
+        <Badge
+          className={`text-xs sm:text-sm whitespace-nowrap ${
+            athlete.status === "approved"
+              ? "bg-green-500"
+              : athlete.status === "rejected"
+                ? "bg-red-500"
+                : athlete.status === "pending"
+                  ? "bg-yellow-500"
+                  : athlete.status === "sent"
+                    ? "bg-blue-500"
+                    : "bg-gray-500"
+          }`}
+        >
+          {athlete.status === "approved"
+            ? "Aprovado"
+            : athlete.status === "rejected"
+              ? "Rejeitado"
+              : athlete.status === "pending"
+                ? "Pendente"
+                : athlete.status === "sent"
+                  ? "Aguardando aprovação"
+                  : ""}
+        </Badge>
+      </div>
+      <CardDescription className="text-sm sm:text-base">
+        <span className="font-medium">Atlética:</span> {athlete.athletic.name}
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-3 sm:space-y-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
+        <div className="space-y-1">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">E-mail</p>
+          <p className="text-sm sm:text-base break-all">{athlete.user.email}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">CPF</p>
+          <p className="text-sm sm:text-base">{athlete.user.cpf}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Telefone</p>
+          <p className="text-sm sm:text-base">{athlete.user.phone}</p>
+        </div>
+        {athlete.sports && athlete.sports.length > 0 && (
+          <div className="col-span-2 space-y-1">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Esportes</p>
+            <div className="flex flex-wrap gap-1.5 mt-0.5">
+              {athlete.sports.map((sport) => (
+                <Badge key={sport.id} variant="outline" className="text-xs sm:text-sm py-0.5 px-2">
+                  {sport.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2 pt-2">
+        <Button
+          variant="link"
+          className="p-0 h-auto"
+          onClick={() => handleOpenDocumentDialog(athlete.cnh_cpf_document_url)}
+          disabled={!athlete.cnh_cpf_document_url}
+        >
+          <FileText className="h-4 w-4 mr-1" />
+          Ver Documento
+        </Button>
+        <Button
+          variant="link"
+          className="p-0 h-auto"
+          onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url)}
+          disabled={!athlete.enrollment_document_url}
+        >
+          <FileText className="h-4 w-4 mr-1" />
+          Ver Matrícula
+        </Button>
+      </div>
+    </CardContent>
+    {(userRole === "admin" || userRole === "athletic") && athlete.status === "sent" && (
+      <CardFooter className="flex justify-between">
+        <Button
+          variant="outline"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={() => handleRejectAthlete(athlete.id)}
+        >
+          <X className="h-4 w-4 mr-1" />
+          Rejeitar
+        </Button>
+        <Button className="bg-green-600 hover:bg-green-700" onClick={() => handleApproveAthlete(athlete.id)}>
+          <CheckCircle className="h-4 w-4 mr-1" />
+          Aprovar
+        </Button>
+      </CardFooter>
+    )}
+  </Card>
+)
+
+  const renderAthletesList = () => (
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <div className="w-full">
+          <Input placeholder="Buscar por nome..." value={searchTerm} onChange={handleSearchChange} className="w-full" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {userRole === "admin" && (
+            <div className="w-full">
+              <Select onValueChange={handleAthleticFilterChange} value={selectedAthleticFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filtrar por atlética" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Atléticas</SelectItem>
+                  {athletics.map((athletic) => (
+                    <SelectItem key={athletic.id} value={athletic.id}>
+                      {athletic.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="w-full">
+            <Select onValueChange={(value) => setSelectedStatusFilter(value)} value={selectedStatusFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="sent">Aguardando Aprovação</SelectItem>
+                <SelectItem value="approved">Aprovados</SelectItem>
+                <SelectItem value="rejected">Rejeitados</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      {filteredAthletes.length === 0 ? (
+        userRole === "athletic" ? (
+          renderEmptyState()
+        ) : (
+          renderNoResults()
+        )
+      ) : (
+        <div className="grid gap-4 sm:gap-5 grid-cols-1 lg:grid-cols-2">
+          {filteredAthletes.map((athlete) => (
+            <AthleteCard
+              key={athlete.id}
+              athlete={athlete}
+              userRole={userRole}
+              handleOpenDocumentDialog={handleOpenDocumentDialog}
+              handleRejectAthlete={handleRejectAthlete}
+              handleApproveAthlete={handleApproveAthlete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -435,14 +651,11 @@ export default function AthletesPage() {
                 : "Cadastre-se como atleta ou veja seu status."}
           </p>
         </div>
-        {userRole === "athletic" && (
+        {userRole === "athletic" && athletes.length > 0 && (
           <div className="flex justify-end">
             <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  onClick={() => handleShareLink(athleticId!)} 
-                  className="bg-[#0456FC] w-full md:w-auto"
-                >
+                <Button onClick={() => handleShareLink(athleticId!)} className="bg-[#0456FC] w-full md:w-auto">
                   <Share2 className="h-4 w-4 mr-2" />
                   <span className="whitespace-nowrap">Compartilhar Link</span>
                 </Button>
@@ -466,209 +679,32 @@ export default function AthletesPage() {
         )}
       </div>
 
-      <Tabs defaultValue={isUserAthlete || userRole === "athletic" || userRole === "admin" ? "list" : "register"}>
-        <TabsList>
-          <TabsTrigger value="list">Lista de Atletas</TabsTrigger>
-          {userRole === "buyer" && !isUserAthlete && <TabsTrigger value="register">Cadastrar como Atleta</TabsTrigger>}
-        </TabsList>
+      {userRole === "athletic" || userRole === "admin" ? (
+        renderAthletesList()
+      ) : (
+        <Tabs defaultValue={isUserAthlete ? "list" : "register"}>
+          <TabsList>
+            <TabsTrigger value="list">Meus Dados de Atleta</TabsTrigger>
+            {!isUserAthlete && <TabsTrigger value="register">Cadastrar como Atleta</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="list">
+            {isUserAthlete ? renderAthletesList() : <p>Você ainda não é um atleta registrado.</p>}
+          </TabsContent>
+        </Tabs>
+      )}
 
-        <TabsContent value="list" className="space-y-4">
-          <div className="space-y-4">
-            <div className="space-y-3">
-              {/* Search Input */}
-              <div className="w-full">
-                <Input 
-                  placeholder="Buscar por nome..." 
-                  value={searchTerm} 
-                  onChange={handleSearchChange} 
-                  className="w-full"
-                />
-              </div>
-              
-              {/* Filters Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Athletic Filter - Only for Admin */}
-                {userRole === "admin" && (
-                  <div className="w-full">
-                    <Select 
-                      onValueChange={handleAthleticFilterChange} 
-                      value={selectedAthleticFilter}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Filtrar por atlética" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas as Atléticas</SelectItem>
-                        {athletics.map((athletic) => (
-                          <SelectItem key={athletic.id} value={athletic.id}>
-                            {athletic.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {/* Status Filter */}
-                <div className="w-full">
-                  <Select 
-                    onValueChange={(value) => setSelectedStatusFilter(value)} 
-                    value={selectedStatusFilter}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Filtrar por status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os status</SelectItem>
-                      <SelectItem value="pending">Pendentes</SelectItem>
-                      <SelectItem value="sent">Aguardando Aprovação</SelectItem>
-                      <SelectItem value="approved">Aprovados</SelectItem>
-                      <SelectItem value="rejected">Rejeitados</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
-            {filteredAthletes.length === 0 ? (
-              <Card className="mt-4">
-                <CardContent className="pt-6">
-                  <p className="text-center text-gray-500">
-                    {userRole === "athletic"
-                      ? "Sua atlética ainda não possui atletas cadastrados."
-                      : "Nenhum atleta encontrado."}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4 sm:gap-5 grid-cols-1 lg:grid-cols-2">
-                {filteredAthletes.map((athlete) => (
-                  <Card key={athlete.id}>
-                    <CardHeader className="pb-3 sm:pb-4 space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                        <CardTitle className="text-lg sm:text-xl break-words pr-2">
-                          {athlete.user.name}
-                        </CardTitle>
-                        <Badge
-                          className={
-                            `text-xs sm:text-sm whitespace-nowrap ${
-                              athlete.status === "approved"
-                                ? "bg-green-500"
-                                : athlete.status === "rejected"
-                                    ? "bg-red-500"
-                                  : athlete.status === "pending"
-                                    ? "bg-yellow-500"
-                                    : athlete.status === "sent"
-                                      ? "bg-blue-500"
-                                      : "bg-gray-500"
-                            }`
-                          }
-                        >
-                          {athlete.status === "approved" ? "Aprovado"
-                            : athlete.status === "rejected" ? "Rejeitado"
-                            : athlete.status === "pending" ? "Pendente"
-                            : athlete.status === "sent" ? "Aguardando aprovação"
-                            : ""}
-                        </Badge>
-                      </div>
-                      <CardDescription className="text-sm sm:text-base">
-                        <span className="font-medium">Atlética:</span> {athlete.athletic.name}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3 sm:space-y-4">
-                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
-                        <div className="space-y-1">
-                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">E-mail</p>
-                          <p className="text-sm sm:text-base break-all">{athlete.user.email}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">CPF</p>
-                          <p className="text-sm sm:text-base">{athlete.user.cpf}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Telefone</p>
-                          <p className="text-sm sm:text-base">{athlete.user.phone}</p>
-                        </div>
-                        {athlete.sports && athlete.sports.length > 0 && (
-                          <div className="col-span-2 space-y-1">
-                            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Esportes</p>
-                            <div className="flex flex-wrap gap-1.5 mt-0.5">
-                              {athlete.sports.map((sport) => (
-                                <Badge 
-                                  key={sport.id} 
-                                  variant="outline" 
-                                  className="text-xs sm:text-sm py-0.5 px-2"
-                                >
-                                  {sport.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto"
-                          onClick={() => handleOpenDocumentDialog(athlete.cnh_cpf_document_url)}
-                          disabled={!athlete.cnh_cpf_document_url}
-                        >
-                          <FileText className="h-4 w-4 mr-1" />
-                          Ver Documento
-                        </Button>
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto"
-                          onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url)}
-                          disabled={!athlete.enrollment_document_url}
-                        >
-                          <FileText className="h-4 w-4 mr-1" />
-                          Ver Matrícula
-                        </Button>
-                      </div>
-                  </CardContent>
-                  {(userRole === "admin" || userRole === "athletic") && athlete.status === "sent" && (
-                    <CardFooter className="flex justify-between">
-                      <Button
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleRejectAthlete(athlete.id)}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Rejeitar
-                      </Button>
-                      <Button
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApproveAthlete(athlete.id)}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Aprovar
-                      </Button>
-                    </CardFooter>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
       <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
         <DialogContent className="bg-white max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Atestado de Matrícula</DialogTitle>
+            <DialogTitle>Visualizador de Documento</DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             {documentUrl ? (
               <div className="flex justify-center">
-                <iframe 
-                  src={documentUrl} 
-                  className="w-full h-[70vh] border rounded-md"
-                  title="Atestado de Matrícula"
-                />
+                <iframe src={documentUrl} className="w-full h-[70vh] border rounded-md" title="Documento" />
               </div>
             ) : (
-              <p className="text-center text-gray-500">Documento não encontrado</p>
+              <p className="text-center text-gray-500">Documento não encontrado.</p>
             )}
           </div>
         </DialogContent>
