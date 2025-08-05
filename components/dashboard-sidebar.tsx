@@ -1,8 +1,8 @@
 "use client"
 
+import type React from "react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { useTheme } from "@/contexts/theme-context"
 import { supabase } from "@/lib/supabase"
 import * as Icons from "lucide-react"
 import Link from "next/link"
@@ -11,18 +11,26 @@ import { useEffect, useState } from "react"
 
 type UserRole = "buyer" | "athlete" | "athletic" | "admin"
 
-export default function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isMobileMenuOpen: boolean
+  setIsMobileMenuOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: DashboardSidebarProps) {
   const { user, signOut } = useAuth()
   const [userRole, setUserRole] = useState<UserRole | null>(null)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
 
-  // Fetch user role
   useEffect(() => {
     const fetchUserRole = async () => {
       if (!user) return
-      const { data, error } = await supabase.from("users").select("role").eq("id", user.id).single()
-      if (!error) setUserRole(data.role as UserRole)
+      try {
+        const { data, error } = await supabase.from("users").select("role").eq("id", user.id).single()
+        if (error) throw error
+        setUserRole(data.role as UserRole)
+      } catch (error) {
+        console.error("Error fetching user role:", error)
+      }
     }
     fetchUserRole()
   }, [user])
@@ -128,24 +136,34 @@ export default function DashboardSidebar() {
           variant="outline"
           size="icon"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-white"
+          className="bg-white shadow-lg"
         >
           {isMobileMenuOpen ? <Icons.X className="h-5 w-5" /> : <Icons.Menu className="h-5 w-5" />}
         </Button>
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar with Backdrop */}
       <div
-        className={`fixed inset-0 z-40 transform transition-transform duration-300 ease-in-out md:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ease-in-out md:hidden ${
+          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
       >
-        <SidebarContent />
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}></div>
+        {/* Sidebar */}
+        <div
+          className={`relative z-10 h-full w-64 transform bg-white transition-transform duration-300 ease-in-out ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <SidebarContent />
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:block w-64 flex-shrink-0 h-screen sticky top-0">
+      <aside className="hidden md:block w-64 flex-shrink-0 h-screen sticky top-0 shadow-lg">
         <SidebarContent />
-      </div>
+      </aside>
     </>
   )
 }
