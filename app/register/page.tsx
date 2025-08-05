@@ -123,51 +123,53 @@ export default function RegisterPage() {
       return false
     }
 
-    // Validação do CPF (formato e dígitos verificadores)
-    const cpf = formData.cpf.replace(/[^\d]/g, "")
-    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
-      toast({
-        title: "CPF inválido",
-        description: "O CPF deve conter 11 dígitos e não pode ter todos os números iguais.",
-        variant: "destructive",
-      })
-      return false
-    }
+    if (formData.role !== "athletic") {
+      // Validação do CPF (formato e dígitos verificadores)
+      const cpf = formData.cpf.replace(/[^\d]/g, "")
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+        toast({
+          title: "CPF inválido",
+          description: "O CPF deve conter 11 dígitos e não pode ter todos os números iguais.",
+          variant: "destructive",
+        })
+        return false
+      }
 
-    // Validação dos dígitos verificadores do CPF
-    let sum = 0
-    let remainder
-    for (let i = 1; i <= 9; i++) {
-      sum += parseInt(cpf.substring(i - 1, i)) * (11 - i)
-    }
-    remainder = (sum * 10) % 11
-    if (remainder === 10 || remainder === 11) {
-      remainder = 0
-    }
-    if (remainder !== parseInt(cpf.substring(9, 10))) {
-      toast({
-        title: "CPF inválido",
-        description: "O CPF informado não é válido. Verifique os dígitos.",
-        variant: "destructive",
-      })
-      return false
-    }
+      // Validação dos dígitos verificadores do CPF
+      let sum = 0
+      let remainder
+      for (let i = 1; i <= 9; i++) {
+        sum += parseInt(cpf.substring(i - 1, i)) * (11 - i)
+      }
+      remainder = (sum * 10) % 11
+      if (remainder === 10 || remainder === 11) {
+        remainder = 0
+      }
+      if (remainder !== parseInt(cpf.substring(9, 10))) {
+        toast({
+          title: "CPF inválido",
+          description: "O CPF informado não é válido. Verifique os dígitos.",
+          variant: "destructive",
+        })
+        return false
+      }
 
-    sum = 0
-    for (let i = 1; i <= 10; i++) {
-      sum += parseInt(cpf.substring(i - 1, i)) * (12 - i)
-    }
-    remainder = (sum * 10) % 11
-    if (remainder === 10 || remainder === 11) {
-      remainder = 0
-    }
-    if (remainder !== parseInt(cpf.substring(10, 11))) {
-      toast({
-        title: "CPF inválido",
-        description: "O CPF informado não é válido. Verifique os dígitos.",
-        variant: "destructive",
-      })
-      return false
+      sum = 0
+      for (let i = 1; i <= 10; i++) {
+        sum += parseInt(cpf.substring(i - 1, i)) * (12 - i)
+      }
+      remainder = (sum * 10) % 11
+      if (remainder === 10 || remainder === 11) {
+        remainder = 0
+      }
+      if (remainder !== parseInt(cpf.substring(10, 11))) {
+        toast({
+          title: "CPF inválido",
+          description: "O CPF informado não é válido. Verifique os dígitos.",
+          variant: "destructive",
+        })
+        return false
+      }
     }
 
     // Validação de seleção de atlética e pacote
@@ -396,18 +398,20 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                name="cpf"
-                type="text"
-                placeholder="000.000.000-00"
-                value={formData.cpf}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            {formData.role !== "athletic" && (
+              <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  name="cpf"
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                  required={formData.role !== "athletic"}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
