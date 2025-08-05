@@ -46,7 +46,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
     {
       category: "Gestão",
       items: [
-        { label: "Ingressos", icon: "Ticket", href: "/dashboard/tickets", roles: [ "athletic", "admin"] },
+        // { label: "Ingressos", icon: "Ticket", href: "/dashboard/tickets", roles: [ "athletic", "admin"] },
         { label: "Atletas", icon: "Medal", href: "/dashboard/athletes", roles: ["athletic", "admin"] },
         { label: "Atléticas", icon: "Trophy", href: "/dashboard/athletics", roles: ["admin"] },
         { label: "Modalidades", icon: "Users", href: "/dashboard/sports", roles: ["admin"] },
