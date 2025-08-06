@@ -223,7 +223,7 @@ export default function AthleticsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4'>
+        <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2'>
           {athletics.map((athletic) => (
             <Card key={athletic.id}>
               <CardHeader className='pb-2'>
