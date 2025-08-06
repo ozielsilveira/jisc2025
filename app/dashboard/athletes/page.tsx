@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
-import { CheckCircle, Copy, FileText, Share2, UsersIcon, UsersIcon, X } from 'lucide-react'
+import { CheckCircle, Copy, FileText, Share2, UsersIcon, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 type Athlete = {
