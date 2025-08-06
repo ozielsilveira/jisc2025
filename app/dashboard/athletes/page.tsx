@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -69,8 +68,6 @@ export default function AthletesPage() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [athleticId, setAthleticId] = useState<string | null>(null)
-  const [shareDialogOpen, setShareDialogOpen] = useState(false)
-  const [shareLink, setShareLink] = useState('')
   const [athleticLink, setAthleticLink] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedAthleticFilter, setSelectedAthleticFilter] = useState('all')
@@ -90,14 +87,12 @@ export default function AthletesPage() {
     const fetchData = async () => {
       if (!user) return
       setIsLoading(true)
-
       try {
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('role')
           .eq('id', user.id)
           .single()
-
         if (userError) throw userError
         setUserRole(userData.role)
 
@@ -114,7 +109,6 @@ export default function AthletesPage() {
         }
 
         let athleticIdForQuery: string | null = null
-
         if (userData.role === 'athletic') {
           const { data: athleticData, error: athleticError } = await supabase
             .from('athletics')
@@ -175,7 +169,6 @@ export default function AthletesPage() {
             .from('athletics')
             .select('id, name, university')
             .order('name')
-
           if (athleticsError) throw athleticsError
           setAthletics(athleticsData as Athletic[])
         }
@@ -184,7 +177,6 @@ export default function AthletesPage() {
           .from('sports')
           .select('id, name, type')
           .order('name')
-
         if (sportsError) throw sportsError
         setSports(sportsData as Sport[])
       } catch (error) {
@@ -214,7 +206,6 @@ export default function AthletesPage() {
 
   const handleAthleteRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!user || !enrollmentFile || !selectedAthleticId || selectedSports.length === 0) {
       toast({
         title: 'Formulário incompleto',
@@ -225,7 +216,6 @@ export default function AthletesPage() {
     }
 
     setIsSubmitting(true)
-
     try {
       // Upload enrollment document
       const enrollmentFileName = `${user.id}-enrollment-${Date.now()}`
@@ -263,7 +253,6 @@ export default function AthletesPage() {
       }))
 
       const { error: sportsError } = await supabase.from('athlete_sports').insert(athleteSports)
-
       if (sportsError) throw sportsError
 
       toast({
@@ -305,7 +294,6 @@ export default function AthletesPage() {
   const handleApproveAthlete = async (athleteId: string) => {
     try {
       const { error } = await supabase.from('athletes').update({ status: 'approved' }).eq('id', athleteId)
-
       if (error) throw error
 
       toast({
@@ -330,7 +318,6 @@ export default function AthletesPage() {
   const handleRejectAthlete = async (athleteId: string) => {
     try {
       const { error } = await supabase.from('athletes').update({ status: 'rejected' }).eq('id', athleteId)
-
       if (error) throw error
 
       toast({
@@ -352,39 +339,18 @@ export default function AthletesPage() {
     }
   }
 
-  const handleShareLink = (athleticId: string) => {
-    const link = `${window.location.origin}/register?type=athlete&athletic=${athleticId}`
-    setShareLink(link)
-    setShareDialogOpen(true)
-  }
-
-  const handleCopyLink = async () => {
+  const handleShareLink = async (athleticId: string) => {
     try {
-      await navigator.clipboard.writeText(shareLink)
+      const link = `${window.location.origin}/register?type=athlete&athletic=${athleticId}`
+      await navigator.clipboard.writeText(link)
       toast({
-        title: 'Link copiado',
-        description: 'O link foi copiado para a área de transferência.'
+        title: 'Link copiado!',
+        description: 'O link de cadastro foi copiado para a área de transferência.'
       })
     } catch (error) {
       toast({
         title: 'Erro ao copiar link',
-        description: 'Não foi possível copiar o link.',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const handleCopyAthleticLink = async () => {
-    try {
-      await navigator.clipboard.writeText(athleticLink)
-      toast({
-        title: 'Link copiado',
-        description: 'O link foi copiado para a área de transferência.'
-      })
-    } catch (error) {
-      toast({
-        title: 'Erro ao copiar link',
-        description: 'Não foi possível copiar o link.',
+        description: 'Não foi possível copiar o link. Tente novamente.',
         variant: 'destructive'
       })
     }
@@ -403,9 +369,6 @@ export default function AthletesPage() {
       params.set('athletic', athleticId)
     }
     window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
-    // Manually trigger a re-fetch by updating a dependency in useEffect
-    // A better way might be to use Next.js router to navigate
-    // For now, we rely on searchParams dependency in useEffect
     window.dispatchEvent(new PopStateEvent('popstate'))
   }
 
@@ -419,7 +382,6 @@ export default function AthletesPage() {
     const matchesSearch = athlete.user.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesAthletic = selectedAthleticFilter === 'all' || athlete.athletic_id === selectedAthleticFilter
     const matchesStatus = selectedStatusFilter === 'all' || athlete.status === selectedStatusFilter
-
     return matchesSearch && matchesAthletic && matchesStatus
   })
 
@@ -431,41 +393,29 @@ export default function AthletesPage() {
     )
   }
 
+  const ShareButton = () => (
+    <Button 
+      onClick={() => handleShareLink(athleticId!)} 
+      className='bg-[#0456FC] hover:bg-[#0456FC]/90'
+    >
+      <Share2 className='h-4 w-4 mr-2' />
+      <span className='hidden sm:inline'>Compartilhar Link</span>
+      <span className='sm:hidden'>Compartilhar</span>
+    </Button>
+  )
+
   const renderEmptyState = () => (
-    <div className='flex flex-col items-center justify-center text-center px-4 py-10'>
-      <div className='p-4 bg-gray-100 rounded-full'>
+    <div className='flex flex-col items-center justify-center text-center px-4 py-12'>
+      <div className='p-4 bg-gray-100 rounded-full mb-6'>
         <UsersIcon className='h-12 w-12 text-gray-400' />
       </div>
-      <h2 className='mt-6 text-2xl font-bold'>Nenhum atleta cadastrado</h2>
-      <p className='mt-2 text-base text-gray-500'>
-        Parece que sua atlética ainda não tem atletas.
-        <br />
-        Compartilhe o link de cadastro para começar a montar sua equipe!
+      <h2 className='text-xl sm:text-2xl font-bold mb-2'>Nenhum atleta cadastrado</h2>
+      <p className='text-sm sm:text-base text-gray-500 max-w-md'>
+        Parece que sua atlética ainda não tem atletas. Use o botão "Compartilhar Link" acima para começar a montar sua equipe!
       </p>
-      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogTrigger asChild>
-          <Button onClick={() => handleShareLink(athleticId!)} className='mt-6 bg-[#0456FC] w-full md:w-auto'>
-            <Share2 className='h-4 w-4 mr-2' />
-            Compartilhar Link de Cadastro
-          </Button>
-        </DialogTrigger>
-        <DialogContent className='bg-white sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>Link de Cadastro</DialogTitle>
-            <DialogDescription>
-              Compartilhe este link com os atletas da sua atlética para que eles possam se cadastrar diretamente.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='flex items-center space-x-2'>
-            <Input value={shareLink} readOnly className='flex-1' />
-            <Button onClick={handleCopyLink} variant='outline' size='icon'>
-              <Copy className='h-4 w-4' />
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
+
   const renderNoResults = () => (
     <div className='text-center py-10'>
       <p className='text-gray-500'>Nenhum atleta encontrado com os filtros aplicados.</p>
@@ -485,7 +435,7 @@ export default function AthletesPage() {
     handleRejectAthlete: (id: string) => void
     handleApproveAthlete: (id: string) => void
   }) => (
-    <Card>
+    <Card className='hover:shadow-md transition-shadow'>
       <CardHeader className='pb-3 sm:pb-4 space-y-2'>
         <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2'>
           <CardTitle className='text-lg sm:text-xl break-words pr-2'>{athlete.user.name}</CardTitle>
@@ -532,7 +482,7 @@ export default function AthletesPage() {
             <p className='text-sm sm:text-base'>{athlete.user.phone}</p>
           </div>
           {athlete.sports && athlete.sports.length > 0 && (
-            <div className='col-span-2 space-y-1'>
+            <div className='col-span-full space-y-1'>
               <p className='text-xs sm:text-sm font-medium text-muted-foreground'>Esportes</p>
               <div className='flex flex-wrap gap-1.5 mt-0.5'>
                 {athlete.sports.map((sport) => (
@@ -547,7 +497,7 @@ export default function AthletesPage() {
         <div className='flex flex-wrap gap-2 pt-2'>
           <Button
             variant='link'
-            className='p-0 h-auto'
+            className='p-0 h-auto text-[#0456FC] hover:text-[#0456FC]/80'
             onClick={() => handleOpenDocumentDialog(athlete.cnh_cpf_document_url)}
             disabled={!athlete.cnh_cpf_document_url}
           >
@@ -556,7 +506,7 @@ export default function AthletesPage() {
           </Button>
           <Button
             variant='link'
-            className='p-0 h-auto'
+            className='p-0 h-auto text-[#0456FC] hover:text-[#0456FC]/80'
             onClick={() => handleOpenDocumentDialog(athlete.enrollment_document_url)}
             disabled={!athlete.enrollment_document_url}
           >
@@ -566,16 +516,19 @@ export default function AthletesPage() {
         </div>
       </CardContent>
       {(userRole === 'admin' || userRole === 'athletic') && athlete.status === 'sent' && (
-        <CardFooter className='flex justify-between'>
+        <CardFooter className='flex flex-col sm:flex-row gap-2 sm:justify-between'>
           <Button
             variant='outline'
-            className='text-red-600 hover:text-red-700 hover:bg-red-50'
+            className='w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200'
             onClick={() => handleRejectAthlete(athlete.id)}
           >
             <X className='h-4 w-4 mr-1' />
             Rejeitar
           </Button>
-          <Button className='bg-green-600 hover:bg-green-700' onClick={() => handleApproveAthlete(athlete.id)}>
+          <Button 
+            className='w-full sm:w-auto bg-green-600 hover:bg-green-700' 
+            onClick={() => handleApproveAthlete(athlete.id)}
+          >
             <CheckCircle className='h-4 w-4 mr-1' />
             Aprovar
           </Button>
@@ -585,10 +538,23 @@ export default function AthletesPage() {
   )
 
   const renderAthletesList = () => (
-    <div className='space-y-4'>
-      <div className='space-y-3'>
+    <div className='space-y-6'>
+      {/* Share Button - Mobile: above filters */}
+      {userRole === 'athletic' && (
+        <div className='md:hidden'>
+          <ShareButton />
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className='space-y-4'>
         <div className='w-full'>
-          <Input placeholder='Buscar por nome...' value={searchTerm} onChange={handleSearchChange} className='w-full' />
+          <Input 
+            placeholder='Buscar por nome...' 
+            value={searchTerm} 
+            onChange={handleSearchChange} 
+            className='w-full' 
+          />
         </div>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
           {userRole === 'admin' && (
@@ -624,6 +590,8 @@ export default function AthletesPage() {
           </div>
         </div>
       </div>
+
+      {/* Athletes Grid */}
       {filteredAthletes.length === 0 ? (
         userRole === 'athletic' ? (
           renderEmptyState()
@@ -631,7 +599,7 @@ export default function AthletesPage() {
           renderNoResults()
         )
       ) : (
-        <div className='grid gap-4 sm:gap-5 grid-cols-1 lg:grid-cols-2'>
+        <div className='grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2'>
           {filteredAthletes.map((athlete) => (
             <AthleteCard
               key={athlete.id}
@@ -648,11 +616,12 @@ export default function AthletesPage() {
   )
 
   return (
-    <div className='space-y-6'>
-      <div className='flex flex-col md:flex-row md:justify-between md:items-center gap-4'>
-        <div className='space-y-1'>
-          <h1 className='text-2xl md:text-3xl font-bold'>Atletas</h1>
-          <p className='text-sm md:text-base text-gray-500'>
+    <div className='space-y-6 max-w-7xl mx-auto'>
+      {/* Header with Share Button */}
+      <div className='flex flex-col md:flex-row md:justify-between md:items-start gap-4'>
+        <div className='space-y-2'>
+          <h1 className='text-2xl md:text-3xl font-bold text-gray-900'>Atletas</h1>
+          <p className='text-sm md:text-base text-gray-600'>
             {userRole === 'admin'
               ? 'Gerencie todos os atletas do campeonato.'
               : userRole === 'athletic'
@@ -660,60 +629,62 @@ export default function AthletesPage() {
                 : 'Cadastre-se como atleta ou veja seu status.'}
           </p>
         </div>
-        {userRole === 'athletic' && athletes.length > 0 && (
-          <div className='flex justify-end'>
-            <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleShareLink(athleticId!)} className='bg-[#0456FC] w-full md:w-auto'>
-                  <Share2 className='h-4 w-4 mr-2' />
-                  <span className='whitespace-nowrap'>Compartilhar Link</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className='bg-white sm:max-w-md'>
-                <DialogHeader>
-                  <DialogTitle>Link de Cadastro</DialogTitle>
-                  <DialogDescription>
-                    Compartilhe este link com os atletas da sua atlética para que eles possam se cadastrar diretamente.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className='flex items-center space-x-2'>
-                  <Input value={shareLink} readOnly className='flex-1' />
-                  <Button onClick={handleCopyLink} variant='outline' size='icon'>
-                    <Copy className='h-4 w-4' />
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+        
+        {/* Share Button - Desktop: top right */}
+        {userRole === 'athletic' && (
+          <div className='hidden md:block flex-shrink-0'>
+            <ShareButton />
           </div>
         )}
       </div>
 
+      {/* Content */}
       {userRole === 'athletic' || userRole === 'admin' ? (
         renderAthletesList()
       ) : (
-        <Tabs defaultValue={isUserAthlete ? 'list' : 'register'}>
-          <TabsList>
+        <Tabs defaultValue={isUserAthlete ? 'list' : 'register'} className='w-full'>
+          <TabsList className='grid w-full grid-cols-2'>
             <TabsTrigger value='list'>Meus Dados de Atleta</TabsTrigger>
             {!isUserAthlete && <TabsTrigger value='register'>Cadastrar como Atleta</TabsTrigger>}
           </TabsList>
-          <TabsContent value='list'>
-            {isUserAthlete ? renderAthletesList() : <p>Você ainda não é um atleta registrado.</p>}
+          <TabsContent value='list' className='mt-6'>
+            {isUserAthlete ? (
+              renderAthletesList()
+            ) : (
+              <div className='text-center py-12'>
+                <p className='text-gray-500'>Você ainda não é um atleta registrado.</p>
+              </div>
+            )}
           </TabsContent>
+          {!isUserAthlete && (
+            <TabsContent value='register' className='mt-6'>
+              <div className='text-center py-12'>
+                <p className='text-gray-500'>Formulário de cadastro de atleta seria implementado aqui.</p>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       )}
 
+      {/* Document Dialog */}
       <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
-        <DialogContent className='bg-white max-w-3xl'>
+        <DialogContent className='bg-white max-w-4xl max-h-[90vh]'>
           <DialogHeader>
             <DialogTitle>Visualizador de Documento</DialogTitle>
           </DialogHeader>
-          <div className='mt-4'>
+          <div className='mt-4 flex-1 min-h-0'>
             {documentUrl ? (
-              <div className='flex justify-center'>
-                <iframe src={documentUrl} className='w-full h-[70vh] border rounded-md' title='Documento' />
+              <div className='w-full h-[70vh]'>
+                <iframe 
+                  src={documentUrl} 
+                  className='w-full h-full border rounded-md' 
+                  title='Documento'
+                />
               </div>
             ) : (
-              <p className='text-center text-gray-500'>Documento não encontrado.</p>
+              <div className='flex items-center justify-center h-64'>
+                <p className='text-gray-500'>Documento não encontrado.</p>
+              </div>
             )}
           </div>
         </DialogContent>

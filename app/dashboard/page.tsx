@@ -7,6 +7,7 @@ import { Calendar, Medal, Ticket, Trophy } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 type UserRole = 'buyer' | 'athlete' | 'athletic' | 'admin'
+
 type UserData = {
   id: string
   name: string
@@ -30,7 +31,6 @@ export default function DashboardPage() {
 
       try {
         const { data, error } = await supabase.from('users').select('id, name, role').eq('id', user.id).single()
-
         if (error) throw error
         setUserData(data as UserData)
 
@@ -56,19 +56,12 @@ export default function DashboardPage() {
 
   const fetchAdminStats = async () => {
     try {
-      // Get total athletes
       const { count: athletesCount } = await supabase.from('athletes').select('*', { count: 'exact', head: true })
-
-      // Get total athletics
       const { count: athleticsCount } = await supabase.from('athletics').select('*', { count: 'exact', head: true })
-
-      // Get upcoming games
       const { count: gamesCount } = await supabase
         .from('games')
         .select('*', { count: 'exact', head: true })
         .gte('start_time', new Date().toISOString())
-
-      // Get tickets sold
       const { count: ticketsCount } = await supabase
         .from('ticket_purchases')
         .select('*', { count: 'exact', head: true })
@@ -86,19 +79,14 @@ export default function DashboardPage() {
 
   const fetchAthleticStats = async (athleticId: string) => {
     try {
-      // Get total athletes for this athletic
       const { count: athletesCount } = await supabase
         .from('athletes')
         .select('*', { count: 'exact', head: true })
         .eq('athletic_id', athleticId)
-
-      // Get upcoming games for this athletic
       const { count: gamesCount } = await supabase
         .from('game_participants')
         .select('game_id', { count: 'exact', head: true })
         .eq('athletic_id', athleticId)
-
-      // Get tickets sold with this athletic's referral
       const { count: ticketsCount } = await supabase
         .from('ticket_purchases')
         .select('*', { count: 'exact', head: true })
@@ -117,7 +105,6 @@ export default function DashboardPage() {
 
   const fetchAthleteStats = async (userId: string) => {
     try {
-      // Get athlete ID
       const { data: athleteData } = await supabase
         .from('athletes')
         .select('id, athletic_id')
@@ -126,7 +113,6 @@ export default function DashboardPage() {
 
       if (!athleteData) return
 
-      // Get upcoming games for athlete's sports
       const { data: athleteSports } = await supabase
         .from('athlete_sports')
         .select('sport_id')
@@ -141,7 +127,6 @@ export default function DashboardPage() {
           .select('*', { count: 'exact', head: true })
           .in('sport_id', sportIds)
           .gte('start_time', new Date().toISOString())
-
         gamesCount = count || 0
       }
 
@@ -158,7 +143,6 @@ export default function DashboardPage() {
 
   const fetchBuyerStats = async (userId: string) => {
     try {
-      // Get tickets purchased by this user
       const { count: ticketsCount } = await supabase
         .from('ticket_purchases')
         .select('*', { count: 'exact', head: true })
@@ -184,21 +168,25 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-3xl font-bold'>Dashboard</h1>
-        <p className='text-gray-500'>Bem-vindo, {userData?.name}! Aqui está um resumo das suas informações.</p>
+    <div className='space-y-6 max-w-7xl mx-auto'>
+      {/* Header */}
+      <div className='space-y-2'>
+        <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>Dashboard</h1>
+        <p className='text-gray-600 text-sm sm:text-base'>
+          Bem-vindo, {userData?.name}! Aqui está um resumo das suas informações.
+        </p>
       </div>
 
-      <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-4'>
-        <Card>
+      {/* Stats Grid */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6'>
+        <Card className='hover:shadow-md transition-shadow'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-sm font-medium'>Atletas</CardTitle>
-            <Medal className='h-4 w-4 text-gray-500' />
+            <CardTitle className='text-sm font-medium text-gray-700'>Atletas</CardTitle>
+            <Medal className='h-4 w-4 text-gray-500 flex-shrink-0' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.totalAthletes}</div>
-            <p className='text-xs text-gray-500'>
+            <div className='text-2xl font-bold text-gray-900'>{stats.totalAthletes}</div>
+            <p className='text-xs text-gray-500 mt-1'>
               {userData?.role === 'admin'
                 ? 'Total de atletas cadastrados'
                 : userData?.role === 'athletic'
@@ -208,27 +196,27 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='hover:shadow-md transition-shadow'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-sm font-medium'>Atléticas</CardTitle>
-            <Trophy className='h-4 w-4 text-gray-500' />
+            <CardTitle className='text-sm font-medium text-gray-700'>Atléticas</CardTitle>
+            <Trophy className='h-4 w-4 text-gray-500 flex-shrink-0' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.totalAthletics}</div>
-            <p className='text-xs text-gray-500'>
+            <div className='text-2xl font-bold text-gray-900'>{stats.totalAthletics}</div>
+            <p className='text-xs text-gray-500 mt-1'>
               {userData?.role === 'admin' ? 'Total de atléticas participantes' : 'Sua atlética'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='hover:shadow-md transition-shadow'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-sm font-medium'>Jogos</CardTitle>
-            <Calendar className='h-4 w-4 text-gray-500' />
+            <CardTitle className='text-sm font-medium text-gray-700'>Jogos</CardTitle>
+            <Calendar className='h-4 w-4 text-gray-500 flex-shrink-0' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.upcomingGames}</div>
-            <p className='text-xs text-gray-500'>
+            <div className='text-2xl font-bold text-gray-900'>{stats.upcomingGames}</div>
+            <p className='text-xs text-gray-500 mt-1'>
               {userData?.role === 'admin'
                 ? 'Total de jogos agendados'
                 : userData?.role === 'athletic'
@@ -240,14 +228,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className='hover:shadow-md transition-shadow'>
           <CardHeader className='flex flex-row items-center justify-between pb-2'>
-            <CardTitle className='text-sm font-medium'>Ingressos</CardTitle>
-            <Ticket className='h-4 w-4 text-gray-500' />
+            <CardTitle className='text-sm font-medium text-gray-700'>Ingressos</CardTitle>
+            <Ticket className='h-4 w-4 text-gray-500 flex-shrink-0' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{stats.ticketsSold}</div>
-            <p className='text-xs text-gray-500'>
+            <div className='text-2xl font-bold text-gray-900'>{stats.ticketsSold}</div>
+            <p className='text-xs text-gray-500 mt-1'>
               {userData?.role === 'admin'
                 ? 'Total de ingressos vendidos'
                 : userData?.role === 'athletic'
@@ -258,58 +246,56 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Additional content based on user role */}
-      {userData?.role === 'admin' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Visão Geral do Campeonato</CardTitle>
-            <CardDescription>Informações gerais sobre o andamento do JISC</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Painel administrativo com visão geral do campeonato.</p>
-            {/* Admin-specific content would go here */}
-          </CardContent>
-        </Card>
-      )}
+      {/* Role-specific content */}
+      <div className='space-y-6'>
+        {userData?.role === 'admin' && (
+          <Card className='hover:shadow-md transition-shadow'>
+            <CardHeader>
+              <CardTitle className='text-lg sm:text-xl'>Visão Geral do Campeonato</CardTitle>
+              <CardDescription>Informações gerais sobre o andamento do JISC</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className='text-gray-600'>Painel administrativo com visão geral do campeonato.</p>
+            </CardContent>
+          </Card>
+        )}
 
-      {userData?.role === 'athletic' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Gerenciamento da Atlética</CardTitle>
-            <CardDescription>Informações sobre seus atletas e jogos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Painel de gerenciamento da atlética.</p>
-            {/* Athletic-specific content would go here */}
-          </CardContent>
-        </Card>
-      )}
+        {userData?.role === 'athletic' && (
+          <Card className='hover:shadow-md transition-shadow'>
+            <CardHeader>
+              <CardTitle className='text-lg sm:text-xl'>Gerenciamento da Atlética</CardTitle>
+              <CardDescription>Informações sobre seus atletas e jogos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className='text-gray-600'>Painel de gerenciamento da atlética.</p>
+            </CardContent>
+          </Card>
+        )}
 
-      {userData?.role === 'athlete' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Meus Jogos</CardTitle>
-            <CardDescription>Próximos jogos e modalidades</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Informações sobre seus próximos jogos.</p>
-            {/* Athlete-specific content would go here */}
-          </CardContent>
-        </Card>
-      )}
+        {userData?.role === 'athlete' && (
+          <Card className='hover:shadow-md transition-shadow'>
+            <CardHeader>
+              <CardTitle className='text-lg sm:text-xl'>Meus Jogos</CardTitle>
+              <CardDescription>Próximos jogos e modalidades</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className='text-gray-600'>Informações sobre seus próximos jogos.</p>
+            </CardContent>
+          </Card>
+        )}
 
-      {userData?.role === 'buyer' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Meus Ingressos</CardTitle>
-            <CardDescription>Ingressos comprados para eventos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Detalhes dos seus ingressos para a festa.</p>
-            {/* Buyer-specific content would go here */}
-          </CardContent>
-        </Card>
-      )}
+        {userData?.role === 'buyer' && (
+          <Card className='hover:shadow-md transition-shadow'>
+            <CardHeader>
+              <CardTitle className='text-lg sm:text-xl'>Meus Ingressos</CardTitle>
+              <CardDescription>Ingressos comprados para eventos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className='text-gray-600'>Detalhes dos seus ingressos para a festa.</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }
