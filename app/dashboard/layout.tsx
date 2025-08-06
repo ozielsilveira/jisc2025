@@ -34,10 +34,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ThemeProvider>
       <div className='flex h-screen bg-gray-100 dark:bg-gray-900'>
         <DashboardSidebar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
-        <div className='flex-1 overflow-auto transition-all duration-300 ease-in-out md:ml-64'>
+        <div className='flex-1 flex flex-col overflow-auto transition-all duration-300 ease-in-out'>
           {/* Add a top padding on mobile to account for the fixed header button */}
-          <div className='pt-16 md:pt-0'>
-            <main className='p-4 sm:p-6 lg:p-8'>{children}</main>
+          <div className='flex-grow'>
+            <main className='p-4 sm:p-6 lg:p-8 h-full'>{children}</main>
           </div>
         </div>
       </div>
