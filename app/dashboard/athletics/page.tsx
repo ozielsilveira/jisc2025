@@ -293,7 +293,7 @@ export default function AthleticsPage() {
                   <Label>Link de Referência para Atléticas</Label>
                   <div className="flex items-center">
                     <Input
-                      value={`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`}
+                      value={`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`}
                       readOnly
                       className="pr-10"
                     />
