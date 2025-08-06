@@ -303,7 +303,7 @@ export default function AthleticsPage() {
                       className="ml-[-40px]"
                       onClick={() => {
                         if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(`${window.location.origin}/register?type=athletic&athletic=${athletic.id}`)
+                          navigator.clipboard.writeText(`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`)
                           toast({
                             title: "Link copiado",
                             description: "Link de referência para atlética copiado para a área de transferência.",
