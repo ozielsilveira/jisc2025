@@ -1,37 +1,36 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 
 export function ScrollToSection() {
-    const [activeSection, setActiveSection] = useState<string>("")
+  const [activeSection, setActiveSection] = useState<string>('')
 
-    useEffect(() => {
-        const handleScroll = () => {
-            const sections = document.querySelectorAll("section[id]")
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('section[id]')
 
-            let currentSection = ""
+      let currentSection = ''
 
-            sections.forEach((section) => {
-                const sectionTop = section.getBoundingClientRect().top
-                const sectionHeight = section.clientHeight
+      sections.forEach((section) => {
+        const sectionTop = section.getBoundingClientRect().top
+        const sectionHeight = section.clientHeight
 
-                // If the section is in view (top is less than 100px from the top of the viewport)
-                if (sectionTop <= 100) {
-                    currentSection = section.getAttribute("id") || ""
-                }
-            })
-
-            setActiveSection(currentSection)
+        // If the section is in view (top is less than 100px from the top of the viewport)
+        if (sectionTop <= 100) {
+          currentSection = section.getAttribute('id') || ''
         }
+      })
 
-        window.addEventListener("scroll", handleScroll)
-        handleScroll() // Call once on mount to set initial active section
+      setActiveSection(currentSection)
+    }
 
-        return () => {
-            window.removeEventListener("scroll", handleScroll)
-        }
-    }, [])
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Call once on mount to set initial active section
 
-    return null // This component doesn't render anything visible
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  return null // This component doesn't render anything visible
 }
-

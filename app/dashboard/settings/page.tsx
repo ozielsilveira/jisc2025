@@ -1,23 +1,23 @@
-"use client"
+'use client'
 
-import type React from "react"
+import type React from 'react'
 
-import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { useTheme } from "@/contexts/theme-context"
-import { supabase } from "@/lib/supabase"
-import { Bell, Save } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useAuth } from '@/components/auth-provider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
+import { useTheme } from '@/contexts/theme-context'
+import { supabase } from '@/lib/supabase'
+import { Bell, Save } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 type UserSettings = {
   id: string
-  theme_preference: "light" | "dark" | "system"
+  theme_preference: 'light' | 'dark' | 'system'
   notification_email: boolean
   notification_push: boolean
   language: string
@@ -32,17 +32,17 @@ export default function SettingsPage() {
   const [tableExists, setTableExists] = useState(false)
 
   const [profile, setProfile] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: '',
+    email: '',
+    phone: ''
   })
 
   const [settings, setSettings] = useState<UserSettings>({
-    id: "",
-    theme_preference: "system",
+    id: '',
+    theme_preference: 'system',
     notification_email: true,
     notification_push: true,
-    language: "pt-BR",
+    language: 'pt-BR'
   })
 
   useEffect(() => {
@@ -52,25 +52,25 @@ export default function SettingsPage() {
       try {
         // Fetch user profile
         const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("name, email, phone")
-          .eq("id", user.id)
+          .from('users')
+          .select('name, email, phone')
+          .eq('id', user.id)
           .single()
 
         if (userError) throw userError
 
         setProfile({
-          name: userData.name || "",
-          email: userData.email || "",
-          phone: userData.phone || "",
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || ''
         })
 
         // Check if user_settings table exists
-        const { error: tableCheckError } = await supabase.from("user_settings").select("count").limit(1)
+        const { error: tableCheckError } = await supabase.from('user_settings').select('count').limit(1)
 
         // If table doesn't exist yet, just use default settings
         if (tableCheckError) {
-          console.log("User settings table may not exist yet:", tableCheckError)
+          console.log('User settings table may not exist yet:', tableCheckError)
           setTableExists(false)
           setIsLoading(false)
           return
@@ -80,24 +80,24 @@ export default function SettingsPage() {
 
         // Fetch or create user settings
         const { data: settingsData, error: settingsError } = await supabase
-          .from("user_settings")
-          .select("*")
-          .eq("user_id", user.id)
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', user.id)
           .maybeSingle()
 
         if (settingsError) {
-          if (settingsError.code === "PGRST116") {
+          if (settingsError.code === 'PGRST116') {
             // Settings don't exist yet, create default settings
             const defaultSettings = {
               user_id: user.id,
-              theme_preference: "system",
+              theme_preference: 'system',
               notification_email: true,
               notification_push: true,
-              language: "pt-BR",
+              language: 'pt-BR'
             }
 
             const { data: newSettings, error: createError } = await supabase
-              .from("user_settings")
+              .from('user_settings')
               .insert(defaultSettings)
               .select()
               .single()
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                 theme_preference: newSettings.theme_preference,
                 notification_email: newSettings.notification_email,
                 notification_push: newSettings.notification_push,
-                language: newSettings.language,
+                language: newSettings.language
               })
             }
           } else {
@@ -122,15 +122,15 @@ export default function SettingsPage() {
             theme_preference: settingsData.theme_preference,
             notification_email: settingsData.notification_email,
             notification_push: settingsData.notification_push,
-            language: settingsData.language,
+            language: settingsData.language
           })
         }
       } catch (error) {
-        console.warn("Error fetching user data:", error)
+        console.warn('Error fetching user data:', error)
         toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar suas configurações.",
-          variant: "destructive",
+          title: 'Erro ao carregar dados',
+          description: 'Não foi possível carregar suas configurações.',
+          variant: 'destructive'
         })
       } finally {
         setIsLoading(false)
@@ -149,7 +149,7 @@ export default function SettingsPage() {
     setSettings((prev) => ({ ...prev, [name]: value }))
 
     // Atualizar o tema em tempo real se a configuração for de tema
-    if (name === "theme_preference" && (value === "light" || value === "dark" || value === "system")) {
+    if (name === 'theme_preference' && (value === 'light' || value === 'dark' || value === 'system')) {
       setTheme(value)
     }
   }
@@ -161,25 +161,25 @@ export default function SettingsPage() {
 
     try {
       const { error } = await supabase
-        .from("users")
+        .from('users')
         .update({
           name: profile.name,
-          phone: profile.phone,
+          phone: profile.phone
         })
-        .eq("id", user.id)
+        .eq('id', user.id)
 
       if (error) throw error
 
       toast({
-        title: "Perfil atualizado",
-        description: "Suas informações de perfil foram atualizadas com sucesso.",
+        title: 'Perfil atualizado',
+        description: 'Suas informações de perfil foram atualizadas com sucesso.'
       })
     } catch (error) {
-      console.warn("Error updating profile:", error)
+      console.warn('Error updating profile:', error)
       toast({
-        title: "Erro ao atualizar perfil",
-        description: "Não foi possível salvar suas alterações.",
-        variant: "destructive",
+        title: 'Erro ao atualizar perfil',
+        description: 'Não foi possível salvar suas alterações.',
+        variant: 'destructive'
       })
     } finally {
       setIsSaving(false)
@@ -195,9 +195,9 @@ export default function SettingsPage() {
       // Check if user_settings table exists
       if (!tableExists) {
         toast({
-          title: "Configuração não disponível",
-          description: "A tabela de configurações ainda não foi criada. Execute o setup completo primeiro.",
-          variant: "destructive",
+          title: 'Configuração não disponível',
+          description: 'A tabela de configurações ainda não foi criada. Execute o setup completo primeiro.',
+          variant: 'destructive'
         })
         setIsSaving(false)
         return
@@ -211,44 +211,44 @@ export default function SettingsPage() {
           theme_preference: settings.theme_preference,
           notification_email: settings.notification_email,
           notification_push: settings.notification_push,
-          language: settings.language,
+          language: settings.language
         }
 
-        const { data, error } = await supabase.from("user_settings").insert(newSettings).select().single()
+        const { data, error } = await supabase.from('user_settings').insert(newSettings).select().single()
 
         if (error) throw error
 
         if (data) {
           setSettings((prev) => ({
             ...prev,
-            id: data.id,
+            id: data.id
           }))
         }
       } else {
         // Update existing settings
         const { error } = await supabase
-          .from("user_settings")
+          .from('user_settings')
           .update({
             theme_preference: settings.theme_preference,
             notification_email: settings.notification_email,
             notification_push: settings.notification_push,
-            language: settings.language,
+            language: settings.language
           })
-          .eq("id", settings.id)
+          .eq('id', settings.id)
 
         if (error) throw error
       }
 
       toast({
-        title: "Configurações atualizadas",
-        description: "Suas preferências foram atualizadas com sucesso.",
+        title: 'Configurações atualizadas',
+        description: 'Suas preferências foram atualizadas com sucesso.'
       })
     } catch (error) {
-      console.warn("Error updating settings:", error)
+      console.warn('Error updating settings:', error)
       toast({
-        title: "Erro ao atualizar configurações",
-        description: "Não foi possível salvar suas alterações.",
-        variant: "destructive",
+        title: 'Erro ao atualizar configurações',
+        description: 'Não foi possível salvar suas alterações.',
+        variant: 'destructive'
       })
     } finally {
       setIsSaving(false)
@@ -257,65 +257,65 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-[#0456FC]"></div>
+      <div className='flex h-full items-center justify-center'>
+        <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-[#0456FC]'></div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <div>
-        <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="text-gray-500 dark:text-gray-400">Gerencie suas preferências e informações pessoais.</p>
+        <h1 className='text-3xl font-bold'>Configurações</h1>
+        <p className='text-gray-500 dark:text-gray-400'>Gerencie suas preferências e informações pessoais.</p>
       </div>
 
-      <Tabs defaultValue="profile">
+      <Tabs defaultValue='profile'>
         <TabsList>
-          <TabsTrigger value="profile">Perfil</TabsTrigger>
+          <TabsTrigger value='profile'>Perfil</TabsTrigger>
           {/* <TabsTrigger value="preferences">Preferências</TabsTrigger> */}
-          <TabsTrigger value="notifications">Notificações</TabsTrigger>
+          <TabsTrigger value='notifications'>Notificações</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-4">
+        <TabsContent value='profile' className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>Informações do Perfil</CardTitle>
               <CardDescription>Atualize suas informações pessoais. Seu e-mail não pode ser alterado.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
+            <CardContent className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='name'>Nome Completo</Label>
                 <Input
-                  id="name"
-                  name="name"
+                  id='name'
+                  name='name'
                   value={profile.name}
                   onChange={handleProfileChange}
-                  placeholder="Seu nome completo"
+                  placeholder='Seu nome completo'
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" name="email" value={profile.email} disabled className="bg-muted" />
-                <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado.</p>
+              <div className='space-y-2'>
+                <Label htmlFor='email'>E-mail</Label>
+                <Input id='email' name='email' value={profile.email} disabled className='bg-muted' />
+                <p className='text-xs text-muted-foreground'>O e-mail não pode ser alterado.</p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='phone'>Telefone</Label>
                 <Input
-                  id="phone"
-                  name="phone"
+                  id='phone'
+                  name='phone'
                   value={profile.phone}
                   onChange={handleProfileChange}
-                  placeholder="(00) 00000-0000"
+                  placeholder='(00) 00000-0000'
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={saveProfile} disabled={isSaving} className="flex items-center">
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? "Salvando..." : "Salvar Alterações"}
+              <Button onClick={saveProfile} disabled={isSaving} className='flex items-center'>
+                <Save className='h-4 w-4 mr-2' />
+                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
               </Button>
             </CardFooter>
           </Card>
@@ -368,7 +368,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent> */}
 
-        <TabsContent value="notifications" className="space-y-4">
+        <TabsContent value='notifications' className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>Preferências de Notificação</CardTitle>
@@ -376,42 +376,42 @@ export default function SettingsPage() {
                 Configure como deseja receber notificações sobre eventos e atualizações.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notification_email">Notificações por E-mail</Label>
-                  <p className="text-sm text-muted-foreground">Receba atualizações sobre jogos e eventos por e-mail.</p>
+            <CardContent className='space-y-6'>
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='notification_email'>Notificações por E-mail</Label>
+                  <p className='text-sm text-muted-foreground'>Receba atualizações sobre jogos e eventos por e-mail.</p>
                 </div>
                 <Switch
-                  id="notification_email"
+                  id='notification_email'
                   checked={settings.notification_email}
-                  onCheckedChange={(checked) => handleSettingChange("notification_email", checked)}
+                  onCheckedChange={(checked) => handleSettingChange('notification_email', checked)}
                   disabled={!tableExists}
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notification_push">Notificações Push</Label>
-                  <p className="text-sm text-muted-foreground">
+              <div className='flex items-center justify-between'>
+                <div className='space-y-0.5'>
+                  <Label htmlFor='notification_push'>Notificações Push</Label>
+                  <p className='text-sm text-muted-foreground'>
                     Receba notificações push no navegador sobre atualizações importantes.
                   </p>
                 </div>
                 <Switch
-                  id="notification_push"
+                  id='notification_push'
                   checked={settings.notification_push}
-                  onCheckedChange={(checked) => handleSettingChange("notification_push", checked)}
+                  onCheckedChange={(checked) => handleSettingChange('notification_push', checked)}
                   disabled={!tableExists}
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={saveSettings} disabled={isSaving || !tableExists} className="flex items-center">
-                <Bell className="h-4 w-4 mr-2" />
-                {isSaving ? "Salvando..." : "Salvar Notificações"}
+              <Button onClick={saveSettings} disabled={isSaving || !tableExists} className='flex items-center'>
+                <Bell className='h-4 w-4 mr-2' />
+                {isSaving ? 'Salvando...' : 'Salvar Notificações'}
               </Button>
               {!tableExists && (
-                <p className="text-xs text-destructive ml-4">
+                <p className='text-xs text-destructive ml-4'>
                   A tabela de configurações ainda não foi criada. Execute o setup completo primeiro.
                 </p>
               )}

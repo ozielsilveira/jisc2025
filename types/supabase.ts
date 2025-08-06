@@ -11,7 +11,7 @@ export interface Database {
           cpf: string
           phone: string
           gender: string
-          role: "buyer" | "athlete" | "athletic" | "admin"
+          role: 'buyer' | 'athlete' | 'athletic' | 'admin'
           created_at: string
           updated_at: string
         }
@@ -22,7 +22,7 @@ export interface Database {
           cpf: string
           phone: string
           gender: string
-          role: "buyer" | "athlete" | "athletic" | "admin"
+          role: 'buyer' | 'athlete' | 'athletic' | 'admin'
           created_at?: string
           updated_at?: string
         }
@@ -33,7 +33,7 @@ export interface Database {
           cpf?: string
           phone?: string
           gender?: string
-          role?: "buyer" | "athlete" | "athletic" | "admin"
+          role?: 'buyer' | 'athlete' | 'athletic' | 'admin'
           created_at?: string
           updated_at?: string
         }
@@ -46,7 +46,7 @@ export interface Database {
           photo_url: string
           enrollment_document_url: string
           cnh_cpf_document_url: string
-          status: "pending" | "approved" | "rejected"
+          status: 'pending' | 'approved' | 'rejected'
           created_at: string
           updated_at: string
         }
@@ -57,7 +57,7 @@ export interface Database {
           photo_url: string
           enrollment_document_url: string
           cnh_cpf_document_url: string
-          status?: "pending" | "approved" | "rejected"
+          status?: 'pending' | 'approved' | 'rejected'
           created_at?: string
           updated_at?: string
         }
@@ -68,7 +68,7 @@ export interface Database {
           photo_url?: string
           enrollment_document_url?: string
           cnh_cpf_document_url?: string
-          status?: "pending" | "approved" | "rejected"
+          status?: 'pending' | 'approved' | 'rejected'
           created_at?: string
           updated_at?: string
         }
@@ -112,7 +112,7 @@ export interface Database {
         Row: {
           id: string
           name: string
-          type: "sport" | "bar_game"
+          type: 'sport' | 'bar_game'
           description: string
           created_at: string
           updated_at: string
@@ -120,7 +120,7 @@ export interface Database {
         Insert: {
           id?: string
           name: string
-          type: "sport" | "bar_game"
+          type: 'sport' | 'bar_game'
           description: string
           created_at?: string
           updated_at?: string
@@ -128,7 +128,7 @@ export interface Database {
         Update: {
           id?: string
           name?: string
-          type?: "sport" | "bar_game"
+          type?: 'sport' | 'bar_game'
           description?: string
           created_at?: string
           updated_at?: string
@@ -161,7 +161,7 @@ export interface Database {
           location: string
           start_time: string
           end_time: string
-          status: "scheduled" | "in_progress" | "completed" | "cancelled"
+          status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
           created_at: string
           updated_at: string
         }
@@ -171,7 +171,7 @@ export interface Database {
           location: string
           start_time: string
           end_time: string
-          status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+          status?: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
           created_at?: string
           updated_at?: string
         }
@@ -181,7 +181,7 @@ export interface Database {
           location?: string
           start_time?: string
           end_time?: string
-          status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+          status?: 'scheduled' | 'in_progress' | 'completed' | 'cancelled'
           created_at?: string
           updated_at?: string
         }
@@ -212,7 +212,7 @@ export interface Database {
           name: string
           description: string
           price: number
-          category: "games" | "party" | "combined"
+          category: 'games' | 'party' | 'combined'
           includes_party: boolean
           includes_games: boolean
           discount_percentage: number | null
@@ -224,7 +224,7 @@ export interface Database {
           name: string
           description: string
           price: number
-          category: "games" | "party" | "combined"
+          category: 'games' | 'party' | 'combined'
           includes_party: boolean
           includes_games: boolean
           discount_percentage?: number | null
@@ -236,7 +236,7 @@ export interface Database {
           name?: string
           description?: string
           price?: number
-          category?: "games" | "party" | "combined"
+          category?: 'games' | 'party' | 'combined'
           includes_party?: boolean
           includes_games?: boolean
           discount_percentage?: number | null
@@ -249,7 +249,7 @@ export interface Database {
           id: string
           athlete_id: string
           package_id: string
-          payment_status: "pending" | "completed" | "refunded"
+          payment_status: 'pending' | 'completed' | 'refunded'
           payment_date: string | null
           created_at: string
           updated_at: string
@@ -258,7 +258,7 @@ export interface Database {
           id?: string
           athlete_id: string
           package_id: string
-          payment_status?: "pending" | "completed" | "refunded"
+          payment_status?: 'pending' | 'completed' | 'refunded'
           payment_date?: string | null
           created_at?: string
           updated_at?: string
@@ -267,7 +267,7 @@ export interface Database {
           id?: string
           athlete_id?: string
           package_id?: string
-          payment_status?: "pending" | "completed" | "refunded"
+          payment_status?: 'pending' | 'completed' | 'refunded'
           payment_date?: string | null
           created_at?: string
           updated_at?: string
@@ -315,7 +315,7 @@ export interface Database {
           ticket_id: string
           quantity: number
           total_price: number
-          payment_status: "pending" | "completed" | "refunded"
+          payment_status: 'pending' | 'completed' | 'refunded'
           payment_date: string | null
           qr_code: string
           athletic_referral_id: string | null
@@ -328,7 +328,7 @@ export interface Database {
           ticket_id: string
           quantity: number
           total_price: number
-          payment_status?: "pending" | "completed" | "refunded"
+          payment_status?: 'pending' | 'completed' | 'refunded'
           payment_date?: string | null
           qr_code: string
           athletic_referral_id?: string | null
@@ -341,7 +341,7 @@ export interface Database {
           ticket_id?: string
           quantity?: number
           total_price?: number
-          payment_status?: "pending" | "completed" | "refunded"
+          payment_status?: 'pending' | 'completed' | 'refunded'
           payment_date?: string | null
           qr_code?: string
           athletic_referral_id?: string | null

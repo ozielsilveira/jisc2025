@@ -1,16 +1,22 @@
-"use client"
+'use client'
 
-
-import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
-import { Building, Copy, School, Users } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useAuth } from '@/components/auth-provider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
+import { Building, Copy, School, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 type Athletic = {
   id: string
@@ -32,7 +38,7 @@ export default function AthleticsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [referralLinks, setReferralLinks] = useState<{ [key: string]: string }>({})
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
-  const [registrationLink, setRegistrationLink] = useState("")
+  const [registrationLink, setRegistrationLink] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,25 +47,25 @@ export default function AthleticsPage() {
       try {
         // Get user role
         const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", user.id)
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
           .single()
 
         if (userError) {
-          console.warn("Error fetching user role:", userError)
+          console.warn('Error fetching user role:', userError)
           throw userError
         }
 
-        console.log("User role data:", userData)
+        console.log('User role data:', userData)
         setUserRole(userData.role)
-        console.log("User role:", userRole);
+        console.log('User role:', userRole)
 
         // Fetch athletics
         const { data: athleticsData, error: athleticsError } = await supabase
-          .from("athletics")
-          .select("*")
-          .order("name")
+          .from('athletics')
+          .select('*')
+          .order('name')
 
         if (athleticsError) throw athleticsError
 
@@ -67,17 +73,17 @@ export default function AthleticsPage() {
         const athleticsWithCounts = await Promise.all(
           athleticsData.map(async (athletic) => {
             const { count, error } = await supabase
-              .from("athletes")
-              .select("*", { count: "exact", head: true })
-              .eq("athletic_id", athletic.id)
+              .from('athletes')
+              .select('*', { count: 'exact', head: true })
+              .eq('athletic_id', athletic.id)
 
             return {
               ...athletic,
               _count: {
-                athletes: count || 0,
-              },
+                athletes: count || 0
+              }
             }
-          }),
+          })
         )
 
         setAthletics(athleticsWithCounts as Athletic[])
@@ -89,11 +95,11 @@ export default function AthleticsPage() {
         })
         setReferralLinks(links)
       } catch (error) {
-        console.warn("Error fetching data:", error)
+        console.warn('Error fetching data:', error)
         toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar as atléticas.",
-          variant: "destructive",
+          title: 'Erro ao carregar dados',
+          description: 'Não foi possível carregar as atléticas.',
+          variant: 'destructive'
         })
       } finally {
         setIsLoading(false)
@@ -106,8 +112,8 @@ export default function AthleticsPage() {
   const copyReferralLink = (athleticId: string) => {
     navigator.clipboard.writeText(referralLinks[athleticId])
     toast({
-      title: "Link copiado",
-      description: "Link de referência copiado para a área de transferência.",
+      title: 'Link copiado',
+      description: 'Link de referência copiado para a área de transferência.'
     })
   }
 
@@ -118,60 +124,60 @@ export default function AthleticsPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    document.body.appendChild(textArea)
+    textArea.select()
     try {
-      document.execCommand('copy');
+      document.execCommand('copy')
       toast({
-        title: "Link copiado",
-        description: "Link de registro para atléticas copiado para a área de transferência.",
-      });
+        title: 'Link copiado',
+        description: 'Link de registro para atléticas copiado para a área de transferência.'
+      })
     } catch (err) {
-      console.warn("Erro ao copiar link", err);
+      console.warn('Erro ao copiar link', err)
       toast({
-        title: "Erro ao copiar link",
-        description: "Não foi possível copiar o link para a área de transferência.",
-        variant: "destructive",
-      });
+        title: 'Erro ao copiar link',
+        description: 'Não foi possível copiar o link para a área de transferência.',
+        variant: 'destructive'
+      })
     }
-    document.body.removeChild(textArea);
-  };
+    document.body.removeChild(textArea)
+  }
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-[#0456FC]"></div>
+      <div className='flex h-full items-center justify-center'>
+        <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-[#0456FC]'></div>
       </div>
     )
   }
 
   // Only admin can access this page
-  if (userRole !== "admin") {
+  if (userRole !== 'admin') {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
-        <p className="text-gray-500">Você não tem permissão para acessar esta página.</p>
-        <p className="text-sm text-gray-400 mt-2">Role atual: {userRole || "Não definida"}</p>
+      <div className='flex flex-col items-center justify-center h-full'>
+        <h1 className='text-2xl font-bold mb-2'>Acesso Restrito</h1>
+        <p className='text-gray-500'>Você não tem permissão para acessar esta página.</p>
+        <p className='text-sm text-gray-400 mt-2'>Role atual: {userRole || 'Não definida'}</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className='space-y-6'>
+      <div className='flex justify-between items-center'>
         <div>
-          <h1 className="text-3xl font-bold">Atléticas</h1>
-          <p className="text-gray-500">Visualize as atléticas participantes do campeonato.</p>
+          <h1 className='text-3xl font-bold'>Atléticas</h1>
+          <p className='text-gray-500'>Visualize as atléticas participantes do campeonato.</p>
         </div>
-        {userRole === "admin" && (
-          <div className="ml-auto">
+        {userRole === 'admin' && (
+          <div className='ml-auto'>
             <Button
               onClick={() => setIsLinkDialogOpen(true)}
-              className="flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600"
+              className='flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600'
             >
-              <Copy className="h-4 w-4" />
+              <Copy className='h-4 w-4' />
               Gerar Link de Registro
             </Button>
           </div>
@@ -179,35 +185,31 @@ export default function AthleticsPage() {
       </div>
 
       <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent className="bg-white">
+        <DialogContent className='bg-white'>
           <DialogHeader>
             <DialogTitle>Link de Registro de Atlética</DialogTitle>
             <DialogDescription>
               Copie o link abaixo para compartilhar com a atlética que deseja cadastrar.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
               <Label>Link de Registro</Label>
-              <div className="flex items-center">
-                <Input
-                  value={`${window.location.origin}/register?type=athletic`}
-                  readOnly
-                  className="pr-10"
-                />
+              <div className='flex items-center'>
+                <Input value={`${window.location.origin}/register?type=athletic`} readOnly className='pr-10' />
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="ml-[-40px]"
+                  variant='ghost'
+                  size='icon'
+                  className='ml-[-40px]'
                   onClick={() => copyToClipboard(`${window.location.origin}/register?type=athletic`)}
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className='h-4 w-4' />
                 </Button>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsLinkDialogOpen(false)}>
+            <Button variant='outline' onClick={() => setIsLinkDialogOpen(false)}>
               Fechar
             </Button>
           </DialogFooter>
@@ -216,39 +218,39 @@ export default function AthleticsPage() {
 
       {athletics.length === 0 ? (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-gray-500">Não há atléticas cadastradas no sistema.</p>
+          <CardContent className='pt-6'>
+            <p className='text-center text-gray-500'>Não há atléticas cadastradas no sistema.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+        <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2'>
           {athletics.map((athletic) => (
             <Card key={athletic.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+              <CardHeader className='pb-2'>
+                <div className='flex items-center gap-4'>
+                  <div className='h-16 w-16 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center'>
                     {athletic.logo_url ? (
                       <img
                         src={athletic.logo_url}
                         alt={`Logo da ${athletic.name}`}
-                        className="h-full w-full object-cover"
+                        className='h-full w-full object-cover'
                       />
                     ) : (
-                      <Building className="h-8 w-8 text-gray-400" />
+                      <Building className='h-8 w-8 text-gray-400' />
                     )}
                   </div>
                   <div>
                     <CardTitle>{athletic.name}</CardTitle>
-                    <CardDescription className="flex items-center mt-1">
-                      <School className="h-4 w-4 mr-1" />
+                    <CardDescription className='flex items-center mt-1'>
+                      <School className='h-4 w-4 mr-1' />
                       {athletic.university}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-gray-500" />
+              <CardContent className='space-y-4'>
+                <div className='flex items-center'>
+                  <Users className='h-4 w-4 mr-2 text-gray-500' />
                   <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
                 </div>
 
@@ -289,39 +291,42 @@ export default function AthleticsPage() {
                   </p>
                 </div> */}
 
-                <div className="space-y-2">
+                <div className='space-y-2'>
                   <Label>Link de Referência para Atléticas</Label>
-                  <div className="flex items-center">
+                  <div className='flex items-center'>
                     <Input
                       value={`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`}
                       readOnly
-                      className="pr-10"
+                      className='pr-10'
                     />
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="ml-[-40px]"
+                      variant='ghost'
+                      size='icon'
+                      className='ml-[-40px]'
                       onClick={() => {
                         if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`)
+                          navigator.clipboard.writeText(
+                            `${window.location.origin}/register?type=athlete&athletic=${athletic.id}`
+                          )
                           toast({
-                            title: "Link copiado",
-                            description: "Link de referência para atlética copiado para a área de transferência.",
+                            title: 'Link copiado',
+                            description: 'Link de referência para atlética copiado para a área de transferência.'
                           })
                         } else {
-                          console.warn("Clipboard API não suportada ou indisponível")
+                          console.warn('Clipboard API não suportada ou indisponível')
                           toast({
-                            title: "Erro ao copiar link",
-                            description: "A API de área de transferência não é suportada ou está indisponível neste navegador.",
-                            variant: "destructive",
+                            title: 'Erro ao copiar link',
+                            description:
+                              'A API de área de transferência não é suportada ou está indisponível neste navegador.',
+                            variant: 'destructive'
                           })
                         }
                       }}
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className='h-4 w-4' />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className='text-xs text-gray-500'>
                     Compartilhe este link para cadastro de novos membros da atlética.
                   </p>
                 </div>
