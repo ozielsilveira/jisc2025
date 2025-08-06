@@ -33,7 +33,7 @@ yarn install
 ```
 
 3. Configure as variáveis de ambiente:
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+   Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
 
 ```env
 # Copie o conteúdo do arquivo .env.example e ajuste conforme necessário
@@ -104,4 +104,5 @@ Este projeto está sob a licença [MIT](LICENSE).
 - Seu Nome - [seu-email@exemplo.com]
 
 ---
+
 Desenvolvido com ❤️ usando Next.js e TypeScript
