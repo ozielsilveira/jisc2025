@@ -281,7 +281,6 @@ export default function RegisterPage() {
         const { data: athleteData, error: athleteError } = await supabase.from('athletes').insert({
           user_id: authData.user.id,
           athletic_id: formData.athletic_id,
-          photo_url: '',
           enrollment_document_url: '',
           status: 'pending',
           id: authData.user.id
@@ -404,7 +403,7 @@ export default function RegisterPage() {
                   placeholder='000.000.000-00'
                   value={formData.cpf}
                   onChange={handleChange}
-                  required={formData.role !== 'athletic'}
+                  // required={formData.role !== 'athletic'}
                 />
               </div>
             )}
@@ -460,7 +459,7 @@ export default function RegisterPage() {
                   <SelectContent>
                     {athletics.map((athletic) => (
                       <SelectItem key={athletic.id} value={athletic.id}>
-                        {athletic.name} - {athletic.university}
+                        {athletic.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
