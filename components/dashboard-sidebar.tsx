@@ -61,9 +61,9 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
     {
       category: 'Financeiro',
       items: [
-        { label: 'Pagamentos', icon: 'CreditCard', href: '/dashboard/payments', roles: ['admin'] },
-        { label: 'Aprovar PIX', icon: 'QrCode', href: '/dashboard/approve-pix', roles: ['admin'] },
-        { label: 'Configurar PIX', icon: 'QrCode', href: '/dashboard/pix-settings', roles: ['athletic'] }
+        // { label: 'Pagamentos', icon: 'CreditCard', href: '/dashboard/payments', roles: ['admin'] },
+        // { label: 'Aprovar PIX', icon: 'QrCode', href: '/dashboard/approve-pix', roles: ['admin'] },
+        // { label: 'Configurar PIX', icon: 'QrCode', href: '/dashboard/pix-settings', roles: ['athletic'] }
       ]
     },
     {

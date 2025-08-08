@@ -54,7 +54,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return
-      
+
       try {
         // Fetch user data
         const { data: userInfo, error } = await supabase
@@ -62,7 +62,7 @@ export default function HomePage() {
           .select('id, name, role')
           .eq('id', user.id)
           .single()
-        
+
         if (error) throw error
         setUserData(userInfo as UserData)
 
@@ -75,7 +75,6 @@ export default function HomePage() {
         setIsLoading(false)
       }
     }
-
     fetchData()
   }, [user])
 
@@ -131,7 +130,6 @@ export default function HomePage() {
           featured: false
         }
       ]
-
       setHighlights([...generalHighlights])
     } catch (error) {
       console.warn('Error fetching highlights:', error)
@@ -145,11 +143,9 @@ export default function HomePage() {
         .from('athletes')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'approved')
-
       const { count: athleticsCount } = await supabase
         .from('athletics')
         .select('*', { count: 'exact', head: true })
-
       const { count: sportsCount } = await supabase
         .from('sports')
         .select('*', { count: 'exact', head: true })
@@ -265,7 +261,7 @@ export default function HomePage() {
               {getGreeting()}, {userData?.name}!
             </h1>
             <p className='text-lg sm:text-xl text-blue-100 mb-6 max-w-2xl'>
-              Bem-vindo ao maior campeonato universitário do sul de Santa Catarina. 
+              Bem-vindo ao maior campeonato universitário do sul de Santa Catarina.
               {userData?.role === 'athlete' && ' Mostre seu talento e conquiste sua vitória!'}
               {userData?.role === 'athletic' && ' Gerencie sua equipe e leve-a ao topo!'}
               {userData?.role === 'admin' && ' Administre o campeonato com excelência!'}
@@ -273,11 +269,35 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-        
         {/* Decorative elements */}
         <div className='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full'></div>
         <div className='absolute bottom-0 right-12 -mb-8 w-16 h-16 bg-yellow-300/20 rounded-full'></div>
       </div>
+
+      {/* CTA for Athletes to complete registration */}
+      {userData?.role === 'athlete' && (
+        <Card className='border-2 border-[#0456FC] bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'>
+          <CardContent className='p-6 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-6'>
+            <div className='flex items-center space-x-4'>
+              <Award className='h-10 w-10 text-[#0456FC] flex-shrink-0' />
+              <div>
+                <CardTitle className='text-xl font-bold text-gray-900'>
+                  Complete seu Cadastro de Atleta!
+                </CardTitle>
+                <CardDescription className='text-gray-700 mt-1'>
+                  Para participar das modalidades e competições, finalize seu registro. É rápido e fácil!
+                </CardDescription>
+              </div>
+            </div>
+            <Link href='/dashboard/profile' passHref>
+              <Button className='w-full sm:w-auto bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 px-6 text-base transition-all duration-200 shadow-md'>
+                <Play className='h-5 w-5 mr-2' />
+                Finalizar Cadastro
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Overview */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-6'>
@@ -290,7 +310,6 @@ export default function HomePage() {
             <p className='text-sm text-blue-600'>Atletas Participando</p>
           </CardContent>
         </Card>
-
         <Card className='text-center hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-green-50 to-green-100'>
           <CardContent className='pt-6'>
             <div className='inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-full mb-4'>
@@ -300,7 +319,6 @@ export default function HomePage() {
             <p className='text-sm text-green-600'>Total de Atléticas</p>
           </CardContent>
         </Card>
-
         <Card className='text-center hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-purple-50 to-purple-100'>
           <CardContent className='pt-6'>
             <div className='inline-flex items-center justify-center w-12 h-12 bg-purple-500 rounded-full mb-4'>
@@ -336,9 +354,8 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
-
           <div className='relative overflow-hidden rounded-xl'>
-            <div 
+            <div
               className='flex transition-transform duration-500 ease-in-out'
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
@@ -355,7 +372,7 @@ export default function HomePage() {
                       <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
                       <div className='absolute bottom-0 left-0 right-0 p-6 text-white'>
                         <div className='flex items-center space-x-2 mb-2'>
-                          <Badge 
+                          <Badge
                             className={`${
                               highlight.type === 'game' ? 'bg-green-500' :
                               highlight.type === 'event' ? 'bg-blue-500' :
@@ -391,7 +408,6 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-
           {/* Carousel indicators */}
           <div className='flex justify-center space-x-2'>
             {highlights.map((_, index) => (
@@ -464,7 +480,6 @@ export default function HomePage() {
               </Button>
             </CardContent>
           </Card>
-
           <Card className='hover:shadow-lg transition-shadow border-l-4 border-l-blue-500'>
             <CardHeader>
               <div className='flex items-center space-x-2'>
@@ -495,7 +510,7 @@ export default function HomePage() {
             Obrigado por fazer parte do JISC!
           </h3>
           <p className='text-gray-600 max-w-2xl mx-auto'>
-            Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial 
+            Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial
             do maior campeonato universitário do país. Juntos, fazemos a diferença no esporte universitário.
           </p>
         </CardContent>
