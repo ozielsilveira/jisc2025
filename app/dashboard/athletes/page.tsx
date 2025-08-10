@@ -676,7 +676,7 @@ const AthleteListItem = ({
                 Matrícula
               </Button>
 
-              {userRole === 'athletic' && athlete.status === 'approved' && hasPackage && (
+              {athlete.status === 'approved' && hasPackage && (
                 <Button
                   variant='outline'
                   size='sm'
@@ -688,7 +688,7 @@ const AthleteListItem = ({
                   }`}
                 >
                   <MessageCircle className='h-4 w-4 mr-2' />
-                  WhatsApp
+                  Enviar mensagem 
                 </Button>
               )}
             </div>
