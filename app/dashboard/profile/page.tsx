@@ -1041,7 +1041,7 @@ export default function ProfilePage() {
                                 url={athlete.cnh_cpf_document_url}
                                 label="Documento com foto"
                                 onReplace={handleReplaceDocument}
-                                canReplace={athleteStatus !== "approved"}
+                                canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
                                 fileType="document"
                               />
                             ) : isReplacingDocument ? (
@@ -1094,7 +1094,7 @@ export default function ProfilePage() {
                                 url={athlete.enrollment_document_url}
                                 label="Atestado de matrícula"
                                 onReplace={handleReplaceEnrollment}
-                                canReplace={athleteStatus !== "approved"}
+                                canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
                                 fileType="enrollment"
                               />
                             ) : isReplacingEnrollment ? (
