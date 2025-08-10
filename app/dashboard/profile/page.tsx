@@ -20,6 +20,9 @@ import {
   Eye,
   FileCheck,
   Sparkles,
+  RefreshCw,
+  X,
+  Check,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -69,8 +72,22 @@ const truncateUrl = (url: string, maxLength = 50): string => {
   return `${start}...${end}`
 }
 
-// Component to display uploaded file with enhanced visual feedback
-const UploadedFileDisplay = ({ url, label }: { url: string; label: string }) => {
+// Component to display uploaded file with replacement functionality
+const UploadedFileDisplay = ({
+  url,
+  label,
+  onReplace,
+  isReplacing,
+  canReplace = true,
+  fileType,
+}: {
+  url: string
+  label: string
+  onReplace?: () => void
+  isReplacing?: boolean
+  canReplace?: boolean
+  fileType?: "document" | "enrollment"
+}) => {
   const fileName = url.split("/").pop() || "arquivo"
   const truncatedUrl = truncateUrl(url)
 
@@ -92,16 +109,31 @@ const UploadedFileDisplay = ({ url, label }: { url: string; label: string }) => 
               <p className="text-sm text-green-600 break-all sm:hidden">{fileName}</p>
               <p className="text-sm text-green-600 hidden sm:block">{truncatedUrl}</p>
             </div>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 flex-shrink-0"
-            >
-              <Eye className="h-4 w-4" />
-              <span>Visualizar</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
+            <div className="flex items-center space-x-2">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 flex-shrink-0"
+              >
+                <Eye className="h-4 w-4" />
+                <span>Visualizar</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              {canReplace && onReplace && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onReplace}
+                  disabled={isReplacing}
+                  className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors"
+                >
+                  {isReplacing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  <span>{isReplacing ? "Substituindo..." : "Substituir"}</span>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Success indicator */}
@@ -117,6 +149,94 @@ const UploadedFileDisplay = ({ url, label }: { url: string; label: string }) => 
   )
 }
 
+// Component for file replacement interface
+const FileReplacementInterface = ({
+  label,
+  description,
+  onFileChange,
+  onCancel,
+  onConfirm,
+  selectedFile,
+  isUploading,
+  fileType,
+}: {
+  label: string
+  description: string
+  onFileChange: (file: File | null) => void
+  onCancel: () => void
+  onConfirm: () => void
+  selectedFile: File | null
+  isUploading: boolean
+  fileType: "document" | "enrollment"
+}) => {
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+            <RefreshCw className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h4 className="text-lg font-bold text-blue-800">Substituir {label}</h4>
+            <p className="text-sm text-blue-600">Selecione um novo arquivo para substituir o atual</p>
+          </div>
+        </div>
+
+        <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-blue-200">
+          <FileUpload
+            id={`replace-${fileType}`}
+            label={label}
+            description={description}
+            onFileChange={onFileChange}
+            required={true}
+          />
+        </div>
+
+        {selectedFile && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <Check className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-700">Novo arquivo selecionado: {selectedFile.name}</span>
+            </div>
+            <p className="text-xs text-green-600 mt-1">Tamanho: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isUploading}
+            className="flex-1 sm:flex-none bg-transparent"
+          >
+            <X className="h-4 w-4 mr-2" />
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={onConfirm}
+            disabled={!selectedFile || isUploading}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Confirmar Substituição
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -124,6 +244,13 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [athleteStatus, setAthleteStatus] = useState<"pending" | "sent" | "approved" | "rejected" | null>(null)
+
+  // File replacement state
+  const [isReplacingDocument, setIsReplacingDocument] = useState(false)
+  const [isReplacingEnrollment, setIsReplacingEnrollment] = useState(false)
+  const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null)
+  const [newEnrollmentFile, setNewEnrollmentFile] = useState<File | null>(null)
+  const [isUploadingReplacement, setIsUploadingReplacement] = useState(false)
 
   // Athlete registration state
   const [sports, setSports] = useState<Sport[]>([])
@@ -146,7 +273,6 @@ export default function ProfilePage() {
 
         if (userData.role === "athlete") {
           await fetchSports()
-
           const { data: athleteData, error: athleteError } = await supabase
             .from("athletes")
             .select("*")
@@ -160,7 +286,6 @@ export default function ProfilePage() {
           if (athleteData) {
             setAthlete(athleteData)
             setAthleteStatus(athleteData.status)
-
             const { data: athleteSportsData, error: athleteSportsError } = await supabase
               .from("athlete_sports")
               .select("sport_id")
@@ -191,6 +316,7 @@ export default function ProfilePage() {
         setIsLoading(false)
       }
     }
+
     fetchProfileAndSports()
   }, [user, toast])
 
@@ -206,6 +332,96 @@ export default function ProfilePage() {
         description: "Não foi possível carregar a lista de modalidades.",
         variant: "destructive",
       })
+    }
+  }
+
+  // File replacement handlers
+  const handleReplaceDocument = () => {
+    setIsReplacingDocument(true)
+    setNewDocumentFile(null)
+  }
+
+  const handleReplaceEnrollment = () => {
+    setIsReplacingEnrollment(true)
+    setNewEnrollmentFile(null)
+  }
+
+  const handleCancelReplacement = (type: "document" | "enrollment") => {
+    if (type === "document") {
+      setIsReplacingDocument(false)
+      setNewDocumentFile(null)
+    } else {
+      setIsReplacingEnrollment(false)
+      setNewEnrollmentFile(null)
+    }
+  }
+
+  const handleConfirmReplacement = async (type: "document" | "enrollment") => {
+    if (!user || !athlete) return
+
+    const file = type === "document" ? newDocumentFile : newEnrollmentFile
+    if (!file) return
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUploadingReplacement(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const currentUrl = type === "document" ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
+      const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.message || "Erro ao fazer upload do arquivo.")
+      }
+
+      // Update athlete record
+      const updateData =
+        type === "document" ? { cnh_cpf_document_url: uploadResult.url } : { enrollment_document_url: uploadResult.url }
+
+      const { data: updatedAthlete, error: updateError } = await supabase
+        .from("athletes")
+        .update(updateData)
+        .eq("id", athlete.id)
+        .select()
+        .single()
+
+      if (updateError) throw updateError
+
+      setAthlete(updatedAthlete)
+
+      // Reset replacement state
+      if (type === "document") {
+        setIsReplacingDocument(false)
+        setNewDocumentFile(null)
+      } else {
+        setIsReplacingEnrollment(false)
+        setNewEnrollmentFile(null)
+      }
+
+      toast({
+        title: "Arquivo substituído com sucesso!",
+        description: `Seu ${type === "document" ? "documento" : "atestado de matrícula"} foi atualizado com sucesso.`,
+      })
+    } catch (error: any) {
+      console.error("Error replacing file:", error)
+      toast({
+        title: "Erro ao substituir arquivo",
+        description: error.message || "Não foi possível substituir o arquivo. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploadingReplacement(false)
     }
   }
 
@@ -234,6 +450,32 @@ export default function ProfilePage() {
       return
     }
     setDocumentFile(file)
+  }
+
+  const handleNewDocumentChange = (file: File | null) => {
+    if (file && file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: `O documento excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
+        variant: "destructive",
+      })
+      setNewDocumentFile(null)
+      return
+    }
+    setNewDocumentFile(file)
+  }
+
+  const handleNewEnrollmentChange = (file: File | null) => {
+    if (file && file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: "Arquivo muito grande",
+        description: `O atestado excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
+        variant: "destructive",
+      })
+      setNewEnrollmentFile(null)
+      return
+    }
+    setNewEnrollmentFile(file)
   }
 
   const handleSportToggle = (sportId: string) => {
@@ -312,6 +554,7 @@ export default function ProfilePage() {
           .eq("id", athlete.id)
           .select()
           .single()
+
         if (updateError) throw updateError
         setAthlete(updatedAthlete)
         setAthleteStatus("sent")
@@ -323,6 +566,7 @@ export default function ProfilePage() {
           athlete_id: athlete.id,
           sport_id: sportId,
         }))
+
         const { error: insertSportsError } = await supabase.from("athlete_sports").insert(athleteSports)
         if (insertSportsError) throw insertSportsError
       } else {
@@ -336,20 +580,24 @@ export default function ProfilePage() {
           })
           .select()
           .single()
+
         if (insertError) throw insertError
 
         const athleteSports = selectedSports.map((sportId) => ({
           athlete_id: newAthlete.id,
           sport_id: sportId,
         }))
+
         const { error: sportsError } = await supabase.from("athlete_sports").insert(athleteSports)
         if (sportsError) throw sportsError
+
         setAthlete(newAthlete)
         setAthleteStatus("sent")
       }
 
       setUploadProgress(100)
       setCurrentUploadStep("Concluído!")
+
       toast({
         title: "Cadastro enviado com sucesso!",
         description: "Seu cadastro de atleta foi enviado e está aguardando aprovação.",
@@ -372,7 +620,6 @@ export default function ProfilePage() {
     if (sportType === "boteco") {
       return Gamepad2
     }
-
     const sportIcons: { [key: string]: any } = {
       futebol: Trophy,
       basquete: Target,
@@ -380,7 +627,6 @@ export default function ProfilePage() {
       tenis: Zap,
       natacao: Heart,
     }
-
     const normalizedName = sportName.toLowerCase()
     return sportIcons[normalizedName] || Trophy
   }
@@ -454,6 +700,7 @@ export default function ProfilePage() {
           <p className="text-xs sm:text-sm lg:text-base text-gray-600 text-center">
             Selecione as modalidades que você gostaria de participar. Toque nos cartões para selecioná-las!
           </p>
+
           {/* Sports Section */}
           {sportsData.length > 0 && (
             <div className="space-y-4">
@@ -501,6 +748,7 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
           {/* Boteco Section */}
           {botecoData.length > 0 && (
             <div className="space-y-4">
@@ -548,6 +796,7 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
           {/* Quick Actions */}
           {sports.length > 0 && (
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-200">
@@ -571,6 +820,7 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
+
           {/* Validation Message */}
           {selectedSports.length === 0 && (
             <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 sm:p-4">
@@ -582,6 +832,7 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
           {/* Success Message */}
           {selectedSports.length > 0 && (
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 sm:p-4">
@@ -619,6 +870,7 @@ export default function ProfilePage() {
                 iconColor="text-green-500"
               />
             )}
+
             {athleteStatus === "sent" && (
               <StatusCard
                 status="pending"
@@ -628,6 +880,7 @@ export default function ProfilePage() {
                 iconColor="text-yellow-500"
               />
             )}
+
             {/* Registration Form */}
             {(athleteStatus === "rejected" || athleteStatus === null || athleteStatus === "pending") && (
               <Card className="shadow-lg">
@@ -643,6 +896,7 @@ export default function ProfilePage() {
                       </CardDescription>
                     </div>
                   </div>
+
                   {athleteStatus === "rejected" && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
                       <div className="flex items-start space-x-3">
@@ -657,6 +911,7 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </CardHeader>
+
                 <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6">
                   <form onSubmit={handleAthleteRegistration} className="space-y-6 sm:space-y-8">
                     {/* Progress Summary */}
@@ -686,7 +941,6 @@ export default function ProfilePage() {
                             Documento
                           </span>
                         </div>
-
                         <div
                           className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
                             athlete?.enrollment_document_url
@@ -707,7 +961,6 @@ export default function ProfilePage() {
                             Matrícula
                           </span>
                         </div>
-
                         <div
                           className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
                             agreedToTerms ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
@@ -724,6 +977,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
+
                     {/* Upload Progress */}
                     {isSubmitting && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
@@ -737,6 +991,7 @@ export default function ProfilePage() {
                         </p>
                       </div>
                     )}
+
                     {/* File Uploads */}
                     <div className="grid gap-6 sm:gap-8">
                       <div className="space-y-4">
@@ -752,8 +1007,26 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        {athlete?.cnh_cpf_document_url ? (
-                          <UploadedFileDisplay url={athlete.cnh_cpf_document_url} label="Documento com foto" />
+
+                        {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
+                          <UploadedFileDisplay
+                            url={athlete.cnh_cpf_document_url}
+                            label="Documento com foto"
+                            onReplace={handleReplaceDocument}
+                            canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
+                            fileType="document"
+                          />
+                        ) : isReplacingDocument ? (
+                          <FileReplacementInterface
+                            label="documento com foto"
+                            description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
+                            onFileChange={handleNewDocumentChange}
+                            onCancel={() => handleCancelReplacement("document")}
+                            onConfirm={() => handleConfirmReplacement("document")}
+                            selectedFile={newDocumentFile}
+                            isUploading={isUploadingReplacement}
+                            fileType="document"
+                          />
                         ) : (
                           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
                             <div className="flex items-center space-x-2 mb-2">
@@ -785,8 +1058,26 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        {athlete?.enrollment_document_url ? (
-                          <UploadedFileDisplay url={athlete.enrollment_document_url} label="Atestado de matrícula" />
+
+                        {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
+                          <UploadedFileDisplay
+                            url={athlete.enrollment_document_url}
+                            label="Atestado de matrícula"
+                            onReplace={handleReplaceEnrollment}
+                            canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null }
+                            fileType="enrollment"
+                          />
+                        ) : isReplacingEnrollment ? (
+                          <FileReplacementInterface
+                            label="atestado de matrícula"
+                            description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
+                            onFileChange={handleNewEnrollmentChange}
+                            onCancel={() => handleCancelReplacement("enrollment")}
+                            onConfirm={() => handleConfirmReplacement("enrollment")}
+                            selectedFile={newEnrollmentFile}
+                            isUploading={isUploadingReplacement}
+                            fileType="enrollment"
+                          />
                         ) : (
                           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
                             <div className="flex items-center space-x-2 mb-2">
@@ -805,8 +1096,10 @@ export default function ProfilePage() {
                         )}
                       </div>
                     </div>
+
                     {/* Sports Selection */}
                     <QuickSportsSelector />
+
                     {/* Consent Checkbox */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
                       <div className="flex items-start space-x-3">
@@ -835,7 +1128,6 @@ export default function ProfilePage() {
                           registro e participação em eventos.
                         </Label>
                       </div>
-
                       {/* Visual feedback for checkbox state */}
                       <div
                         className={`transition-all duration-200 rounded-lg p-3 border-2 ${
@@ -861,6 +1153,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
+
                     {/* Submit Button */}
                     <div className="pt-4">
                       <Button
@@ -868,6 +1161,7 @@ export default function ProfilePage() {
                         className="w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg"
                         disabled={
                           isSubmitting ||
+                          isUploadingReplacement ||
                           (!documentFile && !athlete?.cnh_cpf_document_url) ||
                           (!enrollmentFile && !athlete?.enrollment_document_url) ||
                           selectedSports.length === 0 ||
