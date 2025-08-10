@@ -188,7 +188,7 @@ export default function Home() {
                     <CountdownTimer targetDate={targetDate} />
                   </div>
 
-                  <div className='flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md mx-auto'>
+                  {/* <div className='flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md mx-auto'>
                     <Link href='/register?type=athlete' className='w-full sm:w-auto'>
                       <Button
                         size='lg'
@@ -210,7 +210,7 @@ export default function Home() {
                         <Ticket className='ml-2 h-5 w-5 animate-pulse' />
                       </Button>
                     </Link>
-                  </div>
+                  </div> */}
                 </div>
               </AnimatedSection>
             </div>
@@ -550,30 +550,6 @@ export default function Home() {
                   Não perca a oportunidade de fazer parte do maior campeonato universitário da região! Vagas limitadas
                   para atletas e ingressos.
                 </p>
-
-                <div className='flex flex-col sm:flex-row justify-center gap-6 mb-12'>
-                  <Link href='/inscricao-atleta' className='w-full sm:w-auto'>
-                    <Button
-                      size='lg'
-                      className='w-full bg-[#C200F7] hover:bg-[#C200F7]/90 text-white font-medium text-base px-8 py-6 h-auto rounded-xl shadow-glow-purple transition-all duration-300 hover:scale-105'
-                      aria-label='Inscrever-se como atleta'
-                    >
-                      Inscrever-se como Atleta
-                      <ChevronRight className='ml-2 h-5 w-5 animate-bounce-x' />
-                    </Button>
-                  </Link>
-                  <Link href='/comprar-ingressos' className='w-full sm:w-auto'>
-                    <Button
-                      size='lg'
-                      variant='outline'
-                      className='w-full bg-[#07F2F2] text-black hover:bg-[#07F2F2]/90 font-medium text-base px-8 py-6 h-auto rounded-xl transition-all duration-300 hover:scale-105'
-                      aria-label='Comprar ingressos para o evento'
-                    >
-                      Comprar Ingressos
-                      <Ticket className='ml-2 h-5 w-5 animate-pulse' />
-                    </Button>
-                  </Link>
-                </div>
 
                 <div className='flex items-center justify-center space-x-2 text-white/60 text-sm'>
                   <Calendar className='h-4 w-4' />
