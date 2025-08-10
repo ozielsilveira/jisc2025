@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import { Building, Copy, School, Users } from 'lucide-react'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 type Athletic = {
@@ -107,7 +108,7 @@ export default function AthleticsPage() {
     }
 
     fetchData()
-  }, [user, toast])
+  }, [user, userRole, toast])
 
   const copyReferralLink = (athleticId: string) => {
     navigator.clipboard.writeText(referralLinks[athleticId])
@@ -230,10 +231,12 @@ export default function AthleticsPage() {
                 <div className='flex items-center gap-4'>
                   <div className='h-16 w-16 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center'>
                     {athletic.logo_url ? (
-                      <img
+                      <Image
                         src={athletic.logo_url}
                         alt={`Logo da ${athletic.name}`}
-                        className='h-full w-full object-cover'
+                        layout='fill'
+                        objectFit='cover'
+                        className='h-full w-full'
                       />
                     ) : (
                       <Building className='h-8 w-8 text-gray-400' />
