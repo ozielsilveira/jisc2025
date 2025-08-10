@@ -92,33 +92,39 @@ const UploadedFileDisplay = ({
   const truncatedUrl = truncateUrl(url)
 
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-5 shadow-sm">
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-            <CheckCircle className="h-6 w-6 text-white" />
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
+        <div className="flex-shrink-0 self-center sm:self-start">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
         </div>
         <div className="flex-1 min-w-0 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="space-y-3">
             <div className="min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <FileCheck className="h-4 w-4 text-green-600" />
-                <p className="text-base font-bold text-green-800">{label} enviado com sucesso!</p>
+              <div className="flex items-center space-x-2 mb-2">
+                <FileCheck className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <p className="text-sm sm:text-base font-bold text-green-800 leading-tight">
+                  {label} enviado com sucesso!
+                </p>
               </div>
-              <p className="text-sm text-green-600 break-all sm:hidden">{fileName}</p>
-              <p className="text-sm text-green-600 hidden sm:block">{truncatedUrl}</p>
+              <div className="space-y-1">
+                <p className="text-xs sm:text-sm text-green-600 break-all">{fileName}</p>
+                <p className="text-xs text-green-500 hidden sm:block">{truncatedUrl}</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
+
+            {/* Action buttons - Stack on mobile, inline on desktop */}
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 sm:items-center">
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 flex-shrink-0"
+                className="inline-flex items-center justify-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 w-full sm:w-auto"
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4 flex-shrink-0" />
                 <span>Visualizar</span>
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3 flex-shrink-0" />
               </a>
               {canReplace && onReplace && (
                 <Button
@@ -127,9 +133,13 @@ const UploadedFileDisplay = ({
                   size="sm"
                   onClick={onReplace}
                   disabled={isReplacing}
-                  className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors"
+                  className="inline-flex items-center justify-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors w-full sm:w-auto"
                 >
-                  {isReplacing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  {isReplacing ? (
+                    <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 flex-shrink-0" />
+                  )}
                   <span>{isReplacing ? "Substituindo..." : "Substituir"}</span>
                 </Button>
               )}
@@ -137,10 +147,12 @@ const UploadedFileDisplay = ({
           </div>
 
           {/* Success indicator */}
-          <div className="bg-white bg-opacity-60 rounded-lg p-2 border border-green-200">
+          <div className="bg-white bg-opacity-60 rounded-lg p-2 sm:p-3 border border-green-200">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-green-700 font-medium">Arquivo carregado e pronto para análise</span>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="text-xs sm:text-sm text-green-700 font-medium">
+                Arquivo carregado e pronto para análise
+              </span>
             </div>
           </div>
         </div>
@@ -170,19 +182,19 @@ const FileReplacementInterface = ({
   fileType: "document" | "enrollment"
 }) => {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full">
       <div className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 self-center sm:self-start">
             <RefreshCw className="h-5 w-5 text-white" />
           </div>
-          <div>
-            <h4 className="text-lg font-bold text-blue-800">Substituir {label}</h4>
-            <p className="text-sm text-blue-600">Selecione um novo arquivo para substituir o atual</p>
+          <div className="text-center sm:text-left">
+            <h4 className="text-base sm:text-lg font-bold text-blue-800">Substituir {label}</h4>
+            <p className="text-xs sm:text-sm text-blue-600 mt-1">Selecione um novo arquivo para substituir o atual</p>
           </div>
         </div>
 
-        <div className="bg-white bg-opacity-70 rounded-lg p-4 border border-blue-200">
+        <div className="bg-white bg-opacity-70 rounded-lg p-3 sm:p-4 border border-blue-200">
           <FileUpload
             id={`replace-${fileType}`}
             label={label}
@@ -194,39 +206,43 @@ const FileReplacementInterface = ({
 
         {selectedFile && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <Check className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-700">Novo arquivo selecionado: {selectedFile.name}</span>
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+              <Check className="h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start" />
+              <div className="min-w-0 text-center sm:text-left">
+                <span className="text-sm font-medium text-green-700 break-all">Novo arquivo: {selectedFile.name}</span>
+                <p className="text-xs text-green-600 mt-1">
+                  Tamanho: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-green-600 mt-1">Tamanho: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-2">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isUploading}
-            className="flex-1 sm:flex-none bg-transparent"
+            className="w-full sm:flex-1 bg-transparent order-2 sm:order-1"
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="h-4 w-4 mr-2 flex-shrink-0" />
             Cancelar
           </Button>
           <Button
             type="button"
             onClick={onConfirm}
             disabled={!selectedFile || isUploading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white order-1 sm:order-2"
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
                 Enviando...
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-4 w-4 mr-2 flex-shrink-0" />
                 Confirmar Substituição
               </>
             )}
@@ -667,14 +683,14 @@ export default function ProfilePage() {
     icon: any
     iconColor: string
   }) => (
-    <Card className="border-l-4 border-l-current">
+    <Card className="border-l-4 border-l-current w-full">
       <CardContent className="pt-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className={`p-3 rounded-full ${iconColor} bg-opacity-10 flex-shrink-0`}>
-            <Icon className={`h-8 w-8 ${iconColor}`} />
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
+          <div className={`p-3 rounded-full ${iconColor} bg-opacity-10 flex-shrink-0 self-center sm:self-start`}>
+            <Icon className={`h-6 w-6 sm:h-8 sm:w-8 ${iconColor}`} />
           </div>
-          <div className="flex-1 space-y-2 min-w-0">
-            <h3 className="text-lg sm:text-xl font-bold">{title}</h3>
+          <div className="flex-1 space-y-2 min-w-0 text-center sm:text-left">
+            <h3 className="text-base sm:text-lg lg:text-xl font-bold">{title}</h3>
             <p className="text-gray-600 text-sm sm:text-base">{description}</p>
           </div>
         </div>
@@ -850,347 +866,362 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Meu Perfil</h1>
-        <p className="text-xs sm:text-sm lg:text-base text-gray-600">Visualize e edite suas informações pessoais.</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 sm:bg-transparent">
+      <div className="space-y-4 sm:space-y-6 w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-0">
+        {/* Header */}
+        <div className="space-y-2 px-1 sm:px-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Meu Perfil</h1>
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600">Visualize e edite suas informações pessoais.</p>
+        </div>
 
-      {profile?.role === "athlete" && (
-        <Tabs defaultValue="register" className="w-full">
-          <TabsContent value="register" className="space-y-4 sm:space-y-6">
-            {/* Status Cards */}
-            {athleteStatus === "approved" && (
-              <StatusCard
-                status="approved"
-                title="Documentos Aprovados"
-                description="Seus documentos foram aprovados. Bem-vindo ao time!"
-                icon={CheckCircle}
-                iconColor="text-green-500"
-              />
-            )}
+        {profile?.role === "athlete" && (
+          <Tabs defaultValue="register" className="w-full">
+            <TabsContent value="register" className="space-y-4 sm:space-y-6">
+              {/* Status Cards */}
+              {athleteStatus === "approved" && (
+                <div className="px-1 sm:px-0">
+                  <StatusCard
+                    status="approved"
+                    title="Documentos Aprovados"
+                    description="Seus documentos foram aprovados. Bem-vindo ao time!"
+                    icon={CheckCircle}
+                    iconColor="text-green-500"
+                  />
+                </div>
+              )}
 
-            {athleteStatus === "sent" && (
-              <StatusCard
-                status="pending"
-                title="Documentos em Análise"
-                description="Seus documentos foram enviados e estão em análise. Avisaremos quando o processo for concluído."
-                icon={Clock}
-                iconColor="text-yellow-500"
-              />
-            )}
+              {athleteStatus === "sent" && (
+                <div className="px-1 sm:px-0">
+                  <StatusCard
+                    status="pending"
+                    title="Documentos em Análise"
+                    description="Seus documentos foram enviados e estão em análise. Avisaremos quando o processo for concluído."
+                    icon={Clock}
+                    iconColor="text-yellow-500"
+                  />
+                </div>
+              )}
 
-            {/* Registration Form */}
-            {(athleteStatus === "rejected" || athleteStatus === null || athleteStatus === "pending") && (
-              <Card className="shadow-lg">
-                <CardHeader className="space-y-4 p-4 sm:p-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-[#0456FC] bg-opacity-10 rounded-lg flex-shrink-0">
-                      <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-[#0456FC]" />
-                    </div>
-                    <div className="min-w-0">
-                      <CardTitle className="text-lg sm:text-xl lg:text-2xl">Cadastro de Atleta</CardTitle>
-                      <CardDescription className="text-xs sm:text-sm lg:text-base mt-1">
-                        Complete seu cadastro enviando os documentos necessários
-                      </CardDescription>
-                    </div>
-                  </div>
+              {/* Registration Form */}
+              {(athleteStatus === "rejected" || athleteStatus === null || athleteStatus === "pending") && (
+                <div className="px-1 sm:px-0">
+                  <Card className="shadow-lg w-full overflow-hidden">
+                    <CardHeader className="space-y-4 p-4 sm:p-6">
+                      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                        <div className="p-2 bg-[#0456FC] bg-opacity-10 rounded-lg flex-shrink-0 self-center sm:self-start">
+                          <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-[#0456FC]" />
+                        </div>
+                        <div className="min-w-0 text-center sm:text-left">
+                          <CardTitle className="text-lg sm:text-xl lg:text-2xl">Cadastro de Atleta</CardTitle>
+                          <CardDescription className="text-sm sm:text-base lg:text-lg mt-1">
+                            Complete seu cadastro enviando os documentos necessários
+                          </CardDescription>
+                        </div>
+                      </div>
 
-                  {athleteStatus === "rejected" && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
-                      <div className="flex items-start space-x-3">
-                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 mt-0.5 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <h4 className="font-medium text-red-800 text-sm sm:text-base">Cadastro rejeitado</h4>
-                          <p className="text-xs sm:text-sm text-red-700 mt-1">
-                            Seu cadastro foi rejeitado. Por favor, verifique os arquivos e envie-os novamente.
+                      {athleteStatus === "rejected" && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+                          <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3">
+                            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 self-center sm:self-start sm:mt-0.5" />
+                            <div className="min-w-0 text-center sm:text-left">
+                              <h4 className="font-medium text-red-800 text-sm sm:text-base">Cadastro rejeitado</h4>
+                              <p className="text-xs sm:text-sm text-red-700 mt-1">
+                                Seu cadastro foi rejeitado. Por favor, verifique os arquivos e envie-os novamente.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardHeader>
+
+                    <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6">
+                      <form onSubmit={handleAthleteRegistration} className="space-y-6 sm:space-y-8">
+                        {/* Progress Summary */}
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+                          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-4 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 text-center sm:text-left">
+                            <Sparkles className="h-5 w-5 self-center sm:self-start flex-shrink-0" />
+                            <span>Progresso do Cadastro</span>
+                          </h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                            <div
+                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
+                                athlete?.cnh_cpf_document_url
+                                  ? "bg-green-50 border-green-200"
+                                  : "bg-gray-50 border-gray-200"
+                              }`}
+                            >
+                              {athlete?.cnh_cpf_document_url ? (
+                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                              )}
+                              <span
+                                className={`text-sm font-medium ${
+                                  athlete?.cnh_cpf_document_url ? "text-green-700" : "text-gray-600"
+                                }`}
+                              >
+                                Documento
+                              </span>
+                            </div>
+                            <div
+                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
+                                athlete?.enrollment_document_url
+                                  ? "bg-green-50 border-green-200"
+                                  : "bg-gray-50 border-gray-200"
+                              }`}
+                            >
+                              {athlete?.enrollment_document_url ? (
+                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                              )}
+                              <span
+                                className={`text-sm font-medium ${
+                                  athlete?.enrollment_document_url ? "text-green-700" : "text-gray-600"
+                                }`}
+                              >
+                                Matrícula
+                              </span>
+                            </div>
+                            <div
+                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
+                                agreedToTerms ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                              }`}
+                            >
+                              {agreedToTerms ? (
+                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                              )}
+                              <span
+                                className={`text-sm font-medium ${agreedToTerms ? "text-green-700" : "text-gray-600"}`}
+                              >
+                                Termos
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Upload Progress */}
+                        {isSubmitting && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
+                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                              <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0 self-center sm:self-start" />
+                              <span className="font-medium text-blue-800 text-sm sm:text-base text-center sm:text-left">
+                                {currentUploadStep}
+                              </span>
+                            </div>
+                            <Progress value={uploadProgress} className="w-full" />
+                            <p className="text-xs sm:text-sm text-blue-600 text-center sm:text-left">
+                              {uploadProgress}% concluído - Não feche esta página
+                            </p>
+                          </div>
+                        )}
+
+                        {/* File Uploads */}
+                        <div className="space-y-6 sm:space-y-8">
+                          <div className="space-y-4">
+                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                              <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start">
+                                1
+                              </div>
+                              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left">
+                                Documento com Foto
+                              </h3>
+                              {athlete?.cnh_cpf_document_url && (
+                                <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start">
+                                  <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                                  <span>Enviado</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
+                              <UploadedFileDisplay
+                                url={athlete.cnh_cpf_document_url}
+                                label="Documento com foto"
+                                onReplace={handleReplaceDocument}
+                                canReplace={athleteStatus !== "approved"}
+                                fileType="document"
+                              />
+                            ) : isReplacingDocument ? (
+                              <FileReplacementInterface
+                                label="documento com foto"
+                                description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
+                                onFileChange={handleNewDocumentChange}
+                                onCancel={() => handleCancelReplacement("document")}
+                                onConfirm={() => handleConfirmReplacement("document")}
+                                selectedFile={newDocumentFile}
+                                isUploading={isUploadingReplacement}
+                                fileType="document"
+                              />
+                            ) : (
+                              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                                  <span className="text-sm font-medium text-amber-700">Documento pendente</span>
+                                </div>
+                                <FileUpload
+                                  id="document"
+                                  label="CNH ou RG com foto"
+                                  description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
+                                  existingFileUrl={athlete?.cnh_cpf_document_url}
+                                  onFileChange={handleDocumentChange}
+                                  required={!athlete?.cnh_cpf_document_url}
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+                              <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start">
+                                2
+                              </div>
+                              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left">
+                                Atestado de Matrícula
+                              </h3>
+                              {athlete?.enrollment_document_url && (
+                                <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start">
+                                  <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                                  <span>Enviado</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
+                              <UploadedFileDisplay
+                                url={athlete.enrollment_document_url}
+                                label="Atestado de matrícula"
+                                onReplace={handleReplaceEnrollment}
+                                canReplace={athleteStatus !== "approved"}
+                                fileType="enrollment"
+                              />
+                            ) : isReplacingEnrollment ? (
+                              <FileReplacementInterface
+                                label="atestado de matrícula"
+                                description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
+                                onFileChange={handleNewEnrollmentChange}
+                                onCancel={() => handleCancelReplacement("enrollment")}
+                                onConfirm={() => handleConfirmReplacement("enrollment")}
+                                selectedFile={newEnrollmentFile}
+                                isUploading={isUploadingReplacement}
+                                fileType="enrollment"
+                              />
+                            ) : (
+                              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+                                  <span className="text-sm font-medium text-amber-700">Atestado pendente</span>
+                                </div>
+                                <FileUpload
+                                  id="enrollment"
+                                  label="Comprovante de matrícula atual"
+                                  description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
+                                  existingFileUrl={athlete?.enrollment_document_url}
+                                  onFileChange={handleEnrollmentChange}
+                                  required={!athlete?.enrollment_document_url}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Sports Selection */}
+                        <QuickSportsSelector />
+
+                        {/* Consent Checkbox */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
+                          <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3">
+                            <Checkbox
+                              id="terms"
+                              checked={agreedToTerms}
+                              onCheckedChange={(checked) => {
+                                console.log("Checkbox changed:", checked) // Debug log
+                                setAgreedToTerms(checked === true)
+                              }}
+                              className="mt-1 h-5 w-5 border-2 border-gray-400 data-[state=checked]:bg-[#0456FC] data-[state=checked]:border-[#0456FC] focus:ring-2 focus:ring-[#0456FC] focus:ring-offset-2 flex-shrink-0 self-center sm:self-start"
+                            />
+                            <Label
+                              htmlFor="terms"
+                              className="text-sm sm:text-base text-gray-800 leading-relaxed cursor-pointer flex-1 text-center sm:text-left"
+                            >
+                              Eu li e concordo com os{" "}
+                              <a
+                                href="#"
+                                className="text-[#0456FC] hover:underline font-medium"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                Termos de Uso e Política de Privacidade
+                              </a>
+                              , incluindo o compartilhamento dos meus direitos de imagem e dados legais para fins de
+                              registro e participação em eventos.
+                            </Label>
+                          </div>
+                          {/* Visual feedback for checkbox state */}
+                          <div
+                            className={`transition-all duration-200 rounded-lg p-3 border-2 ${
+                              agreedToTerms ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                            }`}
+                          >
+                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                              {agreedToTerms ? (
+                                <>
+                                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start" />
+                                  <p className="text-sm text-green-700 font-medium text-center sm:text-left">
+                                    ✅ Termos aceitos - Você pode prosseguir com o cadastro
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 self-center sm:self-start" />
+                                  <p className="text-sm text-red-600 font-medium text-center sm:text-left">
+                                    ⚠️ Você deve concordar com os termos para prosseguir
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4">
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg"
+                            disabled={
+                              isSubmitting ||
+                              isUploadingReplacement ||
+                              (!documentFile && !athlete?.cnh_cpf_document_url) ||
+                              (!enrollmentFile && !athlete?.enrollment_document_url) ||
+                              selectedSports.length === 0 ||
+                              !agreedToTerms
+                            }
+                          >
+                            {isSubmitting ? (
+                              <div className="flex items-center justify-center space-x-2">
+                                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin flex-shrink-0" />
+                                <span>Enviando...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-center space-x-2">
+                                <Upload className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                                <span>Enviar e Finalizar Cadastro</span>
+                              </div>
+                            )}
+                          </Button>
+                          <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3">
+                            Ao enviar, você concorda que as informações fornecidas são verdadeiras
                           </p>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </CardHeader>
-
-                <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6">
-                  <form onSubmit={handleAthleteRegistration} className="space-y-6 sm:space-y-8">
-                    {/* Progress Summary */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6 mb-6">
-                      <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center space-x-2">
-                        <Sparkles className="h-5 w-5" />
-                        <span>Progresso do Cadastro</span>
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div
-                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                            athlete?.cnh_cpf_document_url
-                              ? "bg-green-50 border-green-200"
-                              : "bg-gray-50 border-gray-200"
-                          }`}
-                        >
-                          {athlete?.cnh_cpf_document_url ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-gray-400" />
-                          )}
-                          <span
-                            className={`text-sm font-medium ${
-                              athlete?.cnh_cpf_document_url ? "text-green-700" : "text-gray-600"
-                            }`}
-                          >
-                            Documento
-                          </span>
-                        </div>
-                        <div
-                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                            athlete?.enrollment_document_url
-                              ? "bg-green-50 border-green-200"
-                              : "bg-gray-50 border-gray-200"
-                          }`}
-                        >
-                          {athlete?.enrollment_document_url ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-gray-400" />
-                          )}
-                          <span
-                            className={`text-sm font-medium ${
-                              athlete?.enrollment_document_url ? "text-green-700" : "text-gray-600"
-                            }`}
-                          >
-                            Matrícula
-                          </span>
-                        </div>
-                        <div
-                          className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                            agreedToTerms ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
-                          }`}
-                        >
-                          {agreedToTerms ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <AlertCircle className="h-5 w-5 text-gray-400" />
-                          )}
-                          <span className={`text-sm font-medium ${agreedToTerms ? "text-green-700" : "text-gray-600"}`}>
-                            Termos
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Upload Progress */}
-                    {isSubmitting && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
-                        <div className="flex items-center space-x-3">
-                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0" />
-                          <span className="font-medium text-blue-800 text-sm sm:text-base">{currentUploadStep}</span>
-                        </div>
-                        <Progress value={uploadProgress} className="w-full" />
-                        <p className="text-xs sm:text-sm text-blue-600">
-                          {uploadProgress}% concluído - Não feche esta página
-                        </p>
-                      </div>
-                    )}
-
-                    {/* File Uploads */}
-                    <div className="grid gap-6 sm:gap-8">
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-                            1
-                          </div>
-                          <h3 className="text-lg sm:text-xl font-semibold">Documento com Foto</h3>
-                          {athlete?.cnh_cpf_document_url && (
-                            <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Enviado</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
-                          <UploadedFileDisplay
-                            url={athlete.cnh_cpf_document_url}
-                            label="Documento com foto"
-                            onReplace={handleReplaceDocument}
-                            canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
-                            fileType="document"
-                          />
-                        ) : isReplacingDocument ? (
-                          <FileReplacementInterface
-                            label="documento com foto"
-                            description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
-                            onFileChange={handleNewDocumentChange}
-                            onCancel={() => handleCancelReplacement("document")}
-                            onConfirm={() => handleConfirmReplacement("document")}
-                            selectedFile={newDocumentFile}
-                            isUploading={isUploadingReplacement}
-                            fileType="document"
-                          />
-                        ) : (
-                          <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <AlertCircle className="h-4 w-4 text-amber-500" />
-                              <span className="text-sm font-medium text-amber-700">Documento pendente</span>
-                            </div>
-                            <FileUpload
-                              id="document"
-                              label="CNH ou RG com foto"
-                              description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
-                              existingFileUrl={athlete?.cnh_cpf_document_url}
-                              onFileChange={handleDocumentChange}
-                              required={!athlete?.cnh_cpf_document_url}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-                            2
-                          </div>
-                          <h3 className="text-lg sm:text-xl font-semibold">Atestado de Matrícula</h3>
-                          {athlete?.enrollment_document_url && (
-                            <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Enviado</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
-                          <UploadedFileDisplay
-                            url={athlete.enrollment_document_url}
-                            label="Atestado de matrícula"
-                            onReplace={handleReplaceEnrollment}
-                            canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null }
-                            fileType="enrollment"
-                          />
-                        ) : isReplacingEnrollment ? (
-                          <FileReplacementInterface
-                            label="atestado de matrícula"
-                            description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
-                            onFileChange={handleNewEnrollmentChange}
-                            onCancel={() => handleCancelReplacement("enrollment")}
-                            onConfirm={() => handleConfirmReplacement("enrollment")}
-                            selectedFile={newEnrollmentFile}
-                            isUploading={isUploadingReplacement}
-                            fileType="enrollment"
-                          />
-                        ) : (
-                          <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <AlertCircle className="h-4 w-4 text-amber-500" />
-                              <span className="text-sm font-medium text-amber-700">Atestado pendente</span>
-                            </div>
-                            <FileUpload
-                              id="enrollment"
-                              label="Comprovante de matrícula atual"
-                              description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
-                              existingFileUrl={athlete?.enrollment_document_url}
-                              onFileChange={handleEnrollmentChange}
-                              required={!athlete?.enrollment_document_url}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Sports Selection */}
-                    <QuickSportsSelector />
-
-                    {/* Consent Checkbox */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <Checkbox
-                          id="terms"
-                          checked={agreedToTerms}
-                          onCheckedChange={(checked) => {
-                            console.log("Checkbox changed:", checked) // Debug log
-                            setAgreedToTerms(checked === true)
-                          }}
-                          className="mt-1 h-5 w-5 border-2 border-gray-400 data-[state=checked]:bg-[#0456FC] data-[state=checked]:border-[#0456FC] focus:ring-2 focus:ring-[#0456FC] focus:ring-offset-2 flex-shrink-0"
-                        />
-                        <Label
-                          htmlFor="terms"
-                          className="text-sm sm:text-base text-gray-800 leading-relaxed cursor-pointer flex-1"
-                        >
-                          Eu li e concordo com os{" "}
-                          <a
-                            href="#"
-                            className="text-[#0456FC] hover:underline font-medium"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            Termos de Uso e Política de Privacidade
-                          </a>
-                          , incluindo o compartilhamento dos meus direitos de imagem e dados legais para fins de
-                          registro e participação em eventos.
-                        </Label>
-                      </div>
-                      {/* Visual feedback for checkbox state */}
-                      <div
-                        className={`transition-all duration-200 rounded-lg p-3 border-2 ${
-                          agreedToTerms ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2">
-                          {agreedToTerms ? (
-                            <>
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                              <p className="text-sm text-green-700 font-medium">
-                                ✅ Termos aceitos - Você pode prosseguir com o cadastro
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                              <p className="text-sm text-red-600 font-medium">
-                                ⚠️ Você deve concordar com os termos para prosseguir
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Submit Button */}
-                    <div className="pt-4">
-                      <Button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg"
-                        disabled={
-                          isSubmitting ||
-                          isUploadingReplacement ||
-                          (!documentFile && !athlete?.cnh_cpf_document_url) ||
-                          (!enrollmentFile && !athlete?.enrollment_document_url) ||
-                          selectedSports.length === 0 ||
-                          !agreedToTerms
-                        }
-                      >
-                        {isSubmitting ? (
-                          <div className="flex items-center justify-center space-x-2">
-                            <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                            <span>Enviando...</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center space-x-2">
-                            <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span>Enviar e Finalizar Cadastro</span>
-                          </div>
-                        )}
-                      </Button>
-                      <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3">
-                        Ao enviar, você concorda que as informações fornecidas são verdadeiras
-                      </p>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-      )}
+                      </form>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+      </div>
     </div>
   )
 }
