@@ -19,7 +19,10 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
-    parallelServerCompiles: true
+    parallelServerCompiles: true,
+    serverActions: {
+      bodySizeLimit: '5mb'
+    }
   }
 }
 
