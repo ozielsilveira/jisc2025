@@ -676,7 +676,7 @@ const AthleteListItem = ({
                 Matrícula
               </Button>
 
-              {userRole === 'athletic' && athlete.status === 'approved' && hasPackage && (
+              {athlete.status === 'approved' && hasPackage && (
                 <Button
                   variant='outline'
                   size='sm'
@@ -688,7 +688,7 @@ const AthleteListItem = ({
                   }`}
                 >
                   <MessageCircle className='h-4 w-4 mr-2' />
-                  WhatsApp
+                  Enviar mensagem 
                 </Button>
               )}
             </div>
@@ -1189,7 +1189,7 @@ export default function AthletesPage() {
               {userRole === 'athletic' && (
                 <Button onClick={handleShareLink} className='h-10 px-4 bg-blue-600 hover:bg-blue-700 font-medium'>
                   <Share2 className='h-4 w-4 mr-2' />
-                  Compartilhar Link
+                  Copiar link de cadastro
                 </Button>
               )}
 

@@ -229,19 +229,6 @@ export default function AthleticsPage() {
             <Card key={athletic.id}>
               <CardHeader className='pb-2'>
                 <div className='flex items-center gap-4'>
-                  <div className='h-16 w-16 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center'>
-                    {athletic.logo_url ? (
-                      <Image
-                        src={athletic.logo_url}
-                        alt={`Logo da ${athletic.name}`}
-                        layout='fill'
-                        objectFit='cover'
-                        className='h-full w-full'
-                      />
-                    ) : (
-                      <Building className='h-8 w-8 text-gray-400' />
-                    )}
-                  </div>
                   <div>
                     <CardTitle>{athletic.name}</CardTitle>
                     <CardDescription className='flex items-center mt-1'>
