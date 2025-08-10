@@ -85,13 +85,8 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
           <h2 className='text-xl font-bold text-[#0456FC]'>JISC</h2>
           <p className='text-sm text-gray-500'>Campeonato Universitário</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="h-8 w-8"
-        >
-          <Icons.X className="h-4 w-4" />
+        <Button variant='ghost' size='icon' onClick={() => setIsMobileMenuOpen(false)} className='h-8 w-8'>
+          <Icons.X className='h-4 w-4' />
         </Button>
       </div>
 
@@ -108,9 +103,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
 
           return (
             <div key={category.category} className='nav-category'>
-              <h3 className='text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2'>
-                {category.category}
-              </h3>
+              <h3 className='text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2'>{category.category}</h3>
               <div className='space-y-1'>
                 {filteredItems.map((item) => {
                   const Icon = Icons[item.icon as keyof typeof Icons] as React.ElementType
@@ -120,13 +113,11 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
                       href={item.href}
                       onClick={handleLinkClick}
                       className={`nav-item flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
-                        pathname === item.href
-                          ? 'bg-[#0456FC] text-white shadow-lg'
-                          : 'text-gray-700 hover:bg-gray-100'
+                        pathname === item.href ? 'bg-[#0456FC] text-white shadow-lg' : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
                       <Icon className='h-5 w-5 mr-3 flex-shrink-0' />
-                      <span className="truncate">{item.label}</span>
+                      <span className='truncate'>{item.label}</span>
                     </Link>
                   )
                 })}
@@ -143,7 +134,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
           onClick={signOut}
         >
           <Icons.LogOut className='mr-2 h-5 w-5 flex-shrink-0' />
-          <span className="truncate">Sair</span>
+          <span className='truncate'>Sair</span>
         </Button>
       </div>
     </div>
@@ -153,15 +144,12 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
     <>
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className='fixed inset-0 z-50 md:hidden'>
           {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          
+          <div className='absolute inset-0 bg-black/50' onClick={() => setIsMobileMenuOpen(false)} />
+
           {/* Sidebar */}
-          <div className="relative z-10 h-full w-80 max-w-[85vw] bg-white shadow-xl">
+          <div className='relative z-10 h-full w-80 max-w-[85vw] bg-white shadow-xl'>
             <SidebarContent />
           </div>
         </div>

@@ -5,7 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
-import { Calendar, Medal, Ticket, Trophy, Users, ArrowRight, Play, Star, MapPin, Clock, ChevronLeft, ChevronRight, Zap, Target, Award, Heart, Sparkles, TrendingUp } from 'lucide-react'
+import {
+  Calendar,
+  Medal,
+  Ticket,
+  Trophy,
+  Users,
+  ArrowRight,
+  Play,
+  Star,
+  MapPin,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
+  Target,
+  Award,
+  Heart,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -143,12 +162,8 @@ export default function HomePage() {
         .from('athletes')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'approved')
-      const { count: athleticsCount } = await supabase
-        .from('athletics')
-        .select('*', { count: 'exact', head: true })
-      const { count: sportsCount } = await supabase
-        .from('sports')
-        .select('*', { count: 'exact', head: true })
+      const { count: athleticsCount } = await supabase.from('athletics').select('*', { count: 'exact', head: true })
+      const { count: sportsCount } = await supabase.from('sports').select('*', { count: 'exact', head: true })
 
       setStats({
         totalParticipants: athletesCount || 0,
@@ -225,11 +240,16 @@ export default function HomePage() {
 
   const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
-      case 'admin': return 'Administrador'
-      case 'athletic': return 'Representante de Atlética'
-      case 'athlete': return 'Atleta'
-      case 'buyer': return 'Participante'
-      default: return 'Usuário'
+      case 'admin':
+        return 'Administrador'
+      case 'athletic':
+        return 'Representante de Atlética'
+      case 'athlete':
+        return 'Atleta'
+      case 'buyer':
+        return 'Participante'
+      default:
+        return 'Usuário'
     }
   }
 
@@ -253,7 +273,7 @@ export default function HomePage() {
           <div className='max-w-4xl'>
             <div className='flex items-center space-x-2 mb-4'>
               <Sparkles className='h-6 w-6 text-yellow-300' />
-              <Badge variant="secondary" className='bg-white/20 text-white border-white/30'>
+              <Badge variant='secondary' className='bg-white/20 text-white border-white/30'>
                 JISC 2024
               </Badge>
             </div>
@@ -281,9 +301,7 @@ export default function HomePage() {
             <div className='flex items-center space-x-4'>
               <Award className='h-10 w-10 text-[#0456FC] flex-shrink-0' />
               <div>
-                <CardTitle className='text-xl font-bold text-gray-900'>
-                  Complete seu Cadastro de Atleta!
-                </CardTitle>
+                <CardTitle className='text-xl font-bold text-gray-900'>Complete seu Cadastro de Atleta!</CardTitle>
                 <CardDescription className='text-gray-700 mt-1'>
                   Para participar das modalidades e competições, finalize seu registro. É rápido e fácil!
                 </CardDescription>
@@ -336,20 +354,10 @@ export default function HomePage() {
           <div className='flex items-center justify-between'>
             <h2 className='text-2xl font-bold text-gray-900'>Destaques</h2>
             <div className='flex space-x-2'>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={prevSlide}
-                className='h-8 w-8'
-              >
+              <Button variant='outline' size='icon' onClick={prevSlide} className='h-8 w-8'>
                 <ChevronLeft className='h-4 w-4' />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={nextSlide}
-                className='h-8 w-8'
-              >
+              <Button variant='outline' size='icon' onClick={nextSlide} className='h-8 w-8'>
                 <ChevronRight className='h-4 w-4' />
               </Button>
             </div>
@@ -364,7 +372,7 @@ export default function HomePage() {
                   <Card className='border-0 shadow-lg overflow-hidden'>
                     <div className='relative h-64 sm:h-80 bg-gradient-to-br from-gray-100 to-gray-200'>
                       <Image
-                        src={highlight.image || "/placeholder.svg"}
+                        src={highlight.image || '/placeholder.svg'}
                         alt={highlight.title}
                         fill
                         className='object-cover'
@@ -374,13 +382,14 @@ export default function HomePage() {
                         <div className='flex items-center space-x-2 mb-2'>
                           <Badge
                             className={`${
-                              highlight.type === 'game' ? 'bg-green-500' :
-                              highlight.type === 'event' ? 'bg-blue-500' :
-                              'bg-purple-500'
+                              highlight.type === 'game'
+                                ? 'bg-green-500'
+                                : highlight.type === 'event'
+                                  ? 'bg-blue-500'
+                                  : 'bg-purple-500'
                             }`}
                           >
-                            {highlight.type === 'game' ? 'Jogo' :
-                             highlight.type === 'event' ? 'Evento' : 'Novidade'}
+                            {highlight.type === 'game' ? 'Jogo' : highlight.type === 'event' ? 'Evento' : 'Novidade'}
                           </Badge>
                           {highlight.featured && (
                             <Badge className='bg-yellow-500'>
@@ -506,12 +515,10 @@ export default function HomePage() {
           <div className='inline-flex items-center justify-center w-16 h-16 bg-[#0456FC] rounded-full mb-4'>
             <Heart className='h-8 w-8 text-white' />
           </div>
-          <h3 className='text-xl font-bold text-gray-900 mb-2'>
-            Obrigado por fazer parte do JISC!
-          </h3>
+          <h3 className='text-xl font-bold text-gray-900 mb-2'>Obrigado por fazer parte do JISC!</h3>
           <p className='text-gray-600 max-w-2xl mx-auto'>
-            Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial
-            do maior campeonato universitário do país. Juntos, fazemos a diferença no esporte universitário.
+            Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial do maior
+            campeonato universitário do país. Juntos, fazemos a diferença no esporte universitário.
           </p>
         </CardContent>
       </Card>

@@ -47,22 +47,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ThemeProvider>
       <div className='flex h-screen bg-gray-50 dark:bg-gray-900'>
         {/* Sidebar */}
-        <DashboardSidebar 
-          isMobileMenuOpen={isMobileMenuOpen} 
-          setIsMobileMenuOpen={setIsMobileMenuOpen} 
-        />
-        
+        <DashboardSidebar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+
         {/* Main Content Area */}
         <div className='flex flex-col flex-1 min-w-0'>
           {/* Mobile Header */}
           <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(true)} />
-          
+
           {/* Main Content */}
           <main className='flex-1 overflow-auto'>
             <div className='h-full pt-16 md:pt-0'>
-              <div className='p-4 sm:p-6 lg:p-8 h-full'>
-                {children}
-              </div>
+              <div className='p-4 sm:p-6 lg:p-8 h-full'>{children}</div>
             </div>
           </main>
         </div>
