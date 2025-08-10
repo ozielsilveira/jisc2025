@@ -1189,7 +1189,7 @@ export default function AthletesPage() {
               {userRole === 'athletic' && (
                 <Button onClick={handleShareLink} className='h-10 px-4 bg-blue-600 hover:bg-blue-700 font-medium'>
                   <Share2 className='h-4 w-4 mr-2' />
-                  Compartilhar Link
+                  Copiar link de cadastro
                 </Button>
               )}
 
