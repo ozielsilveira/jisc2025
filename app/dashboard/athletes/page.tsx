@@ -849,7 +849,7 @@ const AthleteListItem = ({
                   }`}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Enviar mensagem
+                  {athlete.wpp_sent ? "Reenviar mensagem" : "Enviar mensagem"}
                 </Button>
               )}
             </div>
