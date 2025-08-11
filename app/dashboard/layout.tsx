@@ -1,17 +1,40 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import DashboardSidebar from '@/components/dashboard-sidebar'
 import MobileHeader from '@/components/mobile-header'
 import { ThemeProvider } from '@/contexts/theme-context'
 
+function LoadingSpinner() {
+  return (
+    <div className='flex h-screen items-center justify-center bg-background'>
+      <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary'></div>
+    </div>
+  )
+}
+
+function ContentWrapper({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) {
+    return <LoadingSpinner />
+  }
+
+  return <>{children}</>
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -19,24 +42,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, isLoading, router])
 
-  // Close mobile menu when screen size changes to desktop
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setIsMobileMenuOpen(false)
-      }
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        if (window.innerWidth >= 768) {
+          setIsMobileMenuOpen(false)
+        }
+      }, 150)
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleRouteChangeStart = () => setIsNavigating(true)
+    const handleRouteChangeComplete = () => setIsNavigating(false)
+
+    const handleBeforeUnload = () => setIsNavigating(true)
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
   }, [])
 
   if (isLoading) {
-    return (
-      <div className='flex h-screen items-center justify-center bg-background'>
-        <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary'></div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!user) {
@@ -45,19 +84,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <ThemeProvider>
-      <div className='flex h-screen bg-gray-50 dark:bg-gray-900'>
+      <div className='flex min-h-screen bg-gray-50 dark:bg-gray-900 safe-top safe-bottom'>
         {/* Sidebar */}
         <DashboardSidebar isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
 
         {/* Main Content Area */}
-        <div className='flex flex-col flex-1 min-w-0'>
+        <div className='flex flex-col flex-1 min-w-0 relative'>
           {/* Mobile Header */}
           <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(true)} />
 
-          {/* Main Content */}
-          <main className='flex-1 overflow-auto'>
-            <div className='h-full pt-16 md:pt-0'>
-              <div className='p-4 sm:p-6 lg:p-8 h-full'>{children}</div>
+          {isNavigating && (
+            <div className='absolute inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center'>
+              <div className='h-6 w-6 animate-spin rounded-full border-b-2 border-t-2 border-primary'></div>
+            </div>
+          )}
+
+          <main className='flex-1 pt-16 md:pt-0 overflow-y-auto'>
+            <div className='container-responsive py-4 sm:py-6 lg:py-8 max-w-7xl'>
+              <Suspense fallback={<LoadingSpinner />}>
+                <ContentWrapper>{children}</ContentWrapper>
+              </Suspense>
             </div>
           </main>
         </div>

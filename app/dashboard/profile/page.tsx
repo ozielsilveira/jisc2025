@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useEffect, useState } from "react"
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import {
   CheckCircle,
   Clock,
@@ -22,19 +22,19 @@ import {
   Sparkles,
   RefreshCw,
   X,
-  Check,
-} from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileUpload } from "@/components/ui/file-upload"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
-import { Progress } from "@/components/ui/progress"
-import { Checkbox } from "@/components/ui/checkbox"
-import { uploadFileToR2 } from "@/actions/upload"
+  Check
+} from 'lucide-react'
+import { useAuth } from '@/components/auth-provider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FileUpload } from '@/components/ui/file-upload'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
+import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/lib/supabase'
+import { Progress } from '@/components/ui/progress'
+import { Checkbox } from '@/components/ui/checkbox'
+import { uploadFileToR2 } from '@/actions/upload'
 
 type UserProfile = {
   id: string
@@ -49,7 +49,7 @@ type UserProfile = {
 type Sport = {
   id: string
   name: string
-  type: "sport" | "boteco"
+  type: 'sport' | 'boteco'
 }
 
 type Athlete = {
@@ -57,7 +57,7 @@ type Athlete = {
   user_id: string
   enrollment_document_url: string
   cnh_cpf_document_url: string
-  status: "pending" | "sent" | "approved" | "rejected"
+  status: 'pending' | 'sent' | 'approved' | 'rejected'
 }
 
 // Definir o limite de tamanho de arquivo para validação no cliente
@@ -79,78 +79,78 @@ const UploadedFileDisplay = ({
   onReplace,
   isReplacing,
   canReplace = true,
-  fileType,
+  fileType
 }: {
   url: string
   label: string
   onReplace?: () => void
   isReplacing?: boolean
   canReplace?: boolean
-  fileType?: "document" | "enrollment"
+  fileType?: 'document' | 'enrollment'
 }) => {
-  const fileName = url.split("/").pop() || "arquivo"
+  const fileName = url.split('/').pop() || 'arquivo'
   const truncatedUrl = truncateUrl(url)
 
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
-        <div className="flex-shrink-0 self-center sm:self-start">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-            <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+    <div className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full'>
+      <div className='flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4'>
+        <div className='flex-shrink-0 self-center sm:self-start'>
+          <div className='w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg'>
+            <CheckCircle className='h-5 w-5 sm:h-6 sm:w-6 text-white' />
           </div>
         </div>
-        <div className="flex-1 min-w-0 space-y-3">
-          <div className="space-y-3">
-            <div className="min-w-0">
-              <div className="flex items-center space-x-2 mb-2">
-                <FileCheck className="h-4 w-4 text-green-600 flex-shrink-0" />
-                <p className="text-sm sm:text-base font-bold text-green-800 leading-tight">
+        <div className='flex-1 min-w-0 space-y-3'>
+          <div className='space-y-3'>
+            <div className='min-w-0'>
+              <div className='flex items-center space-x-2 mb-2'>
+                <FileCheck className='h-4 w-4 text-green-600 flex-shrink-0' />
+                <p className='text-sm sm:text-base font-bold text-green-800 leading-tight'>
                   {label} enviado com sucesso!
                 </p>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs sm:text-sm text-green-600 break-all">{fileName}</p>
-                <p className="text-xs text-green-500 hidden sm:block">{truncatedUrl}</p>
+              <div className='space-y-1'>
+                <p className='text-xs sm:text-sm text-green-600 break-all'>{fileName}</p>
+                <p className='text-xs text-green-500 hidden sm:block'>{truncatedUrl}</p>
               </div>
             </div>
 
             {/* Action buttons - Stack on mobile, inline on desktop */}
-            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 sm:items-center">
+            <div className='flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 sm:items-center'>
               <a
                 href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 w-full sm:w-auto"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='inline-flex items-center justify-center space-x-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 hover:text-green-800 rounded-lg transition-colors text-sm font-medium border border-green-300 hover:border-green-400 w-full sm:w-auto'
               >
-                <Eye className="h-4 w-4 flex-shrink-0" />
+                <Eye className='h-4 w-4 flex-shrink-0' />
                 <span>Visualizar</span>
-                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                <ExternalLink className='h-3 w-3 flex-shrink-0' />
               </a>
               {canReplace && onReplace && (
                 <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                  type='button'
+                  variant='outline'
+                  size='sm'
                   onClick={onReplace}
                   disabled={isReplacing}
-                  className="inline-flex items-center justify-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors w-full sm:w-auto"
+                  className='inline-flex items-center justify-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors w-full sm:w-auto'
                 >
                   {isReplacing ? (
-                    <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+                    <Loader2 className='h-4 w-4 animate-spin flex-shrink-0' />
                   ) : (
-                    <RefreshCw className="h-4 w-4 flex-shrink-0" />
+                    <RefreshCw className='h-4 w-4 flex-shrink-0' />
                   )}
-                  <span>{isReplacing ? "Substituindo..." : "Substituir"}</span>
+                  <span>{isReplacing ? 'Substituindo...' : 'Substituir'}</span>
                 </Button>
               )}
             </div>
           </div>
 
           {/* Success indicator */}
-          <div className="bg-white bg-opacity-60 rounded-lg p-2 sm:p-3 border border-green-200">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
-              <span className="text-xs sm:text-sm text-green-700 font-medium">
+          <div className='bg-white bg-opacity-60 rounded-lg p-2 sm:p-3 border border-green-200'>
+            <div className='flex items-center space-x-2'>
+              <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0'></div>
+              <span className='text-xs sm:text-sm text-green-700 font-medium'>
                 Arquivo carregado e pronto para análise
               </span>
             </div>
@@ -170,7 +170,7 @@ const FileReplacementInterface = ({
   onConfirm,
   selectedFile,
   isUploading,
-  fileType,
+  fileType
 }: {
   label: string
   description: string
@@ -179,22 +179,22 @@ const FileReplacementInterface = ({
   onConfirm: () => void
   selectedFile: File | null
   isUploading: boolean
-  fileType: "document" | "enrollment"
+  fileType: 'document' | 'enrollment'
 }) => {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full">
-      <div className="space-y-4">
-        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 self-center sm:self-start">
-            <RefreshCw className="h-5 w-5 text-white" />
+    <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full'>
+      <div className='space-y-4'>
+        <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+          <div className='w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 self-center sm:self-start'>
+            <RefreshCw className='h-5 w-5 text-white' />
           </div>
-          <div className="text-center sm:text-left">
-            <h4 className="text-base sm:text-lg font-bold text-blue-800">Substituir {label}</h4>
-            <p className="text-xs sm:text-sm text-blue-600 mt-1">Selecione um novo arquivo para substituir o atual</p>
+          <div className='text-center sm:text-left'>
+            <h4 className='text-base sm:text-lg font-bold text-blue-800'>Substituir {label}</h4>
+            <p className='text-xs sm:text-sm text-blue-600 mt-1'>Selecione um novo arquivo para substituir o atual</p>
           </div>
         </div>
 
-        <div className="bg-white bg-opacity-70 rounded-lg p-3 sm:p-4 border border-blue-200">
+        <div className='bg-white bg-opacity-70 rounded-lg p-3 sm:p-4 border border-blue-200'>
           <FileUpload
             id={`replace-${fileType}`}
             label={label}
@@ -205,12 +205,12 @@ const FileReplacementInterface = ({
         </div>
 
         {selectedFile && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
-              <Check className="h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start" />
-              <div className="min-w-0 text-center sm:text-left">
-                <span className="text-sm font-medium text-green-700 break-all">Novo arquivo: {selectedFile.name}</span>
-                <p className="text-xs text-green-600 mt-1">
+          <div className='bg-green-50 border border-green-200 rounded-lg p-3'>
+            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
+              <Check className='h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start' />
+              <div className='min-w-0 text-center sm:text-left'>
+                <span className='text-sm font-medium text-green-700 break-all'>Novo arquivo: {selectedFile.name}</span>
+                <p className='text-xs text-green-600 mt-1'>
                   Tamanho: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
@@ -218,31 +218,31 @@ const FileReplacementInterface = ({
           </div>
         )}
 
-        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-2">
+        <div className='flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-2'>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={onCancel}
             disabled={isUploading}
-            className="w-full sm:flex-1 bg-transparent order-2 sm:order-1"
+            className='w-full sm:flex-1 bg-transparent order-2 sm:order-1'
           >
-            <X className="h-4 w-4 mr-2 flex-shrink-0" />
+            <X className='h-4 w-4 mr-2 flex-shrink-0' />
             Cancelar
           </Button>
           <Button
-            type="button"
+            type='button'
             onClick={onConfirm}
             disabled={!selectedFile || isUploading}
-            className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white order-1 sm:order-2"
+            className='w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white order-1 sm:order-2'
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
+                <Loader2 className='h-4 w-4 mr-2 animate-spin flex-shrink-0' />
                 Enviando...
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 mr-2 flex-shrink-0" />
+                <Upload className='h-4 w-4 mr-2 flex-shrink-0' />
                 Confirmar Substituição
               </>
             )}
@@ -259,7 +259,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [athlete, setAthlete] = useState<Athlete | null>(null)
-  const [athleteStatus, setAthleteStatus] = useState<"pending" | "sent" | "approved" | "rejected" | null>(null)
+  const [athleteStatus, setAthleteStatus] = useState<'pending' | 'sent' | 'approved' | 'rejected' | null>(null)
 
   // File replacement state
   const [isReplacingDocument, setIsReplacingDocument] = useState(false)
@@ -275,7 +275,7 @@ export default function ProfilePage() {
   const [selectedSports, setSelectedSports] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [currentUploadStep, setCurrentUploadStep] = useState("")
+  const [currentUploadStep, setCurrentUploadStep] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   useEffect(() => {
@@ -283,19 +283,19 @@ export default function ProfilePage() {
       if (!user) return
       setIsLoading(true)
       try {
-        const { data: userData, error: userError } = await supabase.from("users").select("*").eq("id", user.id).single()
+        const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single()
         if (userError) throw userError
         setProfile(userData as UserProfile)
 
-        if (userData.role === "athlete") {
+        if (userData.role === 'athlete') {
           await fetchSports()
           const { data: athleteData, error: athleteError } = await supabase
-            .from("athletes")
-            .select("*")
-            .eq("user_id", user.id)
+            .from('athletes')
+            .select('*')
+            .eq('user_id', user.id)
             .single()
 
-          if (athleteError && athleteError.code !== "PGRST116") {
+          if (athleteError && athleteError.code !== 'PGRST116') {
             throw athleteError
           }
 
@@ -303,16 +303,16 @@ export default function ProfilePage() {
             setAthlete(athleteData)
             setAthleteStatus(athleteData.status)
             const { data: athleteSportsData, error: athleteSportsError } = await supabase
-              .from("athlete_sports")
-              .select("sport_id")
-              .eq("athlete_id", athleteData.id)
+              .from('athlete_sports')
+              .select('sport_id')
+              .eq('athlete_id', athleteData.id)
 
             if (athleteSportsError) {
-              console.error("Error fetching athlete sports:", athleteSportsError)
+              console.error('Error fetching athlete sports:', athleteSportsError)
               toast({
-                title: "Erro ao carregar modalidades do atleta",
-                description: "Não foi possível carregar suas modalidades selecionadas.",
-                variant: "destructive",
+                title: 'Erro ao carregar modalidades do atleta',
+                description: 'Não foi possível carregar suas modalidades selecionadas.',
+                variant: 'destructive'
               })
             } else if (athleteSportsData) {
               setSelectedSports(athleteSportsData.map((as) => as.sport_id))
@@ -322,11 +322,11 @@ export default function ProfilePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching profile or sports:", error)
+        console.error('Error fetching profile or sports:', error)
         toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar seu perfil ou modalidades.",
-          variant: "destructive",
+          title: 'Erro ao carregar dados',
+          description: 'Não foi possível carregar seu perfil ou modalidades.',
+          variant: 'destructive'
         })
       } finally {
         setIsLoading(false)
@@ -338,15 +338,15 @@ export default function ProfilePage() {
 
   const fetchSports = async () => {
     try {
-      const { data, error } = await supabase.from("sports").select("*")
+      const { data, error } = await supabase.from('sports').select('*')
       if (error) throw error
       setSports(data)
     } catch (error) {
-      console.error("Error fetching sports:", error)
+      console.error('Error fetching sports:', error)
       toast({
-        title: "Erro ao carregar modalidades",
-        description: "Não foi possível carregar a lista de modalidades.",
-        variant: "destructive",
+        title: 'Erro ao carregar modalidades',
+        description: 'Não foi possível carregar a lista de modalidades.',
+        variant: 'destructive'
       })
     }
   }
@@ -362,8 +362,8 @@ export default function ProfilePage() {
     setNewEnrollmentFile(null)
   }
 
-  const handleCancelReplacement = (type: "document" | "enrollment") => {
-    if (type === "document") {
+  const handleCancelReplacement = (type: 'document' | 'enrollment') => {
+    if (type === 'document') {
       setIsReplacingDocument(false)
       setNewDocumentFile(null)
     } else {
@@ -372,18 +372,18 @@ export default function ProfilePage() {
     }
   }
 
-  const handleConfirmReplacement = async (type: "document" | "enrollment") => {
+  const handleConfirmReplacement = async (type: 'document' | 'enrollment') => {
     if (!user || !athlete) return
 
-    const file = type === "document" ? newDocumentFile : newEnrollmentFile
+    const file = type === 'document' ? newDocumentFile : newEnrollmentFile
     if (!file) return
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
       toast({
-        title: "Arquivo muito grande",
+        title: 'Arquivo muito grande',
         description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: "destructive",
+        variant: 'destructive'
       })
       return
     }
@@ -392,23 +392,23 @@ export default function ProfilePage() {
 
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append('file', file)
 
-      const currentUrl = type === "document" ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
+      const currentUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
       const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
 
       if (!uploadResult.success) {
-        throw new Error(uploadResult.message || "Erro ao fazer upload do arquivo.")
+        throw new Error(uploadResult.message || 'Erro ao fazer upload do arquivo.')
       }
 
       // Update athlete record
       const updateData =
-        type === "document" ? { cnh_cpf_document_url: uploadResult.url } : { enrollment_document_url: uploadResult.url }
+        type === 'document' ? { cnh_cpf_document_url: uploadResult.url } : { enrollment_document_url: uploadResult.url }
 
       const { data: updatedAthlete, error: updateError } = await supabase
-        .from("athletes")
+        .from('athletes')
         .update(updateData)
-        .eq("id", athlete.id)
+        .eq('id', athlete.id)
         .select()
         .single()
 
@@ -417,7 +417,7 @@ export default function ProfilePage() {
       setAthlete(updatedAthlete)
 
       // Reset replacement state
-      if (type === "document") {
+      if (type === 'document') {
         setIsReplacingDocument(false)
         setNewDocumentFile(null)
       } else {
@@ -426,15 +426,15 @@ export default function ProfilePage() {
       }
 
       toast({
-        title: "Arquivo substituído com sucesso!",
-        description: `Seu ${type === "document" ? "documento" : "atestado de matrícula"} foi atualizado com sucesso.`,
+        title: 'Arquivo substituído com sucesso!',
+        description: `Seu ${type === 'document' ? 'documento' : 'atestado de matrícula'} foi atualizado com sucesso.`
       })
     } catch (error: any) {
-      console.error("Error replacing file:", error)
+      console.error('Error replacing file:', error)
       toast({
-        title: "Erro ao substituir arquivo",
-        description: error.message || "Não foi possível substituir o arquivo. Tente novamente.",
-        variant: "destructive",
+        title: 'Erro ao substituir arquivo',
+        description: error.message || 'Não foi possível substituir o arquivo. Tente novamente.',
+        variant: 'destructive'
       })
     } finally {
       setIsUploadingReplacement(false)
@@ -445,9 +445,9 @@ export default function ProfilePage() {
   const handleEnrollmentChange = (file: File | null) => {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       toast({
-        title: "Arquivo muito grande",
+        title: 'Arquivo muito grande',
         description: `O atestado excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: "destructive",
+        variant: 'destructive'
       })
       setEnrollmentFile(null)
       return
@@ -458,9 +458,9 @@ export default function ProfilePage() {
   const handleDocumentChange = (file: File | null) => {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       toast({
-        title: "Arquivo muito grande",
+        title: 'Arquivo muito grande',
         description: `O documento excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: "destructive",
+        variant: 'destructive'
       })
       setDocumentFile(null)
       return
@@ -471,9 +471,9 @@ export default function ProfilePage() {
   const handleNewDocumentChange = (file: File | null) => {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       toast({
-        title: "Arquivo muito grande",
+        title: 'Arquivo muito grande',
         description: `O documento excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: "destructive",
+        variant: 'destructive'
       })
       setNewDocumentFile(null)
       return
@@ -484,9 +484,9 @@ export default function ProfilePage() {
   const handleNewEnrollmentChange = (file: File | null) => {
     if (file && file.size > MAX_FILE_SIZE_BYTES) {
       toast({
-        title: "Arquivo muito grande",
+        title: 'Arquivo muito grande',
         description: `O atestado excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: "destructive",
+        variant: 'destructive'
       })
       setNewEnrollmentFile(null)
       return
@@ -513,9 +513,9 @@ export default function ProfilePage() {
 
     if (hasValidationErrors) {
       toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos do formulário e aceite os termos antes de enviar.",
-        variant: "destructive",
+        title: 'Campos obrigatórios',
+        description: 'Por favor, preencha todos os campos do formulário e aceite os termos antes de enviar.',
+        variant: 'destructive'
       })
       return
     }
@@ -524,16 +524,16 @@ export default function ProfilePage() {
     setUploadProgress(0)
 
     try {
-      setCurrentUploadStep("Preparando documentos...")
+      setCurrentUploadStep('Preparando documentos...')
       setUploadProgress(10)
 
       let documentUrl = athlete?.cnh_cpf_document_url
       if (documentFile) {
         const formDataDoc = new FormData()
-        formDataDoc.append("file", documentFile)
-        const uploadResult = await uploadFileToR2(formDataDoc, user.id, "document", athlete?.cnh_cpf_document_url)
+        formDataDoc.append('file', documentFile)
+        const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
         if (!uploadResult.success) {
-          throw new Error(uploadResult.message || "Erro ao fazer upload do documento.")
+          throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
         }
         documentUrl = uploadResult.url
         setUploadProgress(40)
@@ -542,57 +542,57 @@ export default function ProfilePage() {
       let enrollmentUrl = athlete?.enrollment_document_url
       if (enrollmentFile) {
         const formDataEnroll = new FormData()
-        formDataEnroll.append("file", enrollmentFile)
+        formDataEnroll.append('file', enrollmentFile)
         const uploadResult = await uploadFileToR2(
           formDataEnroll,
           user.id,
-          "enrollment",
-          athlete?.enrollment_document_url,
+          'enrollment',
+          athlete?.enrollment_document_url
         )
         if (!uploadResult.success) {
-          throw new Error(uploadResult.message || "Erro ao fazer upload do atestado.")
+          throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
         }
         enrollmentUrl = uploadResult.url
         setUploadProgress(60)
       }
 
-      setCurrentUploadStep("Finalizando cadastro...")
+      setCurrentUploadStep('Finalizando cadastro...')
       setUploadProgress(80)
 
       if (athlete) {
         const { data: updatedAthlete, error: updateError } = await supabase
-          .from("athletes")
+          .from('athletes')
           .update({
             cnh_cpf_document_url: documentUrl,
             enrollment_document_url: enrollmentUrl,
-            status: "sent",
+            status: 'sent'
           })
-          .eq("id", athlete.id)
+          .eq('id', athlete.id)
           .select()
           .single()
 
         if (updateError) throw updateError
         setAthlete(updatedAthlete)
-        setAthleteStatus("sent")
+        setAthleteStatus('sent')
 
-        const { error: deleteSportsError } = await supabase.from("athlete_sports").delete().eq("athlete_id", athlete.id)
+        const { error: deleteSportsError } = await supabase.from('athlete_sports').delete().eq('athlete_id', athlete.id)
         if (deleteSportsError) throw deleteSportsError
 
         const athleteSports = selectedSports.map((sportId) => ({
           athlete_id: athlete.id,
-          sport_id: sportId,
+          sport_id: sportId
         }))
 
-        const { error: insertSportsError } = await supabase.from("athlete_sports").insert(athleteSports)
+        const { error: insertSportsError } = await supabase.from('athlete_sports').insert(athleteSports)
         if (insertSportsError) throw insertSportsError
       } else {
         const { data: newAthlete, error: insertError } = await supabase
-          .from("athletes")
+          .from('athletes')
           .insert({
             user_id: user.id,
             cnh_cpf_document_url: documentUrl!,
             enrollment_document_url: enrollmentUrl!,
-            status: "sent",
+            status: 'sent'
           })
           .select()
           .single()
@@ -601,39 +601,39 @@ export default function ProfilePage() {
 
         const athleteSports = selectedSports.map((sportId) => ({
           athlete_id: newAthlete.id,
-          sport_id: sportId,
+          sport_id: sportId
         }))
 
-        const { error: sportsError } = await supabase.from("athlete_sports").insert(athleteSports)
+        const { error: sportsError } = await supabase.from('athlete_sports').insert(athleteSports)
         if (sportsError) throw sportsError
 
         setAthlete(newAthlete)
-        setAthleteStatus("sent")
+        setAthleteStatus('sent')
       }
 
       setUploadProgress(100)
-      setCurrentUploadStep("Concluído!")
+      setCurrentUploadStep('Concluído!')
 
       toast({
-        title: "Cadastro enviado com sucesso!",
-        description: "Seu cadastro de atleta foi enviado e está aguardando aprovação.",
+        title: 'Cadastro enviado com sucesso!',
+        description: 'Seu cadastro de atleta foi enviado e está aguardando aprovação.'
       })
     } catch (error: any) {
-      console.error("Error during athlete registration:", error)
+      console.error('Error during athlete registration:', error)
       toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível concluir o seu cadastro de atleta. Tente novamente.",
-        variant: "destructive",
+        title: 'Erro no cadastro',
+        description: error.message || 'Não foi possível concluir o seu cadastro de atleta. Tente novamente.',
+        variant: 'destructive'
       })
     } finally {
       setIsSubmitting(false)
       setUploadProgress(0)
-      setCurrentUploadStep("")
+      setCurrentUploadStep('')
     }
   }
 
-  const getSportIcon = (sportName: string, sportType: "sport" | "boteco") => {
-    if (sportType === "boteco") {
+  const getSportIcon = (sportName: string, sportType: 'sport' | 'boteco') => {
+    if (sportType === 'boteco') {
       return Gamepad2
     }
     const sportIcons: { [key: string]: any } = {
@@ -641,30 +641,30 @@ export default function ProfilePage() {
       basquete: Target,
       volei: Users,
       tenis: Zap,
-      natacao: Heart,
+      natacao: Heart
     }
     const normalizedName = sportName.toLowerCase()
     return sportIcons[normalizedName] || Trophy
   }
 
-  const getSportColors = (sportType: "sport" | "boteco", isSelected: boolean) => {
-    if (sportType === "sport") {
+  const getSportColors = (sportType: 'sport' | 'boteco', isSelected: boolean) => {
+    if (sportType === 'sport') {
       return isSelected
-        ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/25"
-        : "bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300"
+        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/25'
+        : 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300'
     } else {
       return isSelected
-        ? "bg-gradient-to-br from-purple-500 to-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/25"
-        : "bg-gradient-to-br from-purple-50 to-purple-100 text-purple-700 border-purple-200 hover:from-purple-100 hover:to-purple-200 hover:border-purple-300"
+        ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/25'
+        : 'bg-gradient-to-br from-purple-50 to-purple-100 text-purple-700 border-purple-200 hover:from-purple-100 hover:to-purple-200 hover:border-purple-300'
     }
   }
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#0456FC]" />
-          <p className="text-sm text-gray-500">Carregando perfil...</p>
+      <div className='flex h-full items-center justify-center'>
+        <div className='flex flex-col items-center space-y-4'>
+          <Loader2 className='h-8 w-8 animate-spin text-[#0456FC]' />
+          <p className='text-sm text-gray-500'>Carregando perfil...</p>
         </div>
       </div>
     )
@@ -675,7 +675,7 @@ export default function ProfilePage() {
     title,
     description,
     icon: Icon,
-    iconColor,
+    iconColor
   }: {
     status: string
     title: string
@@ -683,15 +683,15 @@ export default function ProfilePage() {
     icon: any
     iconColor: string
   }) => (
-    <Card className="border-l-4 border-l-current w-full">
-      <CardContent className="pt-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4">
+    <Card className='border-l-4 border-l-current w-full'>
+      <CardContent className='pt-6'>
+        <div className='flex flex-col space-y-4 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-4'>
           <div className={`p-3 rounded-full ${iconColor} bg-opacity-10 flex-shrink-0 self-center sm:self-start`}>
             <Icon className={`h-6 w-6 sm:h-8 sm:w-8 ${iconColor}`} />
           </div>
-          <div className="flex-1 space-y-2 min-w-0 text-center sm:text-left">
-            <h3 className="text-base sm:text-lg lg:text-xl font-bold">{title}</h3>
-            <p className="text-gray-600 text-sm sm:text-base">{description}</p>
+          <div className='flex-1 space-y-2 min-w-0 text-center sm:text-left'>
+            <h3 className='text-base sm:text-lg lg:text-xl font-bold'>{title}</h3>
+            <p className='text-gray-600 text-sm sm:text-base'>{description}</p>
           </div>
         </div>
       </CardContent>
@@ -699,32 +699,32 @@ export default function ProfilePage() {
   )
 
   const QuickSportsSelector = () => {
-    const sportsData = sports.filter((sport) => sport.type === "sport")
-    const botecoData = sports.filter((sport) => sport.type === "boteco")
+    const sportsData = sports.filter((sport) => sport.type === 'sport')
+    const botecoData = sports.filter((sport) => sport.type === 'boteco')
 
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+      <div className='space-y-6'>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center space-x-3'>
+            <div className='w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0'>
               3
             </div>
-            <h3 className="text-base sm:text-lg lg:text-xl font-semibold">Modalidades de Interesse</h3>
+            <h3 className='text-base sm:text-lg lg:text-xl font-semibold'>Modalidades de Interesse</h3>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 lg:p-6 space-y-6">
-          <p className="text-xs sm:text-sm lg:text-base text-gray-600 text-center">
+        <div className='bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 lg:p-6 space-y-6'>
+          <p className='text-xs sm:text-sm lg:text-base text-gray-600 text-center'>
             Selecione as modalidades que você gostaria de participar. Toque nos cartões para selecioná-las!
           </p>
 
           {/* Sports Section */}
           {sportsData.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
-                <h4 className="font-semibold text-blue-800 text-sm sm:text-base">Esportes</h4>
+            <div className='space-y-4'>
+              <div className='flex items-center space-x-2'>
+                <Trophy className='h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0' />
+                <h4 className='font-semibold text-blue-800 text-sm sm:text-base'>Esportes</h4>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
+              <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4'>
                 {sportsData.map((sport) => {
                   const isSelected = selectedSports.includes(sport.id)
                   const Icon = getSportIcon(sport.name, sport.type)
@@ -737,24 +737,24 @@ export default function ProfilePage() {
                       className={`
                         relative p-3 sm:p-4 lg:p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 active:scale-95
                         ${colors}
-                        ${isSelected ? "ring-4 ring-blue-500 ring-opacity-30" : ""}
+                        ${isSelected ? 'ring-4 ring-blue-500 ring-opacity-30' : ''}
                       `}
                     >
                       {/* Selection indicator */}
                       {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                        <div className='absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg'>
+                          <CheckCircle className='h-3 w-3 sm:h-4 sm:w-4 text-white' />
                         </div>
                       )}
-                      <div className="flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3">
+                      <div className='flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3'>
                         <div
                           className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${
-                            isSelected ? "bg-white bg-opacity-20" : "bg-white bg-opacity-50"
+                            isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
                           }`}
                         >
-                          <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8" />
+                          <Icon className='h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8' />
                         </div>
-                        <span className="font-medium text-xs sm:text-sm text-center leading-tight break-words">
+                        <span className='font-medium text-xs sm:text-sm text-center leading-tight break-words'>
                           {sport.name}
                         </span>
                       </div>
@@ -767,12 +767,12 @@ export default function ProfilePage() {
 
           {/* Boteco Section */}
           {botecoData.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
-                <h4 className="font-semibold text-purple-800 text-sm sm:text-base">Jogos de Boteco</h4>
+            <div className='space-y-4'>
+              <div className='flex items-center space-x-2'>
+                <Gamepad2 className='h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0' />
+                <h4 className='font-semibold text-purple-800 text-sm sm:text-base'>Jogos de Boteco</h4>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4">
+              <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4'>
                 {botecoData.map((sport) => {
                   const isSelected = selectedSports.includes(sport.id)
                   const Icon = getSportIcon(sport.name, sport.type)
@@ -785,24 +785,24 @@ export default function ProfilePage() {
                       className={`
                         relative p-3 sm:p-4 lg:p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 active:scale-95
                         ${colors}
-                        ${isSelected ? "ring-4 ring-purple-500 ring-opacity-30" : ""}
+                        ${isSelected ? 'ring-4 ring-purple-500 ring-opacity-30' : ''}
                       `}
                     >
                       {/* Selection indicator */}
                       {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                        <div className='absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg'>
+                          <CheckCircle className='h-3 w-3 sm:h-4 sm:w-4 text-white' />
                         </div>
                       )}
-                      <div className="flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3">
+                      <div className='flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3'>
                         <div
                           className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${
-                            isSelected ? "bg-white bg-opacity-20" : "bg-white bg-opacity-50"
+                            isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
                           }`}
                         >
-                          <Icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8" />
+                          <Icon className='h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8' />
                         </div>
-                        <span className="font-medium text-xs sm:text-sm text-center leading-tight break-words">
+                        <span className='font-medium text-xs sm:text-sm text-center leading-tight break-words'>
                           {sport.name}
                         </span>
                       </div>
@@ -815,21 +815,21 @@ export default function ProfilePage() {
 
           {/* Quick Actions */}
           {sports.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-200">
+            <div className='flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-gray-200'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={() => setSelectedSports(sports.map((s) => s.id))}
-                className="flex-1 text-xs sm:text-sm"
+                className='flex-1 text-xs sm:text-sm'
                 disabled={selectedSports.length === sports.length}
               >
                 Selecionar Todas
               </Button>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={() => setSelectedSports([])}
-                className="flex-1 text-xs sm:text-sm"
+                className='flex-1 text-xs sm:text-sm'
                 disabled={selectedSports.length === 0}
               >
                 Limpar Seleção
@@ -839,10 +839,10 @@ export default function ProfilePage() {
 
           {/* Validation Message */}
           {selectedSports.length === 0 && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center space-x-3">
-                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-red-600 font-medium">
+            <div className='bg-red-50 border-2 border-red-200 rounded-lg p-3 sm:p-4'>
+              <div className='flex items-center space-x-3'>
+                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0' />
+                <p className='text-xs sm:text-sm text-red-600 font-medium'>
                   Selecione pelo menos uma modalidade para continuar
                 </p>
               </div>
@@ -851,11 +851,11 @@ export default function ProfilePage() {
 
           {/* Success Message */}
           {selectedSports.length > 0 && (
-            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 sm:p-4">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
-                <p className="text-xs sm:text-sm text-green-600 font-medium">
-                  Perfeito! Você selecionou {selectedSports.length} modalidade{selectedSports.length > 1 ? "s" : ""}
+            <div className='bg-green-50 border-2 border-green-200 rounded-lg p-3 sm:p-4'>
+              <div className='flex items-center space-x-3'>
+                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
+                <p className='text-xs sm:text-sm text-green-600 font-medium'>
+                  Perfeito! Você selecionou {selectedSports.length} modalidade{selectedSports.length > 1 ? 's' : ''}
                 </p>
               </div>
             </div>
@@ -866,66 +866,66 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 sm:bg-transparent">
-      <div className="space-y-4 sm:space-y-6 w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-0">
+    <div className='bg-gray-50 sm:bg-transparent'>
+      <div className='space-y-4 sm:space-y-6 w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-0'>
         {/* Header */}
-        <div className="space-y-2 px-1 sm:px-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Meu Perfil</h1>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600">Visualize e edite suas informações pessoais.</p>
+        <div className='space-y-2 px-1 sm:px-0'>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900'>Meu Perfil</h1>
+          <p className='text-sm sm:text-base lg:text-lg text-gray-600'>Visualize e edite suas informações pessoais.</p>
         </div>
 
-        {profile?.role === "athlete" && (
-          <Tabs defaultValue="register" className="w-full">
-            <TabsContent value="register" className="space-y-4 sm:space-y-6">
+        {profile?.role === 'athlete' && (
+          <Tabs defaultValue='register' className='w-full'>
+            <TabsContent value='register' className='space-y-4 sm:space-y-6'>
               {/* Status Cards */}
-              {athleteStatus === "approved" && (
-                <div className="px-1 sm:px-0">
+              {athleteStatus === 'approved' && (
+                <div className='px-1 sm:px-0'>
                   <StatusCard
-                    status="approved"
-                    title="Documentos Aprovados"
-                    description="Seus documentos foram aprovados. Bem-vindo ao time!"
+                    status='approved'
+                    title='Documentos Aprovados'
+                    description='Seus documentos foram aprovados. Bem-vindo ao time!'
                     icon={CheckCircle}
-                    iconColor="text-green-500"
+                    iconColor='text-green-500'
                   />
                 </div>
               )}
 
-              {athleteStatus === "sent" && (
-                <div className="px-1 sm:px-0">
+              {athleteStatus === 'sent' && (
+                <div className='px-1 sm:px-0'>
                   <StatusCard
-                    status="pending"
-                    title="Documentos em Análise"
-                    description="Seus documentos foram enviados e estão em análise. Avisaremos quando o processo for concluído."
+                    status='pending'
+                    title='Documentos em Análise'
+                    description='Seus documentos foram enviados e estão em análise. Avisaremos quando o processo for concluído.'
                     icon={Clock}
-                    iconColor="text-yellow-500"
+                    iconColor='text-yellow-500'
                   />
                 </div>
               )}
 
               {/* Registration Form */}
-              {(athleteStatus === "rejected" || athleteStatus === null || athleteStatus === "pending") && (
-                <div className="px-1 sm:px-0">
-                  <Card className="shadow-lg w-full overflow-hidden">
-                    <CardHeader className="space-y-4 p-4 sm:p-6">
-                      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-                        <div className="p-2 bg-[#0456FC] bg-opacity-10 rounded-lg flex-shrink-0 self-center sm:self-start">
-                          <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-[#0456FC]" />
+              {(athleteStatus === 'rejected' || athleteStatus === null || athleteStatus === 'pending') && (
+                <div className='px-1 sm:px-0'>
+                  <Card className='shadow-lg w-full overflow-hidden'>
+                    <CardHeader className='space-y-4 p-4 sm:p-6'>
+                      <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+                        <div className='p-2 bg-[#0456FC] bg-opacity-10 rounded-lg flex-shrink-0 self-center sm:self-start'>
+                          <FileText className='h-5 w-5 sm:h-6 sm:w-6 text-[#0456FC]' />
                         </div>
-                        <div className="min-w-0 text-center sm:text-left">
-                          <CardTitle className="text-lg sm:text-xl lg:text-2xl">Cadastro de Atleta</CardTitle>
-                          <CardDescription className="text-sm sm:text-base lg:text-lg mt-1">
+                        <div className='min-w-0 text-center sm:text-left'>
+                          <CardTitle className='text-lg sm:text-xl lg:text-2xl'>Cadastro de Atleta</CardTitle>
+                          <CardDescription className='text-sm sm:text-base lg:text-lg mt-1'>
                             Complete seu cadastro enviando os documentos necessários
                           </CardDescription>
                         </div>
                       </div>
 
-                      {athleteStatus === "rejected" && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
-                          <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3">
-                            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 self-center sm:self-start sm:mt-0.5" />
-                            <div className="min-w-0 text-center sm:text-left">
-                              <h4 className="font-medium text-red-800 text-sm sm:text-base">Cadastro rejeitado</h4>
-                              <p className="text-xs sm:text-sm text-red-700 mt-1">
+                      {athleteStatus === 'rejected' && (
+                        <div className='bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4'>
+                          <div className='flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3'>
+                            <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 self-center sm:self-start sm:mt-0.5' />
+                            <div className='min-w-0 text-center sm:text-left'>
+                              <h4 className='font-medium text-red-800 text-sm sm:text-base'>Cadastro rejeitado</h4>
+                              <p className='text-xs sm:text-sm text-red-700 mt-1'>
                                 Seu cadastro foi rejeitado. Por favor, verifique os arquivos e envie-os novamente.
                               </p>
                             </div>
@@ -934,30 +934,30 @@ export default function ProfilePage() {
                       )}
                     </CardHeader>
 
-                    <CardContent className="space-y-6 sm:space-y-8 p-4 sm:p-6">
-                      <form onSubmit={handleAthleteRegistration} className="space-y-6 sm:space-y-8">
+                    <CardContent className='space-y-6 sm:space-y-8 p-4 sm:p-6'>
+                      <form onSubmit={handleAthleteRegistration} className='space-y-6 sm:space-y-8'>
                         {/* Progress Summary */}
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6">
-                          <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-4 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 text-center sm:text-left">
-                            <Sparkles className="h-5 w-5 self-center sm:self-start flex-shrink-0" />
+                        <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6'>
+                          <h3 className='text-base sm:text-lg font-semibold text-blue-900 mb-4 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 text-center sm:text-left'>
+                            <Sparkles className='h-5 w-5 self-center sm:self-start flex-shrink-0' />
                             <span>Progresso do Cadastro</span>
                           </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                          <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4'>
                             <div
                               className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
                                 athlete?.cnh_cpf_document_url
-                                  ? "bg-green-50 border-green-200"
-                                  : "bg-gray-50 border-gray-200"
+                                  ? 'bg-green-50 border-green-200'
+                                  : 'bg-gray-50 border-gray-200'
                               }`}
                             >
                               {athlete?.cnh_cpf_document_url ? (
-                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
                               ) : (
-                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
                               )}
                               <span
                                 className={`text-sm font-medium ${
-                                  athlete?.cnh_cpf_document_url ? "text-green-700" : "text-gray-600"
+                                  athlete?.cnh_cpf_document_url ? 'text-green-700' : 'text-gray-600'
                                 }`}
                               >
                                 Documento
@@ -966,18 +966,18 @@ export default function ProfilePage() {
                             <div
                               className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
                                 athlete?.enrollment_document_url
-                                  ? "bg-green-50 border-green-200"
-                                  : "bg-gray-50 border-gray-200"
+                                  ? 'bg-green-50 border-green-200'
+                                  : 'bg-gray-50 border-gray-200'
                               }`}
                             >
                               {athlete?.enrollment_document_url ? (
-                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
                               ) : (
-                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
                               )}
                               <span
                                 className={`text-sm font-medium ${
-                                  athlete?.enrollment_document_url ? "text-green-700" : "text-gray-600"
+                                  athlete?.enrollment_document_url ? 'text-green-700' : 'text-gray-600'
                                 }`}
                               >
                                 Matrícula
@@ -985,16 +985,16 @@ export default function ProfilePage() {
                             </div>
                             <div
                               className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                                agreedToTerms ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"
+                                agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
                               }`}
                             >
                               {agreedToTerms ? (
-                                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
+                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
                               ) : (
-                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
+                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
                               )}
                               <span
-                                className={`text-sm font-medium ${agreedToTerms ? "text-green-700" : "text-gray-600"}`}
+                                className={`text-sm font-medium ${agreedToTerms ? 'text-green-700' : 'text-gray-600'}`}
                               >
                                 Termos
                               </span>
@@ -1004,33 +1004,33 @@ export default function ProfilePage() {
 
                         {/* Upload Progress */}
                         {isSubmitting && (
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
-                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-                              <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0 self-center sm:self-start" />
-                              <span className="font-medium text-blue-800 text-sm sm:text-base text-center sm:text-left">
+                          <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3'>
+                            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+                              <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0 self-center sm:self-start' />
+                              <span className='font-medium text-blue-800 text-sm sm:text-base text-center sm:text-left'>
                                 {currentUploadStep}
                               </span>
                             </div>
-                            <Progress value={uploadProgress} className="w-full" />
-                            <p className="text-xs sm:text-sm text-blue-600 text-center sm:text-left">
+                            <Progress value={uploadProgress} className='w-full' />
+                            <p className='text-xs sm:text-sm text-blue-600 text-center sm:text-left'>
                               {uploadProgress}% concluído - Não feche esta página
                             </p>
                           </div>
                         )}
 
                         {/* File Uploads */}
-                        <div className="space-y-6 sm:space-y-8">
-                          <div className="space-y-4">
-                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-                              <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start">
+                        <div className='space-y-6 sm:space-y-8'>
+                          <div className='space-y-4'>
+                            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+                              <div className='w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start'>
                                 1
                               </div>
-                              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left">
+                              <h3 className='text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left'>
                                 Documento com Foto
                               </h3>
                               {athlete?.cnh_cpf_document_url && (
-                                <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start">
-                                  <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                                <div className='flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start'>
+                                  <CheckCircle className='h-3 w-3 flex-shrink-0' />
                                   <span>Enviado</span>
                                 </div>
                               )}
@@ -1039,32 +1039,34 @@ export default function ProfilePage() {
                             {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
                               <UploadedFileDisplay
                                 url={athlete.cnh_cpf_document_url}
-                                label="Documento com foto"
+                                label='Documento com foto'
                                 onReplace={handleReplaceDocument}
-                                canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
-                                fileType="document"
+                                canReplace={
+                                  athleteStatus === 'pending' || athleteStatus === 'rejected' || athleteStatus === null
+                                }
+                                fileType='document'
                               />
                             ) : isReplacingDocument ? (
                               <FileReplacementInterface
-                                label="documento com foto"
-                                description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
+                                label='documento com foto'
+                                description='Envie uma foto clara do seu documento de identidade (frente e verso se necessário)'
                                 onFileChange={handleNewDocumentChange}
-                                onCancel={() => handleCancelReplacement("document")}
-                                onConfirm={() => handleConfirmReplacement("document")}
+                                onCancel={() => handleCancelReplacement('document')}
+                                onConfirm={() => handleConfirmReplacement('document')}
                                 selectedFile={newDocumentFile}
                                 isUploading={isUploadingReplacement}
-                                fileType="document"
+                                fileType='document'
                               />
                             ) : (
-                              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                                  <span className="text-sm font-medium text-amber-700">Documento pendente</span>
+                              <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
+                                <div className='flex items-center space-x-2 mb-2'>
+                                  <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
+                                  <span className='text-sm font-medium text-amber-700'>Documento pendente</span>
                                 </div>
                                 <FileUpload
-                                  id="document"
-                                  label="CNH ou RG com foto"
-                                  description="Envie uma foto clara do seu documento de identidade (frente e verso se necessário)"
+                                  id='document'
+                                  label='CNH ou RG com foto'
+                                  description='Envie uma foto clara do seu documento de identidade (frente e verso se necessário)'
                                   existingFileUrl={athlete?.cnh_cpf_document_url}
                                   onFileChange={handleDocumentChange}
                                   required={!athlete?.cnh_cpf_document_url}
@@ -1073,17 +1075,17 @@ export default function ProfilePage() {
                             )}
                           </div>
 
-                          <div className="space-y-4">
-                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
-                              <div className="w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start">
+                          <div className='space-y-4'>
+                            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
+                              <div className='w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start'>
                                 2
                               </div>
-                              <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left">
+                              <h3 className='text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left'>
                                 Atestado de Matrícula
                               </h3>
                               {athlete?.enrollment_document_url && (
-                                <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start">
-                                  <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                                <div className='flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start'>
+                                  <CheckCircle className='h-3 w-3 flex-shrink-0' />
                                   <span>Enviado</span>
                                 </div>
                               )}
@@ -1092,32 +1094,34 @@ export default function ProfilePage() {
                             {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
                               <UploadedFileDisplay
                                 url={athlete.enrollment_document_url}
-                                label="Atestado de matrícula"
+                                label='Atestado de matrícula'
                                 onReplace={handleReplaceEnrollment}
-                                canReplace={athleteStatus === "pending" || athleteStatus === "rejected" || athleteStatus === null}
-                                fileType="enrollment"
+                                canReplace={
+                                  athleteStatus === 'pending' || athleteStatus === 'rejected' || athleteStatus === null
+                                }
+                                fileType='enrollment'
                               />
                             ) : isReplacingEnrollment ? (
                               <FileReplacementInterface
-                                label="atestado de matrícula"
-                                description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
+                                label='atestado de matrícula'
+                                description='O atestado deve ser recente e comprovar sua matrícula na instituição de ensino'
                                 onFileChange={handleNewEnrollmentChange}
-                                onCancel={() => handleCancelReplacement("enrollment")}
-                                onConfirm={() => handleConfirmReplacement("enrollment")}
+                                onCancel={() => handleCancelReplacement('enrollment')}
+                                onConfirm={() => handleConfirmReplacement('enrollment')}
                                 selectedFile={newEnrollmentFile}
                                 isUploading={isUploadingReplacement}
-                                fileType="enrollment"
+                                fileType='enrollment'
                               />
                             ) : (
-                              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full">
-                                <div className="flex items-center space-x-2 mb-2">
-                                  <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                                  <span className="text-sm font-medium text-amber-700">Atestado pendente</span>
+                              <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
+                                <div className='flex items-center space-x-2 mb-2'>
+                                  <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
+                                  <span className='text-sm font-medium text-amber-700'>Atestado pendente</span>
                                 </div>
                                 <FileUpload
-                                  id="enrollment"
-                                  label="Comprovante de matrícula atual"
-                                  description="O atestado deve ser recente e comprovar sua matrícula na instituição de ensino"
+                                  id='enrollment'
+                                  label='Comprovante de matrícula atual'
+                                  description='O atestado deve ser recente e comprovar sua matrícula na instituição de ensino'
                                   existingFileUrl={athlete?.enrollment_document_url}
                                   onFileChange={handleEnrollmentChange}
                                   required={!athlete?.enrollment_document_url}
@@ -1130,25 +1134,25 @@ export default function ProfilePage() {
                         <QuickSportsSelector />
 
                         {/* Consent Checkbox */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4">
-                          <div className="flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3">
+                        <div className='bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 space-y-4'>
+                          <div className='flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3'>
                             <Checkbox
-                              id="terms"
+                              id='terms'
                               checked={agreedToTerms}
                               onCheckedChange={(checked) => {
-                                console.log("Checkbox changed:", checked) // Debug log
+                                console.log('Checkbox changed:', checked) // Debug log
                                 setAgreedToTerms(checked === true)
                               }}
-                              className="mt-1 h-5 w-5 border-2 border-gray-400 data-[state=checked]:bg-[#0456FC] data-[state=checked]:border-[#0456FC] focus:ring-2 focus:ring-[#0456FC] focus:ring-offset-2 flex-shrink-0 self-center sm:self-start"
+                              className='mt-1 h-5 w-5 border-2 border-gray-400 data-[state=checked]:bg-[#0456FC] data-[state=checked]:border-[#0456FC] focus:ring-2 focus:ring-[#0456FC] focus:ring-offset-2 flex-shrink-0 self-center sm:self-start'
                             />
                             <Label
-                              htmlFor="terms"
-                              className="text-sm sm:text-base text-gray-800 leading-relaxed cursor-pointer flex-1 text-center sm:text-left"
+                              htmlFor='terms'
+                              className='text-sm sm:text-base text-gray-800 leading-relaxed cursor-pointer flex-1 text-center sm:text-left'
                             >
-                              Eu li e concordo com os{" "}
+                              Eu li e concordo com os{' '}
                               <a
-                                href="#"
-                                className="text-[#0456FC] hover:underline font-medium"
+                                href='#'
+                                className='text-[#0456FC] hover:underline font-medium'
                                 onClick={(e) => e.preventDefault()}
                               >
                                 Termos de Uso e Política de Privacidade
@@ -1160,21 +1164,21 @@ export default function ProfilePage() {
                           {/* Visual feedback for checkbox state */}
                           <div
                             className={`transition-all duration-200 rounded-lg p-3 border-2 ${
-                              agreedToTerms ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+                              agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                             }`}
                           >
-                            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
                               {agreedToTerms ? (
                                 <>
-                                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start" />
-                                  <p className="text-sm text-green-700 font-medium text-center sm:text-left">
+                                  <CheckCircle className='h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start' />
+                                  <p className='text-sm text-green-700 font-medium text-center sm:text-left'>
                                     ✅ Termos aceitos - Você pode prosseguir com o cadastro
                                   </p>
                                 </>
                               ) : (
                                 <>
-                                  <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 self-center sm:self-start" />
-                                  <p className="text-sm text-red-600 font-medium text-center sm:text-left">
+                                  <AlertCircle className='h-4 w-4 text-red-500 flex-shrink-0 self-center sm:self-start' />
+                                  <p className='text-sm text-red-600 font-medium text-center sm:text-left'>
                                     ⚠️ Você deve concordar com os termos para prosseguir
                                   </p>
                                 </>
@@ -1184,10 +1188,10 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Submit Button */}
-                        <div className="pt-4">
+                        <div className='pt-4'>
                           <Button
-                            type="submit"
-                            className="w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg"
+                            type='submit'
+                            className='w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg'
                             disabled={
                               isSubmitting ||
                               isUploadingReplacement ||
@@ -1198,18 +1202,18 @@ export default function ProfilePage() {
                             }
                           >
                             {isSubmitting ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin flex-shrink-0" />
+                              <div className='flex items-center justify-center space-x-2'>
+                                <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 animate-spin flex-shrink-0' />
                                 <span>Enviando...</span>
                               </div>
                             ) : (
-                              <div className="flex items-center justify-center space-x-2">
-                                <Upload className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                              <div className='flex items-center justify-center space-x-2'>
+                                <Upload className='h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0' />
                                 <span>Enviar e Finalizar Cadastro</span>
                               </div>
                             )}
                           </Button>
-                          <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3">
+                          <p className='text-xs text-gray-500 text-center mt-2 sm:mt-3'>
                             Ao enviar, você concorda que as informações fornecidas são verdadeiras
                           </p>
                         </div>
