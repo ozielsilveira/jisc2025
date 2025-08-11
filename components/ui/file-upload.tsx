@@ -1,105 +1,228 @@
 'use client'
 
-import React, { useState } from 'react'
-import Image from 'next/image'
+import type React from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle, Eye, Trash2, Upload } from 'lucide-react'
+import { Check, Upload, X } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
 
 interface FileUploadProps {
   id: string
   label: string
   description: string
-  existingFileUrl?: string | null
+  existingFileUrl?: string
   onFileChange: (file: File | null) => void
   required?: boolean
+  accept?: string
+  maxSize?: number // in MB
 }
 
-export function FileUpload({ id, label, description, existingFileUrl, onFileChange, required }: FileUploadProps) {
+export function FileUpload({
+  id,
+  label,
+  description,
+  existingFileUrl,
+  onFileChange,
+  required = false,
+  accept = 'image/*,.pdf',
+  maxSize = 5
+}: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isReplacing, setIsReplacing] = useState(!existingFileUrl)
+  const [dragActive, setDragActive] = useState(false)
+  const [error, setError] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
-    setSelectedFile(file)
-    onFileChange(file)
+  const validateFile = useCallback(
+    (file: File): string | null => {
+      // Check file size
+      if (file.size > maxSize * 1024 * 1024) {
+        return `Arquivo muito grande. Tamanho máximo: ${maxSize}MB`
+      }
+
+      // Check file type
+      const acceptedTypes = accept.split(',').map((type) => type.trim())
+      const isValidType = acceptedTypes.some((type) => {
+        if (type.startsWith('.')) {
+          return file.name.toLowerCase().endsWith(type.toLowerCase())
+        }
+        if (type.includes('*')) {
+          const baseType = type.split('/')[0]
+          return file.type.startsWith(baseType)
+        }
+        return file.type === type
+      })
+
+      if (!isValidType) {
+        return 'Tipo de arquivo não suportado'
+      }
+
+      return null
+    },
+    [accept, maxSize]
+  )
+
+  const handleFileSelect = useCallback(
+    (file: File) => {
+      const validationError = validateFile(file)
+      if (validationError) {
+        setError(validationError)
+        return
+      }
+
+      setError('')
+      setSelectedFile(file)
+      onFileChange(file)
+    },
+    [validateFile, onFileChange]
+  )
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleFileSelect(file)
+    }
   }
 
-  const handleRemoveExistingFile = () => {
-    setIsReplacing(true)
-    onFileChange(null) // Signal that the file should be removed/replaced
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
   }
 
-  const isImage = existingFileUrl && /\.(jpg|jpeg|png|gif)$/i.test(existingFileUrl)
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      handleFileSelect(file)
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null)
+    setError('')
+    onFileChange(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
 
   return (
-    <div className='space-y-4 rounded-lg border p-4'>
-      <h3 className='text-lg font-semibold'>{label}</h3>
-      <div className='space-y-2'>
-        <Label htmlFor={id}>Arquivo do Documento</Label>
-        {existingFileUrl && !isReplacing ? (
-          <div className='flex items-center justify-between gap-4 rounded-md border p-3'>
-            <div className='flex items-center gap-3'>
-              {isImage ? (
-                <Image src={existingFileUrl} alt='Preview' width={40} height={40} className='rounded-md object-cover' />
-              ) : (
-                <div className='flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-500'>
-                  PDF
-                </div>
-              )}
-              <span className='text-sm font-medium text-gray-700 truncate max-w-xs'>
-                {existingFileUrl.split('/').pop()?.split('?')[0]}
-              </span>
+    <div className='space-y-2'>
+      <Label htmlFor={id} className='text-sm font-medium'>
+        {label}
+        {required && <span className='text-red-500 ml-1'>*</span>}
+      </Label>
+
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+          dragActive
+            ? 'border-blue-400 bg-blue-50'
+            : error
+              ? 'border-red-300 bg-red-50'
+              : 'border-gray-300 hover:border-gray-400'
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <Input
+          ref={fileInputRef}
+          id={id}
+          type='file'
+          accept={accept}
+          onChange={handleInputChange}
+          className='sr-only'
+          aria-describedby={`${id}-description ${id}-error`}
+        />
+
+        {selectedFile ? (
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center space-x-3'>
+              <div className='flex-shrink-0'>
+                <Check className='h-8 w-8 text-green-500' />
+              </div>
+              <div className='min-w-0 flex-1'>
+                <p className='text-sm font-medium text-gray-900 truncate'>{selectedFile.name}</p>
+                <p className='text-sm text-gray-500'>{formatFileSize(selectedFile.size)}</p>
+              </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                type='button'
-                onClick={async (e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  if (existingFileUrl) {
-                    const url = new URL(existingFileUrl)
-                    if (url) {
-                      window.open(url, '_blank', 'noopener,noreferrer')
-                    } else {
-                      console.error('Não foi possível extrair o caminho do documento da URL')
-                    }
-                  }
-                }}
-              >
-                <Eye className='h-4 w-4 mr-1' />
-                Ver
-              </Button>
-              <Button variant='destructive' size='sm' onClick={handleRemoveExistingFile}>
-                <Trash2 className='h-4 w-4 mr-1' />
-                Remover
-              </Button>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={handleRemoveFile}
+              className='flex-shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+              aria-label='Remover arquivo'
+            >
+              <X className='h-4 w-4' />
+            </Button>
+          </div>
+        ) : existingFileUrl ? (
+          <div className='text-center'>
+            <div className='flex items-center justify-center space-x-2 mb-2'>
+              <Check className='h-5 w-5 text-green-500' />
+              <span className='text-sm font-medium text-green-700'>Arquivo já enviado</span>
             </div>
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              onClick={handleButtonClick}
+              className='mt-2 bg-transparent'
+            >
+              <Upload className='h-4 w-4 mr-2' />
+              Substituir arquivo
+            </Button>
           </div>
         ) : (
-          <>
-            <div className='flex items-center gap-4'>
-              <Input
-                id={id}
-                type='file'
-                accept='.pdf,.jpg,.jpeg,.png'
-                onChange={handleFileChange}
-                required={required}
-              />
-              {selectedFile && (
-                <div className='text-sm text-green-600 flex items-center'>
-                  <CheckCircle className='h-4 w-4 mr-1' />
-                  Novo arquivo selecionado
-                </div>
-              )}
+          <div className='text-center'>
+            <Upload className='mx-auto h-12 w-12 text-gray-400' />
+            <div className='mt-4'>
+              <Button type='button' variant='outline' onClick={handleButtonClick} className='focus-ring bg-transparent'>
+                <Upload className='h-4 w-4 mr-2' />
+                Selecionar arquivo
+              </Button>
             </div>
-            <p className='text-xs text-gray-500'>{description}</p>
-          </>
+            <p className='mt-2 text-sm text-gray-500'>ou arraste e solte aqui</p>
+          </div>
         )}
       </div>
+
+      <p id={`${id}-description`} className='text-sm text-gray-600'>
+        {description}
+      </p>
+
+      {error && (
+        <p id={`${id}-error`} className='text-sm text-red-600' role='alert'>
+          {error}
+        </p>
+      )}
+
+      <p className='text-xs text-gray-500'>
+        Tamanho máximo: {maxSize}MB • Formatos aceitos: {accept.replace(/,/g, ', ')}
+      </p>
     </div>
   )
 }
