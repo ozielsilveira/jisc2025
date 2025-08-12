@@ -40,6 +40,7 @@ import {
   CreditCard
 } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback } from 'react'
+import { DocumentModal } from '@/components/document-modal'
 
 // Types
 type Athlete = {
@@ -1690,28 +1691,12 @@ export default function AthletesPage() {
         </div>
       </div>
 
-      {/* Document Dialog */}
-      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
-        <DialogContent className='max-w-4xl max-h-[90vh]'>
-          <DialogHeader>
-            <DialogTitle className='text-xl font-semibold text-gray-900'>Visualizar Documento</DialogTitle>
-          </DialogHeader>
-          <div className='mt-4 flex-1 min-h-0'>
-            {documentUrl ? (
-              <div className='w-full h-[70vh] rounded-lg overflow-hidden border border-gray-200'>
-                <iframe src={documentUrl} className='w-full h-full' title='Documento' />
-              </div>
-            ) : (
-              <div className='flex items-center justify-center h-96 bg-gray-50 rounded-lg'>
-                <div className='text-center'>
-                  <FileText className='h-16 w-16 text-gray-400 mx-auto mb-4' />
-                  <p className='text-gray-500'>Documento não encontrado.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DocumentModal
+        isOpen={documentDialogOpen}
+        onClose={() => setDocumentDialogOpen(false)}
+        documentUrl={documentUrl}
+        title="Documento do Atleta"
+      />
 
       {/* WhatsApp Confirmation Dialog */}
       <WhatsAppConfirmationDialog
