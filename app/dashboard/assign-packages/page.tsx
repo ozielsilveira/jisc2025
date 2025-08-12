@@ -165,7 +165,7 @@ export default function AssignPackagesPage() {
           throw new Error('No athletes data found')
         }
 
-        setAthletes(athletesData)
+        setAthletes(athletesData as unknown as Athlete[])
 
         // Fetch athlete packages
         let packagesQuery = supabase
@@ -204,7 +204,7 @@ export default function AssignPackagesPage() {
           throw new Error('No athlete packages data found')
         }
 
-        setAthletePackages(athletePackagesData)
+        setAthletePackages(athletePackagesData as unknown as AthletePackage[])
       } catch (error) {
         console.warn('Error fetching data:', error)
         toast({

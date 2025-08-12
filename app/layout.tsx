@@ -64,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='pt-BR' className={inter.variable} style={{ colorScheme: 'light' }}>
+    <html lang='pt-BR' className={inter.variable}>
       <head>
         <meta name='format-detection' content='telephone=no' />
         <meta name='apple-mobile-web-app-capable' content='yes' />
@@ -85,7 +85,7 @@ export default function RootLayout({
         </a>
 
         <AuthProvider>
-          <ThemeProvider attribute='class' defaultTheme='light'>
+          <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false} disableTransitionOnChange>
             <div id='main-content'>{children}</div>
             <Toaster />
           </ThemeProvider>
