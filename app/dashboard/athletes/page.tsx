@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
@@ -26,18 +25,16 @@ import {
   UserX,
   Loader2,
   AlertCircle,
-  Star,
   MessageCircle,
   CheckCircle,
   XCircle,
   Send,
-  SlidersHorizontal,
   RefreshCw,
-  ChevronDown,
   Sparkles,
   TrendingUp,
   FileCheck,
-  ExternalLink
+  ExternalLink,
+  X
 } from 'lucide-react'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 
@@ -730,6 +727,15 @@ const WhatsAppRejectionDialog = ({
   )
 }
 
+interface AthleteCardProps {
+  athlete: Athlete
+  userRole: string | null
+  onApprove: (id: string) => void
+  onReject: (id: string) => void
+  onWhatsApp: (athlete: Athlete) => void
+  onViewDocument: (url: string) => void
+}
+
 const AthleteListItem = ({
   athlete,
   userRole,
@@ -1375,14 +1381,14 @@ export default function AthletesPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+    <div className='min-h-full'>
+      <div className='max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
         {/* Header */}
-        <div className='mb-8'>
-          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6'>
+        <div className='mb-6 sm:mb-8'>
+          <div className='flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 gap-4 lg:gap-6'>
             <div className='space-y-1'>
-              <h1 className='text-3xl font-bold text-gray-900'>Atletas</h1>
-              <p className='text-gray-600'>
+              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>Atletas</h1>
+              <p className='text-sm sm:text-base text-gray-600 leading-relaxed'>
                 {userRole === 'admin'
                   ? 'Gerencie todos os atletas do campeonato'
                   : userRole === 'athletic'
@@ -1391,287 +1397,368 @@ export default function AthletesPage() {
               </p>
             </div>
 
-            {/* Header Actions */}
-            <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3'>
+            <div className='flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 items-stretch sm:items-center'>
               {userRole === 'athletic' && (
-                <Button onClick={handleShareLink} className='h-10 px-4 bg-blue-600 hover:bg-blue-700 font-medium'>
-                  <Share2 className='h-4 w-4 mr-2' />
+                <Button
+                  onClick={handleShareLink}
+                  className='h-11 px-4 bg-blue-600 hover:bg-blue-700 font-medium text-sm sm:text-base'
+                >
+                  <Share2 className='h-4 w-4 mr-2 flex-shrink-0' />
                   Copiar link de cadastro
                 </Button>
               )}
               <Button
                 onClick={() => refetch()}
                 variant='outline'
-                className='h-10 px-4 font-medium border-gray-300 hover:bg-gray-50'
+                className='h-11 px-4 font-medium border-gray-300 hover:bg-gray-50 text-sm sm:text-base'
               >
-                <RefreshCw className='h-4 w-4 mr-2' />
+                <RefreshCw className={`h-4 w-4 mr-2 flex-shrink-0 ${isLoading ? 'animate-spin' : ''}`} />
                 Atualizar
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        {userRole === 'athletic' || userRole === 'admin' ? (
-          <div className='space-y-6'>
-            {/* Statistics Cards */}
-            <StatisticsCards athletes={athletes} />
+        <StatisticsCards athletes={athletes} />
 
-            {/* Filters */}
-            <Card className='border border-gray-200 bg-white'>
-              <CardContent className='p-6'>
-                <div className='space-y-4'>
-                  {/* Search Bar */}
+        {(userRole === 'admin' || userRole === 'athletic') && (
+          <Card className='mb-6 sm:mb-8'>
+            <CardContent className='p-4 sm:p-6'>
+              <div className='flex flex-col space-y-4'>
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0'>
+                  <h3 className='text-base sm:text-lg font-semibold text-gray-900'>Filtros</h3>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={clearAllFilters}
+                    className='self-start sm:self-auto text-xs sm:text-sm'
+                  >
+                    <X className='h-3 w-3 sm:h-4 sm:w-4 mr-1' />
+                    Limpar filtros
+                  </Button>
+                </div>
+
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4'>
+                  {userRole === 'admin' && (
+                    <Select value={selectedAthleticFilter} onValueChange={setSelectedAthleticFilter}>
+                      <SelectTrigger className='h-10 sm:h-11 border-gray-300 text-sm'>
+                        <SelectValue placeholder='Todas as Atléticas' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='all'>Todas as Atléticas</SelectItem>
+                        {athletics.map((athletic) => (
+                          <SelectItem key={athletic.id} value={athletic.id}>
+                            {athletic.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
+                    <SelectTrigger className='h-10 sm:h-11 border-gray-300 text-sm'>
+                      <SelectValue placeholder='Todos os Status' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>Todos os Status</SelectItem>
+                      <SelectItem value='pending'>Enviado</SelectItem>
+                      <SelectItem value='approved'>Aprovado</SelectItem>
+                      <SelectItem value='rejected'>Rejeitado</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedSportFilter} onValueChange={setSelectedSportFilter}>
+                    <SelectTrigger className='h-10 sm:h-11 border-gray-300 text-sm'>
+                      <SelectValue placeholder='Todas as Modalidades' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>Todas as Modalidades</SelectItem>
+                      {sports.map((sport) => (
+                        <SelectItem key={sport.id} value={sport.id}>
+                          {sport.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={`${sortField}-${sortOrder}`}
+                    onValueChange={(value) => {
+                      const [field, order] = value.split('-') as [SortField, SortOrder]
+                      setSortField(field)
+                      setSortOrder(order)
+                    }}
+                  >
+                    <SelectTrigger className='h-10 sm:h-11 border-gray-300 text-sm'>
+                      <SelectValue placeholder='Ordenar por' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='name-asc'>Nome (A-Z)</SelectItem>
+                      <SelectItem value='name-desc'>Nome (Z-A)</SelectItem>
+                      <SelectItem value='created_at-desc'>Data de Cadastro</SelectItem>
+                      <SelectItem value='created_at-asc'>Data de Cadastro</SelectItem>
+                      <SelectItem value='status-asc'>Status</SelectItem>
+                      <SelectItem value='athletic-asc'>Atlética</SelectItem>
+                    </SelectContent>
+                  </Select>
+
                   <div className='relative'>
                     <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
                     <Input
-                      placeholder='Buscar por nome, email ou telefone...'
+                      placeholder='Buscar atletas...'
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className='pl-10 h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                      className='h-10 sm:h-11 pl-10 border-gray-300 text-sm'
                     />
                   </div>
-
-                  {/* Filter Toggle */}
-                  <div className='flex items-center justify-between'>
-                    <Button
-                      variant='outline'
-                      onClick={() => setShowFilters(!showFilters)}
-                      className='h-10 px-4 font-medium border-gray-300 hover:bg-gray-50'
-                    >
-                      <SlidersHorizontal className='h-4 w-4 mr-2' />
-                      Filtros Avançados
-                      <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                    </Button>
-                    {hasActiveFilters && (
-                      <Button
-                        variant='ghost'
-                        onClick={clearAllFilters}
-                        className='h-10 px-4 font-medium text-red-600 hover:bg-red-50 hover:text-red-700'
-                      >
-                        <XCircle className='h-4 w-4 mr-2' />
-                        Limpar Filtros
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Advanced Filters */}
-                  {showFilters && (
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200'>
-                      {userRole === 'admin' && (
-                        <Select value={selectedAthleticFilter} onValueChange={setSelectedAthleticFilter}>
-                          <SelectTrigger className='h-10 border-gray-300'>
-                            <SelectValue placeholder='Todas as Atléticas' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='all'>Todas as Atléticas</SelectItem>
-                            {athletics.map((athletic) => (
-                              <SelectItem key={athletic.id} value={athletic.id}>
-                                {athletic.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-
-                      <Select value={selectedStatusFilter} onValueChange={setSelectedStatusFilter}>
-                        <SelectTrigger className='h-10 border-gray-300'>
-                          <SelectValue placeholder='Todos os Status' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='all'>Todos os Status</SelectItem>
-                          <SelectItem value='pending'>Pendentes</SelectItem>
-                          <SelectItem value='sent'>Em Análise</SelectItem>
-                          <SelectItem value='approved'>Aprovados</SelectItem>
-                          <SelectItem value='rejected'>Rejeitados</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={selectedSportFilter} onValueChange={setSelectedSportFilter}>
-                        <SelectTrigger className='h-10 border-gray-300'>
-                          <SelectValue placeholder='Todas as Modalidades' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='all'>Todas as Modalidades</SelectItem>
-                          {sports.map((sport) => (
-                            <SelectItem key={sport.id} value={sport.id}>
-                              {sport.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {userRole === 'athletic' && (
-                        <Select value={selectedWhatsAppFilter} onValueChange={setSelectedWhatsAppFilter}>
-                          <SelectTrigger className='h-10 border-gray-300'>
-                            <SelectValue placeholder='Status WhatsApp' />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value='all'>Todos</SelectItem>
-                            <SelectItem value='sent'>WhatsApp Enviado</SelectItem>
-                            <SelectItem value='not_sent'>WhatsApp Pendente</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-
-                      <Select
-                        value={`${sortField}-${sortOrder}`}
-                        onValueChange={(value) => {
-                          const [field, order] = value.split('-') as [SortField, SortOrder]
-                          setSortField(field)
-                          setSortOrder(order)
-                        }}
-                      >
-                        <SelectTrigger className='h-10 border-gray-300'>
-                          <SelectValue placeholder='Ordenar por' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='name-asc'>Nome (A-Z)</SelectItem>
-                          <SelectItem value='name-desc'>Nome (Z-A)</SelectItem>
-                          <SelectItem value='created_at-desc'>Mais Recentes</SelectItem>
-                          <SelectItem value='created_at-asc'>Mais Antigos</SelectItem>
-                          <SelectItem value='status-asc'>Status</SelectItem>
-                          <SelectItem value='athletic-asc'>Atlética</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Results Summary */}
-                  <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-3 bg-blue-50 rounded-lg border border-blue-200'>
-                    <div className='flex items-center space-x-2'>
-                      <TrendingUp className='h-4 w-4 text-blue-600' />
-                      <span className='font-medium text-blue-900'>
-                        {filteredAndSortedAthletes.length} atleta{filteredAndSortedAthletes.length !== 1 ? 's' : ''}{' '}
-                        encontrado{filteredAndSortedAthletes.length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    {hasActiveFilters && (
-                      <div className='flex items-center space-x-2'>
-                        <Sparkles className='h-4 w-4 text-blue-600' />
-                        <span className='text-sm text-blue-700 font-medium'>Filtros ativos</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Athletes List */}
-            {filteredAndSortedAthletes.length === 0 ? (
-              <EmptyState userRole={userRole} />
-            ) : (
-              <div className='space-y-4'>
-                {filteredAndSortedAthletes.map((athlete) => (
-                  <AthleteListItem
-                    key={athlete.id}
-                    athlete={athlete}
-                    userRole={userRole}
-                    onViewDocument={handleViewDocument}
-                    onApprove={handleApproveAthlete}
-                    onReject={handleRejectAthlete}
-                    onWhatsApp={handleWhatsApp}
-                  />
-                ))}
+        {filteredAndSortedAthletes.length > 0 && (
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6'>
+            <div className='flex items-center space-x-2'>
+              <TrendingUp className='h-4 w-4 text-blue-600 flex-shrink-0' />
+              <span className='font-medium text-blue-900 text-sm sm:text-base'>
+                {filteredAndSortedAthletes.length} atleta{filteredAndSortedAthletes.length !== 1 ? 's' : ''} encontrado
+                {filteredAndSortedAthletes.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            {hasActiveFilters && (
+              <div className='flex items-center space-x-2'>
+                <Sparkles className='h-4 w-4 text-blue-600 flex-shrink-0' />
+                <span className='text-xs sm:text-sm text-blue-700 font-medium'>Filtros ativos</span>
               </div>
             )}
           </div>
-        ) : (
-          <Tabs defaultValue={isUserAthlete ? 'list' : 'register'} className='w-full'>
-            <TabsList className='grid w-full grid-cols-2 h-12 bg-white border border-gray-200'>
-              <TabsTrigger value='list' className='h-10 font-medium'>
-                Meus Dados de Atleta
-              </TabsTrigger>
-              {!isUserAthlete && (
-                <TabsTrigger value='register' className='h-10 font-medium'>
-                  Cadastrar como Atleta
-                </TabsTrigger>
-              )}
-            </TabsList>
-
-            <TabsContent value='list' className='mt-6'>
-              {isUserAthlete ? (
-                <div className='space-y-4'>
-                  {filteredAndSortedAthletes.map((athlete) => (
-                    <AthleteListItem
-                      key={athlete.id}
-                      athlete={athlete}
-                      userRole={userRole}
-                      onViewDocument={handleViewDocument}
-                      onApprove={handleApproveAthlete}
-                      onReject={handleRejectAthlete}
-                      onWhatsApp={handleWhatsApp}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className='text-center py-20'>
-                  <AlertCircle className='h-16 w-16 text-gray-400 mx-auto mb-6' />
-                  <h3 className='text-xl font-semibold text-gray-900 mb-2'>Você ainda não é um atleta registrado</h3>
-                  <p className='text-gray-600'>Cadastre-se para participar das competições!</p>
-                </div>
-              )}
-            </TabsContent>
-
-            {!isUserAthlete && (
-              <TabsContent value='register' className='mt-6'>
-                <div className='text-center py-20'>
-                  <Star className='h-16 w-16 text-gray-400 mx-auto mb-6' />
-                  <h3 className='text-xl font-semibold text-gray-900 mb-2'>Cadastro de Atleta</h3>
-                  <p className='text-gray-600'>Formulário de cadastro será implementado aqui.</p>
-                </div>
-              </TabsContent>
-            )}
-          </Tabs>
         )}
 
-        {/* Document Dialog */}
-        <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
-          <DialogContent className='max-w-4xl max-h-[90vh]'>
-            <DialogHeader>
-              <DialogTitle className='text-xl font-semibold text-gray-900'>Visualizar Documento</DialogTitle>
-            </DialogHeader>
-            <div className='mt-4 flex-1 min-h-0'>
-              {documentUrl ? (
-                <div className='w-full h-[70vh] rounded-lg overflow-hidden border border-gray-200'>
-                  <iframe src={documentUrl} className='w-full h-full' title='Documento' />
+        <div className='space-y-4 sm:space-y-6'>
+          {isLoading ? (
+            <div className='flex justify-center items-center py-12'>
+              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-blue-600'></div>
+            </div>
+          ) : filteredAndSortedAthletes.length === 0 ? (
+            <Card>
+              <CardContent className='p-8 sm:p-12 text-center'>
+                <Users className='h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4' />
+                <h3 className='text-lg sm:text-xl font-semibold text-gray-900 mb-2'>Nenhum atleta encontrado</h3>
+                <p className='text-sm sm:text-base text-gray-600 max-w-md mx-auto'>
+                  {searchTerm || hasActiveFilters
+                    ? 'Tente ajustar os filtros ou termo de busca para encontrar atletas.'
+                    : 'Ainda não há atletas cadastrados no sistema.'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredAndSortedAthletes.map((athlete) => (
+              <AthleteCard
+                key={athlete.id}
+                athlete={athlete}
+                userRole={userRole}
+                onApprove={handleApproveAthlete}
+                onReject={handleRejectAthlete}
+                onWhatsApp={handleWhatsApp}
+                onViewDocument={handleViewDocument}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Document Dialog */}
+      <Dialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen}>
+        <DialogContent className='max-w-4xl max-h-[90vh]'>
+          <DialogHeader>
+            <DialogTitle className='text-xl font-semibold text-gray-900'>Visualizar Documento</DialogTitle>
+          </DialogHeader>
+          <div className='mt-4 flex-1 min-h-0'>
+            {documentUrl ? (
+              <div className='w-full h-[70vh] rounded-lg overflow-hidden border border-gray-200'>
+                <iframe src={documentUrl} className='w-full h-full' title='Documento' />
+              </div>
+            ) : (
+              <div className='flex items-center justify-center h-96 bg-gray-50 rounded-lg'>
+                <div className='text-center'>
+                  <FileText className='h-16 w-16 text-gray-400 mx-auto mb-4' />
+                  <p className='text-gray-500'>Documento não encontrado.</p>
                 </div>
-              ) : (
-                <div className='flex items-center justify-center h-96 bg-gray-50 rounded-lg'>
-                  <div className='text-center'>
-                    <FileText className='h-16 w-16 text-gray-400 mx-auto mb-4' />
-                    <p className='text-gray-500'>Documento não encontrado.</p>
-                  </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* WhatsApp Confirmation Dialog */}
+      <WhatsAppConfirmationDialog
+        athlete={selectedAthlete}
+        isOpen={whatsappDialogOpen}
+        onClose={() => {
+          setWhatsappDialogOpen(false)
+          setSelectedAthlete(null)
+        }}
+        onConfirm={handleWhatsAppConfirm}
+        isLoading={isWhatsAppLoading}
+      />
+
+      {/* WhatsApp Rejection Dialog */}
+      <WhatsAppRejectionDialog
+        athlete={selectedAthleteForRejection}
+        isOpen={whatsappRejectionDialogOpen}
+        onClose={() => {
+          setWhatsappRejectionDialogOpen(false)
+          setSelectedAthleteForRejection(null)
+        }}
+        onConfirm={handleRejectAthleteConfirm}
+        isLoading={isRejectionLoading}
+      />
+    </div>
+  )
+}
+
+function AthleteCard({ athlete, userRole, onApprove, onReject, onWhatsApp, onViewDocument }: AthleteCardProps) {
+  const hasPackage = athlete.athlete_packages && athlete.athlete_packages.length > 0
+  const sports = athlete.sports || []
+
+  return (
+    <div className='min-h-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
+      <Card className='hover:shadow-lg transition-all duration-200 border border-gray-200'>
+        <CardContent className='p-4 sm:p-6'>
+          <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4 mb-4'>
+            <div className='flex items-start space-x-3 min-w-0 flex-1'>
+              <div className='flex-shrink-0'>
+                <div className='w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center'>
+                  <span className='text-white font-bold text-lg sm:text-xl'>
+                    {athlete.user.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
+              </div>
+              <div className='min-w-0 flex-1'>
+                <h3 className='text-lg sm:text-xl font-bold text-gray-900 truncate'>{athlete.user.name}</h3>
+                <p className='text-sm text-gray-600 truncate'>{athlete.athletic.name}</p>
+                <div className='flex items-center space-x-2 mt-1'>
+                  <StatusBadge status={athlete.status} />
+                  {hasPackage && (
+                    <Badge variant='secondary' className='text-xs bg-green-50 text-green-700 border-green-200'>
+                      Com pacote
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className='mb-4'>
+            <h4 className='text-sm font-semibold text-gray-700 mb-2'>Modalidades:</h4>
+            <div className='flex flex-wrap gap-1.5'>
+              {sports.slice(0, 4).map((sport) => (
+                <Badge
+                  key={sport.id}
+                  variant='secondary'
+                  className={`text-xs font-medium px-2 py-1 ${
+                    sport.type === 'sport'
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-purple-50 text-purple-700 border-purple-200'
+                  }`}
+                >
+                  {sport.name}
+                </Badge>
+              ))}
+              {sports.length > 4 && (
+                <Badge variant='secondary' className='text-xs bg-slate-50 text-slate-600 px-2 py-1 font-medium'>
+                  +{sports.length - 4} mais
+                </Badge>
               )}
             </div>
-          </DialogContent>
-        </Dialog>
+          </div>
 
-        {/* WhatsApp Confirmation Dialog */}
-        <WhatsAppConfirmationDialog
-          athlete={selectedAthlete}
-          isOpen={whatsappDialogOpen}
-          onClose={() => {
-            setWhatsappDialogOpen(false)
-            setSelectedAthlete(null)
-          }}
-          onConfirm={handleWhatsAppConfirm}
-          isLoading={isWhatsAppLoading}
-        />
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4'>
+            <div className='flex items-center space-x-2 text-gray-600'>
+              <Mail className='h-4 w-4 text-gray-400 flex-shrink-0' />
+              <span className='text-sm font-medium truncate'>{athlete.user.email}</span>
+            </div>
+            <div className='flex items-center space-x-2 text-gray-600'>
+              <Phone className='h-4 w-4 text-gray-400 flex-shrink-0' />
+              <span className='text-sm font-medium'>{athlete.user.phone}</span>
+            </div>
+            <div className='flex items-center space-x-2 text-gray-600'>
+              <Calendar className='h-4 w-4 text-gray-400 flex-shrink-0' />
+              <span className='text-sm font-medium'>{new Date(athlete.created_at).toLocaleDateString('pt-BR')}</span>
+            </div>
+            <div className='flex items-center space-x-2 text-gray-600'>
+              <Trophy className='h-4 w-4 text-gray-400 flex-shrink-0' />
+              <span className='text-sm font-medium'>{athlete.sports.length} modalidades</span>
+            </div>
+          </div>
 
-        {/* WhatsApp Rejection Dialog */}
-        <WhatsAppRejectionDialog
-          athlete={selectedAthleteForRejection}
-          isOpen={whatsappRejectionDialogOpen}
-          onClose={() => {
-            setWhatsappRejectionDialogOpen(false)
-            setSelectedAthleteForRejection(null)
-          }}
-          onConfirm={handleRejectAthleteConfirm}
-          isLoading={isRejectionLoading}
-        />
-      </div>
+          <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pt-4 border-t border-gray-100'>
+            <div className='flex flex-wrap gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => onViewDocument(athlete.cnh_cpf_document_url)}
+                disabled={!athlete.cnh_cpf_document_url}
+                className='h-9 px-3 text-xs sm:text-sm font-medium border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-colors'
+              >
+                <Eye className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
+                Documento
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => onViewDocument(athlete.enrollment_document_url)}
+                disabled={!athlete.enrollment_document_url}
+                className='h-9 px-3 text-xs sm:text-sm font-medium border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-colors'
+              >
+                <FileCheck className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
+                Matrícula
+              </Button>
+              {athlete.status === 'approved' && hasPackage && (
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onWhatsApp(athlete)}
+                  className={`h-9 px-3 text-xs sm:text-sm font-medium border transition-colors ${
+                    athlete.wpp_sent
+                      ? 'border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400'
+                      : 'border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400'
+                  }`}
+                >
+                  <MessageCircle className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
+                  <span className='hidden sm:inline'>{athlete.wpp_sent ? 'Reenviar mensagem' : 'Enviar mensagem'}</span>
+                  <span className='sm:hidden'>{athlete.wpp_sent ? 'Reenviar' : 'Enviar'}</span>
+                </Button>
+              )}
+            </div>
+
+            {(userRole === 'admin' || userRole === 'athletic') && athlete.status === 'sent' && (
+              <div className='flex gap-2 sm:gap-3'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onReject(athlete.id)}
+                  className='h-9 px-3 text-xs sm:text-sm font-medium border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 transition-colors'
+                >
+                  <UserX className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
+                  <span className='hidden sm:inline'>Rejeitar</span>
+                  <span className='sm:hidden'>Rejeitar</span>
+                </Button>
+                <Button
+                  size='sm'
+                  onClick={() => onApprove(athlete.id)}
+                  className='h-9 px-3 text-xs sm:text-sm bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 font-medium shadow-md'
+                >
+                  <UserCheck className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
+                  <span className='hidden sm:inline'>Aprovar</span>
+                  <span className='sm:hidden'>Aprovar</span>
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

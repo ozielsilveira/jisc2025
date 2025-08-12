@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           )}
 
           <main className='flex-1 pt-16 md:pt-0 overflow-y-auto'>
-            <div className='container-responsive py-4 sm:py-6 lg:py-8 max-w-7xl'>
+            <div className='w-full min-h-full'>
               <Suspense fallback={<LoadingSpinner />}>
                 <ContentWrapper>{children}</ContentWrapper>
               </Suspense>
