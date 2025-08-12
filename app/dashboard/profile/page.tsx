@@ -616,7 +616,8 @@ export default function ProfilePage() {
 
       toast({
         title: 'Cadastro enviado com sucesso!',
-        description: 'Seu cadastro de atleta foi enviado e está aguardando aprovação.'
+        description: 'Seu cadastro de atleta foi enviado e está aguardando aprovação.',
+        variant: 'success'
       })
     } catch (error: any) {
       console.error('Error during athlete registration:', error)
