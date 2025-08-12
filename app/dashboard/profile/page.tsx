@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   CheckCircle,
   Clock,
@@ -281,63 +281,208 @@ export default function ProfilePage() {
   const [currentUploadStep, setCurrentUploadStep] = useState('')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  useEffect(() => {
-    const fetchProfileAndSports = async () => {
-      if (!user) return
-      setIsLoading(true)
-      try {
-        const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single()
-        if (userError) throw userError
-        setProfile(userData as UserProfile)
+  const [isPageVisible, setIsPageVisible] = useState(true)
+  const [hasUnsavedFiles, setHasUnsavedFiles] = useState(false)
+  const progressIntervalsRef = useRef<{ [key: string]: NodeJS.Timeout }>({})
 
-        if (userData.role === 'athlete') {
-          await fetchSports()
-          const { data: athleteData, error: athleteError } = await supabase
-            .from('athletes')
-            .select('*')
-            .eq('user_id', user.id)
-            .single()
+  const persistFiles = useCallback(() => {
+    if (typeof window === 'undefined') return
 
-          if (athleteError && athleteError.code !== 'PGRST116') {
-            throw athleteError
+    const filesToPersist = {
+      documentFile: documentFile
+        ? {
+            name: documentFile.name,
+            size: documentFile.size,
+            type: documentFile.type,
+            lastModified: documentFile.lastModified
           }
-
-          if (athleteData) {
-            setAthlete(athleteData)
-            setAthleteStatus(athleteData.status)
-            const { data: athleteSportsData, error: athleteSportsError } = await supabase
-              .from('athlete_sports')
-              .select('sport_id')
-              .eq('athlete_id', athleteData.id)
-
-            if (athleteSportsError) {
-              console.error('Error fetching athlete sports:', athleteSportsError)
-              toast({
-                title: 'Erro ao carregar modalidades do atleta',
-                description: 'Não foi possível carregar suas modalidades selecionadas.',
-                variant: 'destructive'
-              })
-            } else if (athleteSportsData) {
-              setSelectedSports(athleteSportsData.map((as) => as.sport_id))
-            }
-          } else {
-            setAthleteStatus(null)
+        : null,
+      enrollmentFile: enrollmentFile
+        ? {
+            name: enrollmentFile.name,
+            size: enrollmentFile.size,
+            type: enrollmentFile.type,
+            lastModified: enrollmentFile.lastModified
           }
+        : null,
+      newDocumentFile: newDocumentFile
+        ? {
+            name: newDocumentFile.name,
+            size: newDocumentFile.size,
+            type: newDocumentFile.type,
+            lastModified: newDocumentFile.lastModified
+          }
+        : null,
+      newEnrollmentFile: newEnrollmentFile
+        ? {
+            name: newEnrollmentFile.name,
+            size: newEnrollmentFile.size,
+            type: newEnrollmentFile.type,
+            lastModified: newEnrollmentFile.lastModified
+          }
+        : null,
+      selectedSports,
+      agreedToTerms,
+      isReplacingDocument,
+      isReplacingEnrollment,
+      uploadProgress,
+      uploadStatus
+    }
+
+    sessionStorage.setItem('profile-form-state', JSON.stringify(filesToPersist))
+  }, [
+    documentFile,
+    enrollmentFile,
+    newDocumentFile,
+    newEnrollmentFile,
+    selectedSports,
+    agreedToTerms,
+    isReplacingDocument,
+    isReplacingEnrollment,
+    uploadProgress,
+    uploadStatus
+  ])
+
+  const restoreFiles = useCallback(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      const savedState = sessionStorage.getItem('profile-form-state')
+      if (savedState) {
+        const parsed = JSON.parse(savedState)
+
+        // Restore form state
+        setSelectedSports(parsed.selectedSports || [])
+        setAgreedToTerms(parsed.agreedToTerms || false)
+        setIsReplacingDocument(parsed.isReplacingDocument || false)
+        setIsReplacingEnrollment(parsed.isReplacingEnrollment || false)
+        setUploadProgress(parsed.uploadProgress || {})
+        setUploadStatus(parsed.uploadStatus || {})
+
+        // Show recovery message if there were files
+        if (parsed.documentFile || parsed.enrollmentFile || parsed.newDocumentFile || parsed.newEnrollmentFile) {
+          toast({
+            title: 'Sessão restaurada',
+            description: 'Seus arquivos foram recuperados. Por favor, selecione-os novamente para continuar.',
+            variant: 'default'
+          })
+          setHasUnsavedFiles(true)
         }
-      } catch (error) {
-        console.error('Error fetching profile or sports:', error)
-        toast({
-          title: 'Erro ao carregar dados',
-          description: 'Não foi possível carregar seu perfil ou modalidades.',
-          variant: 'destructive'
-        })
-      } finally {
-        setIsLoading(false)
+      }
+    } catch (error) {
+      console.error('Error restoring files:', error)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden
+      setIsPageVisible(isVisible)
+
+      if (!isVisible) {
+        // Page is becoming hidden - persist current state
+        persistFiles()
+      } else {
+        // Page is becoming visible - check if we need to restore state
+        if (!hasUnsavedFiles) {
+          restoreFiles()
+        }
       }
     }
 
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedFiles || documentFile || enrollmentFile || newDocumentFile || newEnrollmentFile) {
+        persistFiles()
+        e.preventDefault()
+        e.returnValue = 'Você tem arquivos não salvos. Tem certeza que deseja sair?'
+        return e.returnValue
+      }
+    }
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        // Page was restored from cache
+        restoreFiles()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pageshow', handlePageShow)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('pageshow', handlePageShow)
+
+      // Clean up any running intervals
+      Object.values(progressIntervalsRef.current).forEach((interval) => {
+        clearInterval(interval)
+      })
+    }
+  }, [persistFiles, restoreFiles, hasUnsavedFiles, documentFile, enrollmentFile, newDocumentFile, newEnrollmentFile])
+
+  const fetchProfileAndSports = useCallback(async () => {
+    if (!user?.id) return
+    setIsLoading(true)
+    try {
+      const { data: userData, error: userError } = await supabase.from('users').select('*').eq('id', user.id).single()
+      if (userError) throw userError
+      setProfile(userData as UserProfile)
+
+      if (userData.role === 'athlete') {
+        await fetchSports()
+        const { data: athleteData, error: athleteError } = await supabase
+          .from('athletes')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+
+        if (athleteError && athleteError.code !== 'PGRST116') {
+          throw athleteError
+        }
+
+        if (athleteData) {
+          setAthlete(athleteData)
+          setAthleteStatus(athleteData.status)
+          const { data: athleteSportsData, error: athleteSportsError } = await supabase
+            .from('athlete_sports')
+            .select('sport_id')
+            .eq('athlete_id', athleteData.id)
+
+          if (athleteSportsError) {
+            console.error('Error fetching athlete sports:', athleteSportsError)
+            toast({
+              title: 'Erro ao carregar modalidades do atleta',
+              description: 'Não foi possível carregar suas modalidades selecionadas.',
+              variant: 'destructive'
+            })
+          } else if (athleteSportsData) {
+            setSelectedSports(athleteSportsData.map((as) => as.sport_id))
+          }
+        } else {
+          setAthleteStatus(null)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile or sports:', error)
+      toast({
+        title: 'Erro ao carregar dados',
+        description: 'Não foi possível carregar seu perfil ou modalidades.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user?.id, toast])
+
+  useEffect(() => {
     fetchProfileAndSports()
-  }, [user, toast])
+  }, [fetchProfileAndSports])
+
+  useEffect(() => {
+    restoreFiles()
+  }, [restoreFiles])
 
   const fetchSports = async () => {
     try {
@@ -394,13 +539,14 @@ export default function ProfilePage() {
     setUploadProgress((prev) => ({ ...prev, [uploadKey]: 0 }))
 
     try {
-      // Simulate progress updates for better UX
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => ({
           ...prev,
           [uploadKey]: Math.min((prev[uploadKey] || 0) + 10, 90)
         }))
       }, 200)
+
+      progressIntervalsRef.current[uploadKey] = progressInterval
 
       const formData = new FormData()
       formData.append('file', file)
@@ -409,6 +555,7 @@ export default function ProfilePage() {
       const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
 
       clearInterval(progressInterval)
+      delete progressIntervalsRef.current[uploadKey]
 
       if (!uploadResult.success) {
         throw new Error(uploadResult.message || 'Erro ao fazer upload do arquivo.')
@@ -416,7 +563,7 @@ export default function ProfilePage() {
 
       setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
 
-      // Update athlete record with optimistic UI update
+      // Optimistic update - update UI immediately
       let updateData: Partial<Athlete> = {}
 
       if (type === 'document') {
@@ -424,10 +571,6 @@ export default function ProfilePage() {
       } else {
         updateData.enrollment_document_url = uploadResult.url
       }
-
-      // Optimistic update - update UI immediately
-      setAthlete((prev) => (prev ? { ...prev, ...updateData } : null))
-
       const { data: updatedAthlete, error: updateError } = await supabase
         .from('athletes')
         .update(updateData)
@@ -454,30 +597,50 @@ export default function ProfilePage() {
       }
 
       setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'success' }))
+      setHasUnsavedFiles(false)
+
+      sessionStorage.removeItem('profile-form-state')
 
       toast({
         title: 'Arquivo substituído com sucesso!',
-        description: `Seu ${type === 'document' ? 'documento' : 'atestado de matrícula'} foi atualizado com sucesso.`,
-        variant: 'success'
+        description: `${type === 'document' ? 'Documento' : 'Atestado de matrícula'} foi atualizado.`,
+        variant: 'default'
       })
-
-      // Clear success status after 3 seconds
-      setTimeout(() => {
-        setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'idle' }))
-        setUploadProgress((prev) => ({ ...prev, [uploadKey]: 0 }))
-      }, 3000)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error replacing file:', error)
       setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'error' }))
       toast({
         title: 'Erro ao substituir arquivo',
-        description: error.message || 'Não foi possível substituir o arquivo. Tente novamente.',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado.',
         variant: 'destructive'
       })
     } finally {
       setIsUploadingReplacement(false)
+      // Clean up interval if it exists
+      if (progressIntervalsRef.current[uploadKey]) {
+        clearInterval(progressIntervalsRef.current[uploadKey])
+        delete progressIntervalsRef.current[uploadKey]
+      }
     }
   }
+
+  const handleDocumentFileChange = useCallback(
+    (file: File | null) => {
+      setDocumentFile(file)
+      setHasUnsavedFiles(!!file)
+      persistFiles()
+    },
+    [persistFiles]
+  )
+
+  const handleEnrollmentFileChange = useCallback(
+    (file: File | null) => {
+      setEnrollmentFile(file)
+      setHasUnsavedFiles(!!file)
+      persistFiles()
+    },
+    [persistFiles]
+  )
 
   // Validação de tamanho de arquivo no cliente para feedback imediato
   const handleEnrollmentChange = (file: File | null) => {
@@ -490,7 +653,7 @@ export default function ProfilePage() {
       setEnrollmentFile(null)
       return
     }
-    setEnrollmentFile(file)
+    handleEnrollmentFileChange(file)
   }
 
   const handleDocumentChange = (file: File | null) => {
@@ -503,7 +666,7 @@ export default function ProfilePage() {
       setDocumentFile(null)
       return
     }
-    setDocumentFile(file)
+    handleDocumentFileChange(file)
   }
 
   const handleNewDocumentChange = (file: File | null) => {
@@ -990,72 +1153,6 @@ export default function ProfilePage() {
 
                     <CardContent className='space-y-6 sm:space-y-8 p-4 sm:p-6'>
                       <form onSubmit={handleAthleteRegistration} className='space-y-6 sm:space-y-8'>
-                        {/* Progress Summary */}
-                        <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6'>
-                          <h3 className='text-base sm:text-lg font-semibold text-blue-900 mb-4 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 text-center sm:text-left'>
-                            <Sparkles className='h-5 w-5 self-center sm:self-start flex-shrink-0' />
-                            <span>Progresso do Cadastro</span>
-                          </h3>
-                          <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4'>
-                            <div
-                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                                athlete?.cnh_cpf_document_url
-                                  ? 'bg-green-50 border-green-200'
-                                  : 'bg-gray-50 border-gray-200'
-                              }`}
-                            >
-                              {athlete?.cnh_cpf_document_url ? (
-                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
-                              ) : (
-                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
-                              )}
-                              <span
-                                className={`text-sm font-medium ${
-                                  athlete?.cnh_cpf_document_url ? 'text-green-700' : 'text-gray-600'
-                                }`}
-                              >
-                                Documento
-                              </span>
-                            </div>
-                            <div
-                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                                athlete?.enrollment_document_url
-                                  ? 'bg-green-50 border-green-200'
-                                  : 'bg-gray-50 border-gray-200'
-                              }`}
-                            >
-                              {athlete?.enrollment_document_url ? (
-                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
-                              ) : (
-                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
-                              )}
-                              <span
-                                className={`text-sm font-medium ${
-                                  athlete?.enrollment_document_url ? 'text-green-700' : 'text-gray-600'
-                                }`}
-                              >
-                                Matrícula
-                              </span>
-                            </div>
-                            <div
-                              className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                                agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                              }`}
-                            >
-                              {agreedToTerms ? (
-                                <CheckCircle className='h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0' />
-                              ) : (
-                                <AlertCircle className='h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0' />
-                              )}
-                              <span
-                                className={`text-sm font-medium ${agreedToTerms ? 'text-green-700' : 'text-gray-600'}`}
-                              >
-                                Termos
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
                         {isSubmitting && (
                           <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3'>
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
