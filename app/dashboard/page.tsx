@@ -199,73 +199,77 @@ export default function HomePage() {
   }
 
   return (
-    <div className='space-y-8 max-w-7xl mx-auto'>
-      {/* Hero Section */}
-      <div className='relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0456FC] via-[#0345D1] to-[#0234B8] text-white'>
-        <div className='absolute inset-0 bg-black/10'></div>
-        <div className='relative px-6 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20'>
-          <div className='max-w-4xl'>
-            <div className='flex items-center space-x-2 mb-4'>
-              <Sparkles className='h-6 w-6 text-yellow-300' />
-              <Badge variant='secondary' className='bg-white/20 text-white border-white/30'>
-                JISC 2025
-              </Badge>
-            </div>
-            <h1 className='text-3xl sm:text-4xl lg:text-5xl font-bold mb-4'>
-              {getGreeting()}, {userData?.name}!
-            </h1>
-            <p className='text-lg sm:text-xl text-blue-100 mb-6 max-w-2xl'>
-              Bem-vindo ao maior campeonato universitário do sul de Santa Catarina.
-              {userData?.role === 'athlete' && ' Mostre seu talento e conquiste sua vitória!'}
-              {userData?.role === 'athletic' && ' Gerencie sua equipe e leve-a ao topo!'}
-              {userData?.role === 'admin' && ' Administre o campeonato com excelência!'}
-              {userData?.role === 'buyer' && ' Acompanhe os melhores jogos e torça pelo seu time!'}
-            </p>
-          </div>
-        </div>
-        {/* Decorative elements */}
-        <div className='absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full'></div>
-        <div className='absolute bottom-0 right-12 -mb-8 w-16 h-16 bg-yellow-300/20 rounded-full'></div>
-      </div>
-
-      {/* CTA for Athletes to complete registration */}
-      {userData?.role === 'athlete' && (
-        <Card className='border-2 border-[#0456FC] bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'>
-          <CardContent className='p-6 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-6'>
-            <div className='flex items-center space-x-4'>
-              <Award className='h-10 w-10 text-[#0456FC] flex-shrink-0' />
-              <div>
-                <CardTitle className='text-xl font-bold text-gray-900'>Complete seu Cadastro de Atleta!</CardTitle>
-                <CardDescription className='text-gray-700 mt-1'>
-                  Para participar das modalidades e competições, finalize seu registro. É rápido e fácil!
-                </CardDescription>
+    <div className='min-h-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
+      <div className='space-y-6 sm:space-y-8 max-w-7xl mx-auto'>
+        {/* Hero Section */}
+        <div className='relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0456FC] via-[#0345D1] to-[#0234B8] text-white'>
+          <div className='absolute inset-0 bg-black/10'></div>
+          <div className='relative px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16'>
+            <div className='max-w-4xl'>
+              <div className='flex items-center space-x-2 mb-3 sm:mb-4'>
+                <Sparkles className='h-5 w-5 sm:h-6 sm:w-6 text-yellow-300 flex-shrink-0' />
+                <Badge variant='secondary' className='bg-white/20 text-white border-white/30 text-xs sm:text-sm'>
+                  JISC 2025
+                </Badge>
               </div>
+              <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 leading-tight'>
+                {getGreeting()}, {userData?.name}!
+              </h1>
+              <p className='text-base sm:text-lg lg:text-xl text-blue-100 mb-4 sm:mb-6 max-w-2xl leading-relaxed'>
+                Bem-vindo ao maior campeonato universitário do sul de Santa Catarina.
+                {userData?.role === 'athlete' && ' Mostre seu talento e conquiste sua vitória!'}
+                {userData?.role === 'athletic' && ' Gerencie sua equipe e leve-a ao topo!'}
+                {userData?.role === 'admin' && ' Administre o campeonato com excelência!'}
+                {userData?.role === 'buyer' && ' Acompanhe os melhores jogos e torça pelo seu time!'}
+              </p>
             </div>
-            <Link href='/dashboard/profile' passHref>
-              <Button className='w-full sm:w-auto bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 px-6 text-base transition-all duration-200 shadow-md'>
-                <Play className='h-5 w-5 mr-2' />
-                Finalizar Cadastro
-              </Button>
-            </Link>
+          </div>
+          {/* Decorative elements */}
+          <div className='absolute top-0 right-0 -mt-2 -mr-2 sm:-mt-4 sm:-mr-4 w-16 h-16 sm:w-24 sm:h-24 bg-white/10 rounded-full'></div>
+          <div className='absolute bottom-0 right-6 sm:right-12 -mb-4 sm:-mb-8 w-12 h-12 sm:w-16 sm:h-16 bg-yellow-300/20 rounded-full'></div>
+        </div>
+
+        {/* CTA for Athletes to complete registration */}
+        {userData?.role === 'athlete' && (
+          <Card className='border-2 border-[#0456FC] bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'>
+            <CardContent className='p-4 sm:p-6 flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 sm:space-x-6'>
+              <div className='flex items-start sm:items-center space-x-3 sm:space-x-4'>
+                <Award className='h-8 w-8 sm:h-10 sm:w-10 text-[#0456FC] flex-shrink-0 mt-1 sm:mt-0' />
+                <div>
+                  <CardTitle className='text-lg sm:text-xl font-bold text-gray-900 leading-tight'>
+                    Complete seu Cadastro de Atleta!
+                  </CardTitle>
+                  <CardDescription className='text-sm sm:text-base text-gray-700 mt-1 leading-relaxed'>
+                    Para participar das modalidades e competições, finalize seu registro. É rápido e fácil!
+                  </CardDescription>
+                </div>
+              </div>
+              <Link href='/dashboard/profile' passHref>
+                <Button className='w-full sm:w-auto bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 px-6 text-sm sm:text-base transition-all duration-200 shadow-md'>
+                  <Play className='h-4 w-4 sm:h-5 sm:w-5 mr-2' />
+                  Finalizar Cadastro
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        <LazyDashboardSections userData={userData} stats={stats} highlights={highlights} />
+
+        {/* Role-specific Welcome Message */}
+        <Card className='bg-gradient-to-r from-gray-50 to-gray-100 border-0'>
+          <CardContent className='p-6 sm:p-8 text-center'>
+            <div className='inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-[#0456FC] rounded-full mb-3 sm:mb-4'>
+              <Heart className='h-6 w-6 sm:h-8 sm:w-8 text-white' />
+            </div>
+            <h3 className='text-lg sm:text-xl font-bold text-gray-900 mb-2'>Obrigado por fazer parte do JISC!</h3>
+            <p className='text-sm sm:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed'>
+              Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial do maior
+              campeonato universitário do país. Juntos, fazemos a diferença no esporte universitário.
+            </p>
           </CardContent>
         </Card>
-      )}
-
-      <LazyDashboardSections userData={userData} stats={stats} highlights={highlights} />
-
-      {/* Role-specific Welcome Message */}
-      <Card className='bg-gradient-to-r from-gray-50 to-gray-100 border-0'>
-        <CardContent className='p-8 text-center'>
-          <div className='inline-flex items-center justify-center w-16 h-16 bg-[#0456FC] rounded-full mb-4'>
-            <Heart className='h-8 w-8 text-white' />
-          </div>
-          <h3 className='text-xl font-bold text-gray-900 mb-2'>Obrigado por fazer parte do JISC!</h3>
-          <p className='text-gray-600 max-w-2xl mx-auto'>
-            Como {getRoleDisplayName(userData?.role || 'buyer').toLowerCase()}, você é parte essencial do maior
-            campeonato universitário do país. Juntos, fazemos a diferença no esporte universitário.
-          </p>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }

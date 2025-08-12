@@ -264,161 +264,118 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-3xl font-bold'>Configurações</h1>
-        <p className='text-gray-500 dark:text-gray-400'>Gerencie suas preferências e informações pessoais.</p>
-      </div>
+    <div className='min-h-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
+      <div className='space-y-6'>
+        <div>
+          <h1 className='text-3xl font-bold'>Configurações</h1>
+          <p className='text-gray-500 dark:text-gray-400'>Gerencie suas preferências e informações pessoais.</p>
+        </div>
 
-      <Tabs defaultValue='profile'>
-        <TabsList>
-          <TabsTrigger value='profile'>Perfil</TabsTrigger>
-          {/* <TabsTrigger value="preferences">Preferências</TabsTrigger> */}
-          <TabsTrigger value='notifications'>Notificações</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue='profile'>
+          <TabsList>
+            <TabsTrigger value='profile'>Perfil</TabsTrigger>
+            {/* <TabsTrigger value="preferences">Preferências</TabsTrigger> */}
+            <TabsTrigger value='notifications'>Notificações</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value='profile' className='space-y-4'>
-          <Card>
-            <CardHeader>
-              <CardTitle>Informações do Perfil</CardTitle>
-              <CardDescription>Atualize suas informações pessoais. Seu e-mail não pode ser alterado.</CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='name'>Nome Completo</Label>
-                <Input
-                  id='name'
-                  name='name'
-                  value={profile.name}
-                  onChange={handleProfileChange}
-                  placeholder='Seu nome completo'
-                />
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='email'>E-mail</Label>
-                <Input id='email' name='email' value={profile.email} disabled className='bg-muted' />
-                <p className='text-xs text-muted-foreground'>O e-mail não pode ser alterado.</p>
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='phone'>Telefone</Label>
-                <Input
-                  id='phone'
-                  name='phone'
-                  value={profile.phone}
-                  onChange={handleProfileChange}
-                  placeholder='(00) 00000-0000'
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={saveProfile} disabled={isSaving} className='flex items-center'>
-                <Save className='h-4 w-4 mr-2' />
-                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* <TabsContent value="preferences" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferências de Aparência</CardTitle>
-              <CardDescription>Personalize a aparência e o idioma da plataforma.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* <div className="space-y-2">
-                <Label>Tema</Label>
-                <Select
-                  value={settings.theme_preference}
-                  onValueChange={(value) => handleSettingChange("theme_preference", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tema" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Claro</SelectItem>
-                    <SelectItem value="dark">Escuro</SelectItem>
-                    <SelectItem value="system">Sistema (Automático)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div> 
-
-              <div className="space-y-2">
-                <Label>Idioma</Label>
-                <Select value={settings.language} onValueChange={(value) => handleSettingChange("language", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um idioma" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                    <SelectItem value="en-US">English (US)</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={saveSettings} disabled={isSaving || !tableExists} className="flex items-center">
-                <Moon className="h-4 w-4 mr-2" />
-                {isSaving ? "Salvando..." : "Salvar Preferências"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent> */}
-
-        <TabsContent value='notifications' className='space-y-4'>
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferências de Notificação</CardTitle>
-              <CardDescription>
-                Configure como deseja receber notificações sobre eventos e atualizações.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              <div className='flex items-center justify-between'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='notification_email'>Notificações por E-mail</Label>
-                  <p className='text-sm text-muted-foreground'>Receba atualizações sobre jogos e eventos por e-mail.</p>
+          <TabsContent value='profile' className='space-y-4'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações do Perfil</CardTitle>
+                <CardDescription>Atualize suas informações pessoais. Seu e-mail não pode ser alterado.</CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='name'>Nome Completo</Label>
+                  <Input
+                    id='name'
+                    name='name'
+                    value={profile.name}
+                    onChange={handleProfileChange}
+                    placeholder='Seu nome completo'
+                  />
                 </div>
-                <Switch
-                  id='notification_email'
-                  checked={settings.notification_email}
-                  onCheckedChange={(checked) => handleSettingChange('notification_email', checked)}
-                  disabled={!tableExists}
-                />
-              </div>
 
-              <div className='flex items-center justify-between'>
-                <div className='space-y-0.5'>
-                  <Label htmlFor='notification_push'>Notificações Push</Label>
-                  <p className='text-sm text-muted-foreground'>
-                    Receba notificações push no navegador sobre atualizações importantes.
+                <div className='space-y-2'>
+                  <Label htmlFor='email'>E-mail</Label>
+                  <Input id='email' name='email' value={profile.email} disabled className='bg-muted' />
+                  <p className='text-xs text-muted-foreground'>O e-mail não pode ser alterado.</p>
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='phone'>Telefone</Label>
+                  <Input
+                    id='phone'
+                    name='phone'
+                    value={profile.phone}
+                    onChange={handleProfileChange}
+                    placeholder='(00) 00000-0000'
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={saveProfile} disabled={isSaving} className='flex items-center'>
+                  <Save className='h-4 w-4 mr-2' />
+                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='notifications' className='space-y-4'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferências de Notificação</CardTitle>
+                <CardDescription>
+                  Configure como deseja receber notificações sobre eventos e atualizações.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className='space-y-6'>
+                <div className='flex items-center justify-between'>
+                  <div className='space-y-0.5'>
+                    <Label htmlFor='notification_email'>Notificações por E-mail</Label>
+                    <p className='text-sm text-muted-foreground'>
+                      Receba atualizações sobre jogos e eventos por e-mail.
+                    </p>
+                  </div>
+                  <Switch
+                    id='notification_email'
+                    checked={settings.notification_email}
+                    onCheckedChange={(checked) => handleSettingChange('notification_email', checked)}
+                    disabled={!tableExists}
+                  />
+                </div>
+
+                <div className='flex items-center justify-between'>
+                  <div className='space-y-0.5'>
+                    <Label htmlFor='notification_push'>Notificações Push</Label>
+                    <p className='text-sm text-muted-foreground'>
+                      Receba notificações push no navegador sobre atualizações importantes.
+                    </p>
+                  </div>
+                  <Switch
+                    id='notification_push'
+                    checked={settings.notification_push}
+                    onCheckedChange={(checked) => handleSettingChange('notification_push', checked)}
+                    disabled={!tableExists}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={saveSettings} disabled={isSaving || !tableExists} className='flex items-center'>
+                  <Bell className='h-4 w-4 mr-2' />
+                  {isSaving ? 'Salvando...' : 'Salvar Notificações'}
+                </Button>
+                {!tableExists && (
+                  <p className='text-xs text-destructive ml-4'>
+                    A tabela de configurações ainda não foi criada. Execute o setup completo primeiro.
                   </p>
-                </div>
-                <Switch
-                  id='notification_push'
-                  checked={settings.notification_push}
-                  onCheckedChange={(checked) => handleSettingChange('notification_push', checked)}
-                  disabled={!tableExists}
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={saveSettings} disabled={isSaving || !tableExists} className='flex items-center'>
-                <Bell className='h-4 w-4 mr-2' />
-                {isSaving ? 'Salvando...' : 'Salvar Notificações'}
-              </Button>
-              {!tableExists && (
-                <p className='text-xs text-destructive ml-4'>
-                  A tabela de configurações ainda não foi criada. Execute o setup completo primeiro.
-                </p>
-              )}
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                )}
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }

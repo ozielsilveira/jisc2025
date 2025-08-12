@@ -166,85 +166,86 @@ export default function AthleticsPage() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold'>Atléticas</h1>
-          <p className='text-gray-500'>Visualize as atléticas participantes do campeonato.</p>
-        </div>
-        {userRole === 'admin' && (
-          <div className='ml-auto'>
-            <Button
-              onClick={() => setIsLinkDialogOpen(true)}
-              className='flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600'
-            >
-              <Copy className='h-4 w-4' />
-              Gerar Link de Registro
-            </Button>
+    <div className='min-h-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
+      <div className='space-y-6'>
+        <div className='flex justify-between items-center'>
+          <div>
+            <h1 className='text-3xl font-bold'>Atléticas</h1>
+            <p className='text-gray-500'>Visualize as atléticas participantes do campeonato.</p>
           </div>
-        )}
-      </div>
+          {userRole === 'admin' && (
+            <div className='ml-auto'>
+              <Button
+                onClick={() => setIsLinkDialogOpen(true)}
+                className='flex items-center gap-2 bg-blue-500 text-white hover:bg-blue-600'
+              >
+                <Copy className='h-4 w-4' />
+                Gerar Link de Registro
+              </Button>
+            </div>
+          )}
+        </div>
 
-      <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
-        <DialogContent className='bg-white'>
-          <DialogHeader>
-            <DialogTitle>Link de Registro de Atlética</DialogTitle>
-            <DialogDescription>
-              Copie o link abaixo para compartilhar com a atlética que deseja cadastrar.
-            </DialogDescription>
-          </DialogHeader>
-          <div className='space-y-4 py-4'>
-            <div className='space-y-2'>
-              <Label>Link de Registro</Label>
-              <div className='flex items-center'>
-                <Input value={`${window.location.origin}/register?type=athletic`} readOnly className='pr-10' />
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='ml-[-40px]'
-                  onClick={() => copyToClipboard(`${window.location.origin}/register?type=athletic`)}
-                >
-                  <Copy className='h-4 w-4' />
-                </Button>
+        <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+          <DialogContent className='bg-white'>
+            <DialogHeader>
+              <DialogTitle>Link de Registro de Atlética</DialogTitle>
+              <DialogDescription>
+                Copie o link abaixo para compartilhar com a atlética que deseja cadastrar.
+              </DialogDescription>
+            </DialogHeader>
+            <div className='space-y-4 py-4'>
+              <div className='space-y-2'>
+                <Label>Link de Registro</Label>
+                <div className='flex items-center'>
+                  <Input value={`${window.location.origin}/register?type=athletic`} readOnly className='pr-10' />
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='ml-[-40px]'
+                    onClick={() => copyToClipboard(`${window.location.origin}/register?type=athletic`)}
+                  >
+                    <Copy className='h-4 w-4' />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant='outline' onClick={() => setIsLinkDialogOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant='outline' onClick={() => setIsLinkDialogOpen(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {athletics.length === 0 ? (
-        <Card>
-          <CardContent className='pt-6'>
-            <p className='text-center text-gray-500'>Não há atléticas cadastradas no sistema.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2'>
-          {athletics.map((athletic) => (
-            <Card key={athletic.id}>
-              <CardHeader className='pb-2'>
-                <div className='flex items-center gap-4'>
-                  <div>
-                    <CardTitle>{athletic.name}</CardTitle>
-                    <CardDescription className='flex items-center mt-1'>
-                      <School className='h-4 w-4 mr-1' />
-                      {athletic.university}
-                    </CardDescription>
+        {athletics.length === 0 ? (
+          <Card>
+            <CardContent className='pt-6'>
+              <p className='text-center text-gray-500'>Não há atléticas cadastradas no sistema.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2'>
+            {athletics.map((athletic) => (
+              <Card key={athletic.id}>
+                <CardHeader className='pb-2'>
+                  <div className='flex items-center gap-4'>
+                    <div>
+                      <CardTitle>{athletic.name}</CardTitle>
+                      <CardDescription className='flex items-center mt-1'>
+                        <School className='h-4 w-4 mr-1' />
+                        {athletic.university}
+                      </CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='flex items-center'>
-                  <Users className='h-4 w-4 mr-2 text-gray-500' />
-                  <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
-                </div>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <div className='flex items-center'>
+                    <Users className='h-4 w-4 mr-2 text-gray-500' />
+                    <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
+                  </div>
 
-                {/* <div className="space-y-2">
+                  {/* <div className="space-y-2">
                   <Label>Link de Referência para Atletas</Label>
                   <div className="flex items-center">
                     <Input
@@ -281,50 +282,55 @@ export default function AthleticsPage() {
                   </p>
                 </div> */}
 
-                <div className='space-y-2'>
-                  <Label>Link de Referência para Atléticas</Label>
-                  <div className='flex items-center'>
-                    <Input
-                      value={`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`}
-                      readOnly
-                      className='pr-10'
-                    />
-                    <Button
-                      variant='ghost'
-                      size='icon'
-                      className='ml-[-40px]'
-                      onClick={() => {
-                        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
-                          navigator.clipboard.writeText(
-                            `${window.location.origin}/register?type=athlete&athletic=${athletic.id}`
-                          )
-                          toast({
-                            title: 'Link copiado',
-                            description: 'Link de referência para atlética copiado para a área de transferência.'
-                          })
-                        } else {
-                          console.warn('Clipboard API não suportada ou indisponível')
-                          toast({
-                            title: 'Erro ao copiar link',
-                            description:
-                              'A API de área de transferência não é suportada ou está indisponível neste navegador.',
-                            variant: 'destructive'
-                          })
-                        }
-                      }}
-                    >
-                      <Copy className='h-4 w-4' />
-                    </Button>
+                  <div className='space-y-2'>
+                    <Label>Link de Referência para Atléticas</Label>
+                    <div className='flex items-center'>
+                      <Input
+                        value={`${window.location.origin}/register?type=athlete&athletic=${athletic.id}`}
+                        readOnly
+                        className='pr-10'
+                      />
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        className='ml-[-40px]'
+                        onClick={() => {
+                          if (
+                            typeof navigator !== 'undefined' &&
+                            navigator.clipboard &&
+                            navigator.clipboard.writeText
+                          ) {
+                            navigator.clipboard.writeText(
+                              `${window.location.origin}/register?type=athlete&athletic=${athletic.id}`
+                            )
+                            toast({
+                              title: 'Link copiado',
+                              description: 'Link de referência para atlética copiado para a área de transferência.'
+                            })
+                          } else {
+                            console.warn('Clipboard API não suportada ou indisponível')
+                            toast({
+                              title: 'Erro ao copiar link',
+                              description:
+                                'A API de área de transferência não é suportada ou está indisponível neste navegador.',
+                              variant: 'destructive'
+                            })
+                          }
+                        }}
+                      >
+                        <Copy className='h-4 w-4' />
+                      </Button>
+                    </div>
+                    <p className='text-xs text-gray-500'>
+                      Compartilhe este link para cadastro de novos membros da atlética.
+                    </p>
                   </div>
-                  <p className='text-xs text-gray-500'>
-                    Compartilhe este link para cadastro de novos membros da atlética.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

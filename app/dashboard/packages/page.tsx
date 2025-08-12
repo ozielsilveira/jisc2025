@@ -469,308 +469,276 @@ export default function PackagesPage() {
     )
   }
 
-  if (!isTableReady) {
-    return (
-      <div className='space-y-6'>
-        <div>
-          <h1 className='text-3xl font-bold'>Pacotes</h1>
-          <p className='text-gray-500'>Gerencie os pacotes disponíveis para os atletas.</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className='flex items-center text-amber-600'>
-              <AlertTriangle className='h-5 w-5 mr-2' />
-              Configuração Necessária
-            </CardTitle>
-            <CardDescription>
-              A tabela de pacotes precisa ser configurada antes de usar esta funcionalidade.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className='mb-4'>
-              É necessário executar a configuração do banco de dados para criar ou atualizar a estrutura da tabela de
-              pacotes.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => router.push('/dashboard/database-setup')} className='w-full bg-[#0456FC]'>
-              Ir para Configuração do Banco de Dados
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className='text-3xl font-bold'>Pacotes</h1>
-          <p className='text-gray-500'>
-            {userRole === 'admin'
-              ? 'Gerencie os pacotes disponíveis para os atletas.'
-              : 'Visualize os pacotes disponíveis para os atletas.'}
-          </p>
-        </div>
+    <div className='min-h-full px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8'>
+      <div className='space-y-6'>
+        <div className='flex justify-between items-center'>
+          <div>
+            <h1 className='text-3xl font-bold'>Pacotes</h1>
+            <p className='text-gray-500'>
+              {userRole === 'admin'
+                ? 'Gerencie os pacotes disponíveis para os atletas.'
+                : 'Visualize os pacotes disponíveis para os atletas.'}
+            </p>
+          </div>
 
-        {userRole === 'admin' && (
-          <Dialog
-            open={isDialogOpen}
-            onOpenChange={(open) => {
-              setIsDialogOpen(open)
-              if (!open) resetForm()
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className='bg-[#0456FC]'>
-                <Plus className='h-4 w-4 mr-2' />
-                Novo Pacote
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='sm:max-w-[600px]'>
-              <DialogHeader>
-                <DialogTitle>{formData.id ? 'Editar Pacote' : 'Adicionar Novo Pacote'}</DialogTitle>
-                <DialogDescription>
-                  {formData.id
-                    ? 'Edite os detalhes do pacote existente.'
-                    : 'Preencha os detalhes para criar um novo pacote.'}
-                </DialogDescription>
-              </DialogHeader>
+          {userRole === 'admin' && (
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                setIsDialogOpen(open)
+                if (!open) resetForm()
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button className='bg-[#0456FC]'>
+                  <Plus className='h-4 w-4 mr-2' />
+                  Novo Pacote
+                </Button>
+              </DialogTrigger>
+              <DialogContent className='sm:max-w-[600px]'>
+                <DialogHeader>
+                  <DialogTitle>{formData.id ? 'Editar Pacote' : 'Adicionar Novo Pacote'}</DialogTitle>
+                  <DialogDescription>
+                    {formData.id
+                      ? 'Edite os detalhes do pacote existente.'
+                      : 'Preencha os detalhes para criar um novo pacote.'}
+                  </DialogDescription>
+                </DialogHeader>
 
-              <form onSubmit={handleCreateOrUpdatePackage} className='space-y-4 py-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='name'>Nome do Pacote</Label>
-                  <Input
-                    id='name'
-                    name='name'
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder='Ex: Pacote Completo'
-                    required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='description'>Descrição</Label>
-                  <Textarea
-                    id='description'
-                    name='description'
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder='Descreva o que está incluído neste pacote...'
-                    rows={3}
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label htmlFor='price'>Preço (R$)</Label>
-                  <Input
-                    id='price'
-                    name='price'
-                    type='number'
-                    step='0.01'
-                    min='0'
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    placeholder='0.00'
-                    required
-                  />
-                </div>
-
-                <div className='space-y-2'>
-                  <Label>Categoria do Pacote</Label>
-                  <RadioGroup
-                    value={formData.category}
-                    onValueChange={(value) => handleCategoryChange(value as 'games' | 'combined')}
-                    className='flex flex-col space-y-1'
-                  >
-                    <div className='flex items-center space-x-2'>
-                      <RadioGroupItem value='games' id='games' />
-                      <Label htmlFor='games'>Jogos (Apenas modalidades esportivas)</Label>
-                    </div>
-                    <div className='flex items-center space-x-2'>
-                      <RadioGroupItem value='combined' id='combined' />
-                      <Label htmlFor='combined'>Combinado (Jogos + Festa)</Label>
-                    </div>
-                    <div className='flex items-center space-x-2'>
-                      <RadioGroupItem value='party' id='party' />
-                      <Label htmlFor='party'>Festa (Apenas festa)</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {formData.category === 'combined' && (
+                <form onSubmit={handleCreateOrUpdatePackage} className='space-y-4 py-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='discount_percentage'>Desconto (%) para pacote combinado</Label>
+                    <Label htmlFor='name'>Nome do Pacote</Label>
                     <Input
-                      id='discount_percentage'
-                      name='discount_percentage'
+                      id='name'
+                      name='name'
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder='Ex: Pacote Completo'
+                      required
+                    />
+                  </div>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='description'>Descrição</Label>
+                    <Textarea
+                      id='description'
+                      name='description'
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder='Descreva o que está incluído neste pacote...'
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='price'>Preço (R$)</Label>
+                    <Input
+                      id='price'
+                      name='price'
                       type='number'
                       step='0.01'
                       min='0'
-                      max='100'
-                      value={formData.discount_percentage}
+                      value={formData.price}
                       onChange={handleInputChange}
                       placeholder='0.00'
+                      required
                     />
-                    <p className='text-xs text-gray-500'>
-                      Opcional: Desconto aplicado ao comprar o pacote combinado em vez de comprar separadamente.
-                    </p>
                   </div>
-                )}
 
-                <DialogFooter>
-                  <Button type='submit' className='bg-[#0456FC]' disabled={isSubmitting}>
-                    {isSubmitting ? 'Salvando...' : formData.id ? 'Atualizar Pacote' : 'Criar Pacote'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+                  <div className='space-y-2'>
+                    <Label>Categoria do Pacote</Label>
+                    <RadioGroup
+                      value={formData.category}
+                      onValueChange={(value) => handleCategoryChange(value as 'games' | 'combined')}
+                      className='flex flex-col space-y-1'
+                    >
+                      <div className='flex items-center space-x-2'>
+                        <RadioGroupItem value='games' id='games' />
+                        <Label htmlFor='games'>Jogos (Apenas modalidades esportivas)</Label>
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <RadioGroupItem value='combined' id='combined' />
+                        <Label htmlFor='combined'>Combinado (Jogos + Festa)</Label>
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <RadioGroupItem value='party' id='party' />
+                        <Label htmlFor='party'>Festa (Apenas festa)</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente o pacote{' '}
-              <span className='font-semibold'>{selectedPackage?.name}</span>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePackage} className='bg-red-600 hover:bg-red-700'>
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                  {formData.category === 'combined' && (
+                    <div className='space-y-2'>
+                      <Label htmlFor='discount_percentage'>Desconto (%) para pacote combinado</Label>
+                      <Input
+                        id='discount_percentage'
+                        name='discount_percentage'
+                        type='number'
+                        step='0.01'
+                        min='0'
+                        max='100'
+                        value={formData.discount_percentage}
+                        onChange={handleInputChange}
+                        placeholder='0.00'
+                      />
+                      <p className='text-xs text-gray-500'>
+                        Opcional: Desconto aplicado ao comprar o pacote combinado em vez de comprar separadamente.
+                      </p>
+                    </div>
+                  )}
 
-      <Dialog open={showAthleticSelection} onOpenChange={setShowAthleticSelection}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Selecione sua Atlética</DialogTitle>
-            <DialogDescription>
-              Para participar dos jogos, é necessário selecionar a atlética à qual você pertence.
-            </DialogDescription>
-          </DialogHeader>
+                  <DialogFooter>
+                    <Button type='submit' className='bg-[#0456FC]' disabled={isSubmitting}>
+                      {isSubmitting ? 'Salvando...' : formData.id ? 'Atualizar Pacote' : 'Criar Pacote'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
 
-          <div className='space-y-4 py-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='athletic'>Atlética</Label>
-              <Select onValueChange={setSelectedAthleticId} value={selectedAthleticId}>
-                <SelectTrigger id='athletic'>
-                  <SelectValue placeholder='Selecione sua atlética' />
-                </SelectTrigger>
-                <SelectContent>
-                  {athletics.map((athletic) => (
-                    <SelectItem key={athletic.id} value={athletic.id}>
-                      {athletic.name} - {athletic.university}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso excluirá permanentemente o pacote{' '}
+                <span className='font-semibold'>{selectedPackage?.name}</span>.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeletePackage} className='bg-red-600 hover:bg-red-700'>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-            <DialogFooter>
-              <Button onClick={handleAthleticSelection} disabled={!selectedAthleticId}>
-                Confirmar
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={showAthleticSelection} onOpenChange={setShowAthleticSelection}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Selecione sua Atlética</DialogTitle>
+              <DialogDescription>
+                Para participar dos jogos, é necessário selecionar a atlética à qual você pertence.
+              </DialogDescription>
+            </DialogHeader>
 
-      <Tabs defaultValue='all'>
-        <TabsList>
-          <TabsTrigger value='all'>Todos os Pacotes</TabsTrigger>
-          <TabsTrigger value='games'>Jogos</TabsTrigger>
-          <TabsTrigger value='party'>Festa</TabsTrigger>
-          <TabsTrigger value='combined'>Combinados</TabsTrigger>
-        </TabsList>
-
-        {['all', 'games', 'party', 'combined'].map((category) => (
-          <TabsContent key={category} value={category} className='space-y-4'>
-            {packages.filter((pkg) => category === 'all' || pkg.category === category).length === 0 ? (
-              <Card>
-                <CardContent className='pt-6'>
-                  <p className='text-center text-gray-500'>
-                    Não há pacotes {category === 'all' ? '' : `do tipo ${category}`} cadastrados no sistema.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'>
-                {packages
-                  .filter((pkg) => category === 'all' || pkg.category === category)
-                  .map((pkg) => (
-                    <Card key={pkg.id}>
-                      <CardHeader className='pb-2'>
-                        <div className='flex justify-between items-start'>
-                          <CardTitle>{pkg.name}</CardTitle>
-                          {getCategoryBadge(pkg.category)}
-                        </div>
-                        <CardDescription>{pkg.description || 'Sem descrição disponível.'}</CardDescription>
-                      </CardHeader>
-                      <CardContent className='space-y-4'>
-                        <div className='flex items-center'>
-                          <DollarSign className='h-4 w-4 mr-2 text-gray-500' />
-                          <span className='text-2xl font-bold'>{formatCurrency(pkg.price)}</span>
-                        </div>
-
-                        <div className='flex flex-wrap gap-2'>
-                          {pkg.includes_games && (
-                            <Badge variant='outline' className='bg-blue-50 text-blue-700 border-blue-200'>
-                              Jogos
-                            </Badge>
-                          )}
-                          {pkg.includes_party && (
-                            <Badge variant='outline' className='bg-purple-50 text-purple-700 border-purple-200'>
-                              Festa
-                            </Badge>
-                          )}
-                          {pkg.discount_percentage && pkg.discount_percentage > 0 && (
-                            <Badge variant='outline' className='bg-green-50 text-green-700 border-green-200'>
-                              <Percent className='h-3 w-3 mr-1' />
-                              {pkg.discount_percentage}% de desconto
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className='flex items-center'>
-                          <Users className='h-4 w-4 mr-2 text-gray-500' />
-                          <span>{pkg._count?.athletes || 0} atletas inscritos</span>
-                        </div>
-                      </CardContent>
-                      <CardFooter className='flex justify-between'>
-                        {userRole === 'admin' && (
-                          <>
-                            <Button
-                              variant='outline'
-                              className='text-red-600 hover:text-red-700 hover:bg-red-50'
-                              onClick={() => openDeleteDialog(pkg)}
-                            >
-                              <Trash2 className='h-4 w-4 mr-1' />
-                              Excluir
-                            </Button>
-                            <Button onClick={() => openEditDialog(pkg)}>
-                              <Edit className='h-4 w-4 mr-1' />
-                              Editar
-                            </Button>
-                          </>
-                        )}
-                      </CardFooter>
-                    </Card>
-                  ))}
+            <div className='space-y-4 py-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='athletic'>Atlética</Label>
+                <Select onValueChange={setSelectedAthleticId} value={selectedAthleticId}>
+                  <SelectTrigger id='athletic'>
+                    <SelectValue placeholder='Selecione sua atlética' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {athletics.map((athletic) => (
+                      <SelectItem key={athletic.id} value={athletic.id}>
+                        {athletic.name} - {athletic.university}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+
+              <DialogFooter>
+                <Button onClick={handleAthleticSelection} disabled={!selectedAthleticId}>
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Tabs defaultValue='all'>
+          <TabsList>
+            <TabsTrigger value='all'>Todos os Pacotes</TabsTrigger>
+            <TabsTrigger value='games'>Jogos</TabsTrigger>
+            <TabsTrigger value='party'>Festa</TabsTrigger>
+            <TabsTrigger value='combined'>Combinados</TabsTrigger>
+          </TabsList>
+
+          {['all', 'games', 'party', 'combined'].map((category) => (
+            <TabsContent key={category} value={category} className='space-y-4'>
+              {packages.filter((pkg) => category === 'all' || pkg.category === category).length === 0 ? (
+                <Card>
+                  <CardContent className='pt-6'>
+                    <p className='text-center text-gray-500'>
+                      Não há pacotes {category === 'all' ? '' : `do tipo ${category}`} cadastrados no sistema.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className='grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'>
+                  {packages
+                    .filter((pkg) => category === 'all' || pkg.category === category)
+                    .map((pkg) => (
+                      <Card key={pkg.id}>
+                        <CardHeader className='pb-2'>
+                          <div className='flex justify-between items-start'>
+                            <CardTitle>{pkg.name}</CardTitle>
+                            {getCategoryBadge(pkg.category)}
+                          </div>
+                          <CardDescription>{pkg.description || 'Sem descrição disponível.'}</CardDescription>
+                        </CardHeader>
+                        <CardContent className='space-y-4'>
+                          <div className='flex items-center'>
+                            <DollarSign className='h-4 w-4 mr-2 text-gray-500' />
+                            <span className='text-2xl font-bold'>{formatCurrency(pkg.price)}</span>
+                          </div>
+
+                          <div className='flex flex-wrap gap-2'>
+                            {pkg.includes_games && (
+                              <Badge variant='outline' className='bg-blue-50 text-blue-700 border-blue-200'>
+                                Jogos
+                              </Badge>
+                            )}
+                            {pkg.includes_party && (
+                              <Badge variant='outline' className='bg-purple-50 text-purple-700 border-purple-200'>
+                                Festa
+                              </Badge>
+                            )}
+                            {pkg.discount_percentage && pkg.discount_percentage > 0 && (
+                              <Badge variant='outline' className='bg-green-50 text-green-700 border-green-200'>
+                                <Percent className='h-3 w-3 mr-1' />
+                                {pkg.discount_percentage}% de desconto
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className='flex items-center'>
+                            <Users className='h-4 w-4 mr-2 text-gray-500' />
+                            <span>{pkg._count?.athletes || 0} atletas inscritos</span>
+                          </div>
+                        </CardContent>
+                        <CardFooter className='flex justify-between'>
+                          {userRole === 'admin' && (
+                            <>
+                              <Button
+                                variant='outline'
+                                className='text-red-600 hover:text-red-700 hover:bg-red-50'
+                                onClick={() => openDeleteDialog(pkg)}
+                              >
+                                <Trash2 className='h-4 w-4 mr-1' />
+                                Excluir
+                              </Button>
+                              <Button onClick={() => openEditDialog(pkg)}>
+                                <Edit className='h-4 w-4 mr-1' />
+                                Editar
+                              </Button>
+                            </>
+                          )}
+                        </CardFooter>
+                      </Card>
+                    ))}
+                </div>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
     </div>
   )
 }
