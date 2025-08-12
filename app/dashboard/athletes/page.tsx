@@ -499,56 +499,48 @@ const WhatsAppConfirmationDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='w-[98vw] sm:w-[90vw] md:w-[600px] lg:w-[700px] xl:w-[750px] max-w-[98vw] h-[95vh] sm:h-[90vh] md:h-auto md:max-h-[85vh] rounded-2xl sm:rounded-3xl border-0 shadow-2xl bg-white p-0 overflow-hidden flex flex-col'>
-        <div className='bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 px-4 sm:px-6 pt-6 sm:pt-8 pb-4 sm:pb-6 border-b border-green-100 flex-shrink-0'>
-          <DialogHeader className='text-center space-y-3 sm:space-y-4'>
-            <div className='mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-green-200'>
-              <MessageCircle className='h-8 w-8 sm:h-10 sm:w-10 text-white' />
-            </div>
-            <div className='space-y-1 sm:space-y-2'>
-              <DialogTitle className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight'>
-                Confirmar Envio
-              </DialogTitle>
-              <p className='text-gray-600 text-sm sm:text-base font-medium'>Revise as informações antes de enviar</p>
-            </div>
-          </DialogHeader>
+      <DialogContent className='w-[96vw] max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl h-[96vh] max-h-[96vh] rounded-3xl border-0 shadow-2xl bg-white p-0 overflow-hidden flex flex-col'>
+        {/* Header Mobile-First */}
+        <div className='bg-gradient-to-br from-green-500 to-emerald-600 px-6 py-8 text-center text-white flex-shrink-0'>
+          <div className='w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg'>
+            <CheckCircle className='h-10 w-10 text-white' />
+          </div>
+          <DialogTitle className='text-2xl font-bold mb-2'>Aprovar Cadastro</DialogTitle>
+          <p className='text-green-100 text-sm font-medium'>Confirme o envio da mensagem WhatsApp</p>
         </div>
 
-        <div className='px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1 min-h-0'>
-          <div className='bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4'>
-              <div className='w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                <Building2 className='h-5 w-5 sm:h-6 sm:w-6 text-blue-600' />
+        {/* Content Area with Better Mobile Spacing */}
+        <div className='flex-1 overflow-y-auto px-4 py-6 space-y-6'>
+          {/* Athlete Info - Mobile Optimized */}
+          <div className='bg-slate-50 rounded-2xl p-5 border border-slate-200'>
+            <div className='text-center space-y-3'>
+              <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg'>
+                <Building2 className='h-8 w-8 text-white' />
               </div>
-              <div className='flex-1 min-w-0 text-center sm:text-left'>
-                <h3 className='font-bold text-gray-900 text-lg sm:text-xl break-words'>{athlete.user.name}</h3>
-                <div className='flex items-center justify-center sm:justify-start space-x-2 mt-1'>
-                  <Phone className='h-4 w-4 text-gray-500' />
-                  <p className='text-sm text-gray-600 font-medium'>{athlete.user.phone}</p>
+              <div>
+                <h3 className='text-xl font-bold text-gray-900 mb-1'>{athlete.user.name}</h3>
+                <div className='flex items-center justify-center space-x-2 text-gray-600'>
+                  <Phone className='h-4 w-4' />
+                  <span className='text-sm font-medium'>{athlete.user.phone}</span>
                 </div>
-                <p className='text-xs text-gray-500 mt-2 bg-gray-100 px-2 py-1 rounded-lg inline-block'>
+                <span className='inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full'>
                   {athlete.athletic.name}
-                </p>
+                </span>
               </div>
             </div>
           </div>
 
-          <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-blue-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0'>
-              <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 flex-1'>
-                <div className='w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                  <CreditCard className='h-5 w-5 sm:h-6 sm:w-6 text-white' />
-                </div>
-                <div className='flex-1 min-w-0 text-center sm:text-left'>
-                  <p className='text-sm font-semibold text-blue-700 mb-1'>Pacote Selecionado</p>
-                  <h4 className='font-bold text-blue-900 text-base sm:text-lg leading-tight break-words'>
-                    {athletePackage.package.name}
-                  </h4>
-                </div>
+          {/* Package Info - Mobile Optimized */}
+          <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-200'>
+            <div className='text-center space-y-4'>
+              <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg'>
+                <CreditCard className='h-8 w-8 text-white' />
               </div>
-              <div className='text-center sm:text-right sm:ml-4'>
-                <div className='bg-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 shadow-sm border border-blue-200 inline-block'>
-                  <p className='text-xl sm:text-2xl font-bold text-blue-700'>
+              <div>
+                <p className='text-sm font-semibold text-blue-700 mb-1'>Pacote Selecionado</p>
+                <h4 className='text-lg font-bold text-blue-900 mb-3'>{athletePackage.package.name}</h4>
+                <div className='bg-white rounded-xl px-4 py-3 shadow-sm border border-blue-200 inline-block'>
+                  <p className='text-2xl font-bold text-blue-700'>
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
@@ -559,79 +551,92 @@ const WhatsAppConfirmationDialog = ({
             </div>
           </div>
 
-          <div className='bg-gradient-to-br from-green-100 via-green-50 to-emerald-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border-2 border-green-300 shadow-lg'>
-            <div className='flex items-start space-x-3 mb-4'>
-              <div className='w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md'>
-                <MessageCircle className='h-5 w-5 text-white' />
+          {/* WhatsApp Preview - Completely Redesigned for Mobile */}
+          <div className='bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-300 shadow-lg'>
+            <div className='text-center mb-4'>
+              <div className='w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg'>
+                <MessageCircle className='h-8 w-8 text-white' />
               </div>
-              <div className='flex-1'>
-                <p className='text-sm sm:text-base font-bold text-green-800 mb-1'>📱 Mensagem WhatsApp</p>
-                <p className='text-xs text-green-700'>Esta mensagem será enviada automaticamente</p>
-              </div>
+              <h4 className='text-lg font-bold text-green-800 mb-1'>📱 Mensagem WhatsApp</h4>
+              <p className='text-sm text-green-700'>Será enviada automaticamente após confirmação</p>
             </div>
-            <div className='bg-white rounded-xl p-4 sm:p-5 border-2 border-green-200 shadow-inner relative overflow-hidden'>
-              <div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-500'></div>
-              <div className='flex items-start space-x-3 pt-2'>
-                <div className='w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0'>
-                  <span className='text-white text-xs font-bold'>W</span>
+
+            {/* WhatsApp Message Simulation - Mobile Optimized */}
+            <div className='bg-white rounded-2xl p-4 shadow-inner border-2 border-green-200 relative'>
+              <div className='absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-t-2xl'></div>
+
+              {/* WhatsApp Header */}
+              <div className='flex items-center space-x-3 pt-3 pb-4 border-b border-green-100'>
+                <div className='w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-md'>
+                  <span className='text-white text-sm font-bold'>W</span>
                 </div>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-xs text-gray-500 mb-1 font-medium'>WhatsApp Business</p>
-                  <div className='bg-green-50 rounded-lg p-3 border border-green-200'>
-                    <p className='text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap break-words font-medium'>
-                      {message}
-                    </p>
-                  </div>
-                  <p className='text-xs text-gray-400 mt-2 text-right'>Agora ✓✓</p>
+                <div>
+                  <p className='font-semibold text-gray-800'>WhatsApp Business</p>
+                  <p className='text-xs text-gray-500'>Online agora</p>
+                </div>
+              </div>
+
+              {/* Message Bubble */}
+              <div className='py-4'>
+                <div className='bg-green-100 rounded-2xl rounded-tl-md p-4 border border-green-200 shadow-sm'>
+                  <p className='text-gray-800 leading-relaxed font-medium break-words'>{message}</p>
+                </div>
+                <div className='flex justify-end mt-2'>
+                  <span className='text-xs text-gray-400 flex items-center space-x-1'>
+                    <span>Agora</span>
+                    <span className='text-green-500'>✓✓</span>
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className='bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3'>
-              <div className='w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                <Info className='h-4 w-4 text-white' />
+          {/* Important Notice - Mobile Optimized */}
+          <div className='bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-200'>
+            <div className='text-center space-y-3'>
+              <div className='w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mx-auto'>
+                <Info className='h-6 w-6 text-white' />
               </div>
-              <div className='flex-1 text-center sm:text-left'>
-                <p className='text-sm font-semibold text-amber-800 mb-1'>⚠️ Importante</p>
-                <p className='text-xs sm:text-sm text-amber-700 leading-relaxed'>
-                  Após confirmar, o status será marcado como &quot;WhatsApp Enviado&quot; e você será redirecionado
-                  automaticamente.
+              <div>
+                <p className='font-bold text-amber-800 mb-2'>⚠️ Importante</p>
+                <p className='text-sm text-amber-700 leading-relaxed'>
+                  Ap&oacute;s confirmar, o status ser&aacute; alterado para &quot;WhatsApp Enviado&quot; e voc&ecirc;
+                  ser&aacute; redirecionado automaticamente.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className='px-4 sm:px-6 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex-shrink-0'>
-          <DialogFooter className='flex flex-col sm:flex-row gap-3'>
-            <Button
-              variant='outline'
-              onClick={onClose}
-              disabled={isLoading}
-              className='w-full sm:w-auto h-11 sm:h-12 font-semibold border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 bg-transparent text-sm sm:text-base'
-            >
-              Cancelar
-            </Button>
+        {/* Footer with Large Touch-Friendly Buttons */}
+        <div className='px-6 py-6 bg-gray-50 border-t border-gray-200 flex-shrink-0'>
+          <div className='space-y-3'>
             <Button
               onClick={onConfirm}
               disabled={isLoading}
-              className='w-full sm:w-auto h-11 sm:h-12 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] text-sm sm:text-base'
+              className='w-full h-14 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl'
             >
               {isLoading ? (
                 <>
-                  <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin' />
+                  <Loader2 className='h-6 w-6 mr-3 animate-spin' />
                   Enviando...
                 </>
               ) : (
                 <>
-                  <Send className='h-4 w-4 sm:h-5 sm:w-5 mr-2' />
-                  Confirmar e Enviar
+                  <Send className='h-6 w-6 mr-3' />
+                  Confirmar e Enviar WhatsApp
                 </>
               )}
             </Button>
-          </DialogFooter>
+            <Button
+              variant='outline'
+              onClick={onClose}
+              disabled={isLoading}
+              className='w-full h-12 font-semibold border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 rounded-xl text-base bg-transparent'
+            >
+              Cancelar
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -670,104 +675,110 @@ const WhatsAppRejectionDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className='w-[98vw] sm:w-[90vw] md:w-[650px] lg:w-[750px] xl:w-[800px] max-w-[98vw] h-[95vh] sm:h-[90vh] md:h-auto md:max-h-[85vh] rounded-2xl sm:rounded-3xl border-0 shadow-2xl bg-white p-0 overflow-hidden flex flex-col'>
-        <div className='bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 px-4 sm:px-6 pt-6 sm:pt-8 pb-4 sm:pb-6 border-b border-red-100 flex-shrink-0'>
-          <DialogHeader className='text-center space-y-3 sm:space-y-4'>
-            <div className='mx-auto w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-400 via-red-500 to-rose-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-red-200'>
-              <UserX className='h-8 w-8 sm:h-10 sm:w-10 text-white' />
-            </div>
-            <div className='space-y-1 sm:space-y-2'>
-              <DialogTitle className='text-xl sm:text-2xl font-bold text-gray-900 leading-tight'>
-                Rejeitar Cadastro
-              </DialogTitle>
-              <p className='text-gray-600 text-sm sm:text-base font-medium'>O atleta será notificado via WhatsApp</p>
-            </div>
-          </DialogHeader>
+      <DialogContent className='w-[96vw] max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-3xl h-[96vh] max-h-[96vh] rounded-3xl border-0 shadow-2xl bg-white p-0 overflow-hidden flex flex-col'>
+        {/* Header Mobile-First */}
+        <div className='bg-gradient-to-br from-red-500 to-rose-600 px-6 py-8 text-center text-white flex-shrink-0'>
+          <div className='w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg'>
+            <XCircle className='h-10 w-10 text-white' />
+          </div>
+          <DialogTitle className='text-2xl font-bold mb-2'>Rejeitar Cadastro</DialogTitle>
+          <p className='text-red-100 text-sm font-medium'>O atleta será notificado via WhatsApp</p>
         </div>
 
-        <div className='px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1 min-h-0'>
-          <div className='bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4'>
-              <div className='w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                <Building2 className='h-5 w-5 sm:h-6 sm:w-6 text-blue-600' />
+        {/* Content Area with Better Mobile Spacing */}
+        <div className='flex-1 overflow-y-auto px-4 py-6 space-y-6'>
+          {/* Athlete Info - Mobile Optimized */}
+          <div className='bg-slate-50 rounded-2xl p-5 border border-slate-200'>
+            <div className='text-center space-y-3'>
+              <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto shadow-lg'>
+                <Building2 className='h-8 w-8 text-white' />
               </div>
-              <div className='flex-1 min-w-0 text-center sm:text-left'>
-                <h3 className='font-bold text-gray-900 text-lg sm:text-xl break-words'>{athlete.user.name}</h3>
-                <div className='flex items-center justify-center sm:justify-start space-x-2 mt-1'>
-                  <Phone className='h-4 w-4 text-gray-500' />
-                  <p className='text-sm text-gray-600 font-medium'>{athlete.user.phone}</p>
+              <div>
+                <h3 className='text-xl font-bold text-gray-900 mb-1'>{athlete.user.name}</h3>
+                <div className='flex items-center justify-center space-x-2 text-gray-600'>
+                  <Phone className='h-4 w-4' />
+                  <span className='text-sm font-medium'>{athlete.user.phone}</span>
                 </div>
-                <p className='text-xs text-gray-500 mt-2 bg-gray-100 px-2 py-1 rounded-lg inline-block'>
+                <span className='inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full'>
                   {athlete.athletic.name}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rejection Reason - Mobile Optimized */}
+          <div className='bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-200'>
+            <div className='text-center mb-4'>
+              <div className='w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mx-auto mb-3'>
+                <AlertCircle className='h-6 w-6 text-white' />
+              </div>
+              <h4 className='font-bold text-amber-800 mb-1'>Motivo da Rejeição</h4>
+              <p className='text-sm text-amber-700'>Opcional - Explique o motivo para o atleta</p>
+            </div>
+            <Textarea
+              placeholder='Ex: Documento ilegível, informações incompletas, dados inconsistentes...'
+              value={customMessage}
+              onChange={(e) => setCustomMessage(e.target.value)}
+              className='min-h-[120px] border-amber-200 focus:border-amber-400 focus:ring-amber-400 rounded-xl resize-none text-base'
+              maxLength={500}
+            />
+            <div className='text-right mt-2'>
+              <span className='text-xs text-amber-600 font-medium'>{customMessage.length}/500 caracteres</span>
+            </div>
+          </div>
+
+          {/* WhatsApp Preview - Completely Redesigned for Mobile */}
+          <div className='bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-5 border-2 border-red-300 shadow-lg'>
+            <div className='text-center mb-4'>
+              <div className='w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg'>
+                <MessageCircle className='h-8 w-8 text-white' />
+              </div>
+              <h4 className='text-lg font-bold text-red-800 mb-1'>📱 Mensagem WhatsApp</h4>
+              <p className='text-sm text-red-700'>Será enviada automaticamente após confirmação</p>
+            </div>
+
+            {/* WhatsApp Message Simulation - Mobile Optimized */}
+            <div className='bg-white rounded-2xl p-4 shadow-inner border-2 border-red-200 relative'>
+              <div className='absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-400 to-rose-500 rounded-t-2xl'></div>
+
+              {/* WhatsApp Header */}
+              <div className='flex items-center space-x-3 pt-3 pb-4 border-b border-red-100'>
+                <div className='w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-md'>
+                  <span className='text-white text-sm font-bold'>W</span>
+                </div>
+                <div>
+                  <p className='font-semibold text-gray-800'>WhatsApp Business</p>
+                  <p className='text-xs text-gray-500'>Online agora</p>
+                </div>
+              </div>
+
+              {/* Message Bubble */}
+              <div className='py-4'>
+                <div className='bg-red-100 rounded-2xl rounded-tl-md p-4 border border-red-200 shadow-sm max-h-32 overflow-y-auto'>
+                  <p className='text-gray-800 leading-relaxed font-medium break-words whitespace-pre-line'>{message}</p>
+                </div>
+                <div className='flex justify-end mt-2'>
+                  <span className='text-xs text-gray-400 flex items-center space-x-1'>
+                    <span>Agora</span>
+                    <span className='text-red-500'>✓✓</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Correction Link Info - Mobile Optimized */}
+          <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-200'>
+            <div className='text-center space-y-3'>
+              <div className='w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto'>
+                <ExternalLink className='h-6 w-6 text-white' />
+              </div>
+              <div>
+                <p className='font-bold text-blue-800 mb-2'>🔗 Link de Correção</p>
+                <p className='text-sm text-blue-700 mb-3 leading-relaxed'>
+                  O atleta receberá um link para corrigir as informações
                 </p>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm'>
-            <div className='space-y-4'>
-              <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3'>
-                <div className='w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                  <AlertCircle className='h-4 w-4 text-white' />
-                </div>
-                <div className='flex-1 text-center sm:text-left'>
-                  <p className='text-sm font-semibold text-amber-800 mb-1'>Motivo da Rejeição (Opcional)</p>
-                  <p className='text-xs text-amber-700'>Adicione uma mensagem explicando o motivo da rejeição</p>
-                </div>
-              </div>
-              <Textarea
-                placeholder='Ex: Documento ilegível, informações incompletas, etc.'
-                value={customMessage}
-                onChange={(e) => setCustomMessage(e.target.value)}
-                className='min-h-[80px] sm:min-h-[100px] border-amber-200 focus:border-amber-400 focus:ring-amber-400 rounded-lg sm:rounded-xl resize-none text-sm sm:text-base'
-                maxLength={500}
-              />
-              <div className='text-right'>
-                <span className='text-xs text-amber-600 font-medium'>{customMessage.length}/500 caracteres</span>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-gradient-to-br from-red-100 via-red-50 to-rose-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border-2 border-red-300 shadow-lg'>
-            <div className='flex items-start space-x-3 mb-4'>
-              <div className='w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md'>
-                <MessageCircle className='h-5 w-5 text-white' />
-              </div>
-              <div className='flex-1'>
-                <p className='text-sm sm:text-base font-bold text-red-800 mb-1'>📱 Mensagem WhatsApp</p>
-                <p className='text-xs text-red-700'>Esta mensagem será enviada automaticamente</p>
-              </div>
-            </div>
-            <div className='bg-white rounded-xl p-4 sm:p-5 border-2 border-red-200 shadow-inner relative overflow-hidden'>
-              <div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-400 to-rose-500'></div>
-              <div className='flex items-start space-x-3 pt-2'>
-                <div className='w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0'>
-                  <span className='text-white text-xs font-bold'>W</span>
-                </div>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-xs text-gray-500 mb-1 font-medium'>WhatsApp Business</p>
-                  <div className='bg-red-50 rounded-lg p-3 border border-red-200 max-h-24 sm:max-h-32 overflow-y-auto'>
-                    <p className='text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-line break-words font-medium'>
-                      {message}
-                    </p>
-                  </div>
-                  <p className='text-xs text-gray-400 mt-2 text-right'>Agora ✓✓</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-blue-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3'>
-              <div className='w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                <ExternalLink className='h-4 w-4 text-white' />
-              </div>
-              <div className='flex-1 text-center sm:text-left'>
-                <p className='text-sm font-semibold text-blue-800 mb-1'>🔗 Link de Correção</p>
-                <p className='text-xs text-blue-700 mb-3 leading-relaxed'>
-                  O atleta receberá um link direto para corrigir as informações
-                </p>
-                <div className='bg-blue-100 rounded-lg p-3 border border-blue-200'>
+                <div className='bg-blue-100 rounded-xl p-3 border border-blue-200'>
                   <p className='text-xs text-blue-800 font-mono break-all'>
                     {typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/profile
                   </p>
@@ -776,60 +787,62 @@ const WhatsAppRejectionDialog = ({
             </div>
           </div>
 
-          <div className='bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm'>
-            <div className='flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3'>
-              <div className='w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0'>
-                <Info className='h-4 w-4 text-white' />
+          {/* Process Info - Mobile Optimized */}
+          <div className='bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-5 border border-gray-200'>
+            <div className='text-center space-y-4'>
+              <div className='w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center mx-auto'>
+                <Info className='h-6 w-6 text-white' />
               </div>
-              <div className='flex-1 text-center sm:text-left'>
-                <p className='text-sm font-semibold text-gray-800 mb-2'>ℹ️ O que acontecerá:</p>
-                <ul className='text-xs sm:text-sm text-gray-700 space-y-2'>
-                  <li className='flex items-start space-x-2'>
-                    <span className='w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0'></span>
-                    <span>O status do atleta será alterado para &quot;Rejeitado&quot;</span>
-                  </li>
-                  <li className='flex items-start space-x-2'>
-                    <span className='w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0'></span>
-                    <span>Uma mensagem será enviada via WhatsApp automaticamente</span>
-                  </li>
-                  <li className='flex items-start space-x-2'>
-                    <span className='w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0'></span>
-                    <span>O atleta poderá corrigir e reenviar a documentação</span>
-                  </li>
-                </ul>
+              <div>
+                <p className='font-bold text-gray-800 mb-3'>ℹ️ O que acontecerá:</p>
+                <div className='space-y-3 text-left'>
+                  <div className='flex items-start space-x-3'>
+                    <div className='w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0'></div>
+                    <span className='text-sm text-gray-700'>Status alterado para &quot;Rejeitado&quot;</span>
+                  </div>
+                  <div className='flex items-start space-x-3'>
+                    <div className='w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0'></div>
+                    <span className='text-sm text-gray-700'>Mensagem enviada via WhatsApp</span>
+                  </div>
+                  <div className='flex items-start space-x-3'>
+                    <div className='w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0'></div>
+                    <span className='text-sm text-gray-700'>Atleta pode corrigir e reenviar</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className='px-4 sm:px-6 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex-shrink-0'>
-          <DialogFooter className='flex flex-col sm:flex-row gap-3'>
-            <Button
-              variant='outline'
-              onClick={handleClose}
-              disabled={isLoading}
-              className='w-full sm:w-auto h-11 sm:h-12 font-semibold border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 bg-transparent text-sm sm:text-base'
-            >
-              Cancelar
-            </Button>
+        {/* Footer with Large Touch-Friendly Buttons */}
+        <div className='px-6 py-6 bg-gray-50 border-t border-gray-200 flex-shrink-0'>
+          <div className='space-y-3'>
             <Button
               onClick={handleConfirm}
               disabled={isLoading}
-              className='w-full sm:w-auto h-11 sm:h-12 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] text-sm sm:text-base'
+              className='w-full h-14 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] rounded-xl'
             >
               {isLoading ? (
                 <>
-                  <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin' />
+                  <Loader2 className='h-6 w-6 mr-3 animate-spin' />
                   Rejeitando...
                 </>
               ) : (
                 <>
-                  <UserX className='h-4 w-4 sm:h-5 sm:w-5 mr-2' />
-                  Rejeitar e Enviar
+                  <UserX className='h-6 w-6 mr-3' />
+                  Rejeitar e Enviar WhatsApp
                 </>
               )}
             </Button>
-          </DialogFooter>
+            <Button
+              variant='outline'
+              onClick={handleClose}
+              disabled={isLoading}
+              className='w-full h-12 font-semibold border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 rounded-xl text-base bg-transparent'
+            >
+              Cancelar
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
