@@ -4,7 +4,7 @@ import type React from 'react'
 
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
@@ -53,7 +53,7 @@ export default function LoginPage() {
             description: 'Por favor, complete o cadastro da sua atlética nas configurações.',
             variant: 'success'
           })
-          router.push('/dashboard/settings')
+          router.push('/dashboard/athletes')
           return
         }
       }
@@ -63,7 +63,7 @@ export default function LoginPage() {
         description: 'Você será redirecionado para o painel.',
         variant: 'success'
       })
-      router.push('/dashboard')
+      router.push('/dashboard/profile')
     } catch (error) {
       console.warn('Error signing in:', error)
       if (error instanceof Error) {
