@@ -1,12 +1,13 @@
 'use client'
 
-import type React from 'react'
-import { useEffect, useState, Suspense } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
+import { CacheDebug } from '@/components/cache-debug'
 import DashboardSidebar from '@/components/dashboard-sidebar'
 import MobileHeader from '@/components/mobile-header'
 import { ThemeProvider } from '@/contexts/theme-context'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
 function LoadingSpinner() {
   return (
@@ -107,6 +108,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </main>
         </div>
+
+        {/* Cache Debug Component (only in development) */}
+        {process.env.NODE_ENV === 'development' && <CacheDebug />}
       </div>
     </ThemeProvider>
   )
