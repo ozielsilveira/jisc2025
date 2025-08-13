@@ -1,46 +1,54 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
+import { DocumentModal } from '@/components/document-modal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  useAthletesList,
+  useAthleticByRepresentative,
+  useAthletics,
+  usePackages,
+  useSports,
+  useUserData
+} from '@/hooks/use-cached-data'
 import { useToast } from '@/hooks/use-toast'
+import { athleteService } from '@/lib/services'
 import { supabase } from '@/lib/supabase'
 import {
-  FileText,
-  Share2,
-  Users,
-  Search,
-  Mail,
-  Phone,
-  Calendar,
-  Trophy,
-  Eye,
-  UserCheck,
-  UserX,
-  Loader2,
   AlertCircle,
-  MessageCircle,
+  Building2,
+  Calendar,
   CheckCircle,
-  XCircle,
-  Send,
+  CreditCard,
+  ExternalLink,
+  Eye,
+  FileCheck,
+  Info,
+  Loader2,
+  Mail,
+  MessageCircle,
+  Phone,
   RefreshCw,
+  Search,
+  Send,
+  Share2,
   Sparkles,
   TrendingUp,
-  FileCheck,
-  ExternalLink,
+  Trophy,
+  UserCheck,
+  Users,
+  UserX,
   X,
-  Info,
-  Building2,
-  CreditCard
+  XCircle
 } from 'lucide-react'
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { DocumentModal } from '@/components/document-modal'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 
 // Types
 type Athlete = {
@@ -159,237 +167,61 @@ const logAthleteSearch = (action: string, data?: any, error?: any) => {
   }
 }
 
-// Custom Hooks
-const useAthletes = (user: any, userRole: string | null) => {
-  const [athletes, setAthletes] = useState<Athlete[]>([])
-  const [athletics, setAthletics] = useState<Athletic[]>([])
-  const [sports, setSports] = useState<Sport[]>([])
-  const [packages, setPackages] = useState<Package[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+// Hook otimizado com cache
+const useAthletesOptimized = (user: any, userRole: string | null) => {
+  const searchParams = useSearchParams()
   const [athleticId, setAthleticId] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
-  const searchParams = useSearchParams()
 
-  const fetchData = useCallback(async () => {
-    if (!user) {
-      logAthleteSearch('FETCH_SKIPPED', { reason: 'No user provided' })
-      return
-    }
+  // Usar hooks com cache
+  const { athletics } = useAthletics()
+  const { sports } = useSports()
+  const { packages } = usePackages()
+  const { athletic: userAthletic } = useAthleticByRepresentative(user?.id)
 
-    setIsLoading(true)
-    setFetchError(null)
-    logAthleteSearch('FETCH_START', { userId: user.id, userRole })
-
-    try {
-      let athleticIdForQuery: string | null = null
-
-      // Step 1: Get athletic ID if user is athletic representative
-      if (userRole === 'athletic') {
-        logAthleteSearch('FETCHING_ATHLETIC_ID', { userId: user.id })
-        const { data: athleticData, error: athleticError } = await supabase
-          .from('athletics')
-          .select('id, name')
-          .eq('representative_id', user.id)
-          .maybeSingle()
-
-        if (athleticError) {
-          logAthleteSearch('ATHLETIC_ID_ERROR', { error: athleticError })
-          throw new Error(`Erro ao buscar atlética: ${athleticError.message}`)
-        }
-
-        if (athleticData) {
-          athleticIdForQuery = athleticData.id
-          setAthleticId(athleticData.id)
-          logAthleteSearch('ATHLETIC_ID_FOUND', { athleticId: athleticData.id, athleticName: athleticData.name })
-        } else {
-          logAthleteSearch('ATHLETIC_ID_NOT_FOUND', { userId: user.id })
-          setFetchError('Atlética não encontrada para este usuário')
-          return
-        }
-      }
-
-      // Step 2: Build athletes query with proper joins
-      logAthleteSearch('BUILDING_ATHLETES_QUERY', { userRole, athleticIdForQuery })
-      const athletesQuery = supabase
-        .from('athletes')
-        .select(
-          `
-          id,
-          user_id,
-          athletic_id,
-          enrollment_document_url,
-          status,
-          created_at,
-          cnh_cpf_document_url,
-          wpp_sent,
-          user:users!athletes_user_id_fkey(
-            name,
-            email,
-            cpf,
-            phone,
-            gender
-          ),
-          athletic:athletics!athletes_athletic_id_fkey(
-            name
-          ),
-          athlete_sports!athlete_sports_athlete_id_fkey(
-            sport:sports!athlete_sports_sport_id_fkey(
-              id,
-              name,
-              type
-            )
-          ),
-          athlete_packages!athlete_packages_athlete_id_fkey(
-            id,
-            payment_status,
-            package:packages!athlete_packages_package_id_fkey(
-              id,
-              name,
-              price,
-              description
-            )
-          )
-        `
-        )
-        .order('created_at', { ascending: false })
-
-      // Apply filters based on user role and search params
-      if (userRole === 'admin') {
-        const athleticFilter = searchParams.get('athletic')
-        logAthleteSearch('ADMIN_FILTER_APPLIED', { athleticFilter })
-        if (athleticFilter && athleticFilter !== 'all') {
-          athletesQuery.eq('athletic_id', athleticFilter)
-        }
-      } else if (userRole === 'athletic' && athleticIdForQuery) {
-        logAthleteSearch('ATHLETIC_FILTER_APPLIED', { athleticId: athleticIdForQuery })
-        athletesQuery.eq('athletic_id', athleticIdForQuery)
-      } else if (userRole !== 'admin' && userRole !== 'athletic') {
-        // For regular users, show only their own athlete record
-        logAthleteSearch('USER_FILTER_APPLIED', { userId: user.id })
-        athletesQuery.eq('user_id', user.id)
-      }
-
-      // Step 3: Execute athletes query
-      logAthleteSearch('EXECUTING_ATHLETES_QUERY')
-      const { data: athletesData, error: athletesError } = await athletesQuery
-
-      if (athletesError) {
-        logAthleteSearch('ATHLETES_QUERY_ERROR', { error: athletesError })
-        throw new Error(`Erro ao buscar atletas: ${athletesError.message}`)
-      }
-
-      // Step 4: Format athletes data
-      const formattedAthletes =
-        athletesData
-          ?.map((athlete) => {
-            const formattedAthlete = {
-              ...athlete,
-              sports: athlete.athlete_sports?.map((as: any) => as.sport).filter(Boolean) || [],
-              athlete_packages: athlete.athlete_packages || []
-            }
-
-            // Validate required fields
-            if (!formattedAthlete.user) {
-              logAthleteSearch('ATHLETE_MISSING_USER', { athleteId: athlete.id })
-            }
-            if (!formattedAthlete.athletic) {
-              logAthleteSearch('ATHLETE_MISSING_ATHLETIC', { athleteId: athlete.id })
-            }
-
-            return formattedAthlete
-          })
-          .filter((athlete) => athlete.user && athlete.athletic) || []
-
-      setAthletes(formattedAthletes as unknown as Athlete[])
-      logAthleteSearch('ATHLETES_SET', { count: formattedAthletes.length })
-
-      // Step 5: Fetch athletics for admin users
-      if (userRole === 'admin') {
-        logAthleteSearch('FETCHING_ATHLETICS_LIST')
-        const { data: athleticsData, error: athleticsError } = await supabase
-          .from('athletics')
-          .select('id, name, university')
-          .order('name')
-
-        if (athleticsError) {
-          logAthleteSearch('ATHLETICS_LIST_ERROR', { error: athleticsError })
-          console.warn('Error fetching athletics:', athleticsError)
-        } else {
-          setAthletics(athleticsData as Athletic[])
-          logAthleteSearch('ATHLETICS_LIST_SUCCESS', { count: athleticsData?.length || 0 })
-        }
-      }
-
-      // Step 6: Fetch sports
-      logAthleteSearch('FETCHING_SPORTS')
-      const { data: sportsData, error: sportsError } = await supabase
-        .from('sports')
-        .select('id, name, type')
-        .order('name')
-
-      if (sportsError) {
-        logAthleteSearch('SPORTS_ERROR', { error: sportsError })
-        console.warn('Error fetching sports:', sportsError)
-      } else {
-        setSports(sportsData as Sport[])
-        logAthleteSearch('SPORTS_SUCCESS', { count: sportsData?.length || 0 })
-      }
-
-      // Step 7: Fetch packages with fallback
-      logAthleteSearch('FETCHING_PACKAGES')
-      try {
-        const { data: packagesData, error: packagesError } = await supabase
-          .from('packages')
-          .select('id, name, price, description')
-          .order('name')
-
-        if (packagesError) {
-          logAthleteSearch('PACKAGES_ERROR', { error: packagesError })
-          throw packagesError
-        }
-
-        setPackages(packagesData as Package[])
-        logAthleteSearch('PACKAGES_SUCCESS', { count: packagesData?.length || 0 })
-      } catch (error) {
-        logAthleteSearch('PACKAGES_FALLBACK', { error })
-        // Fallback packages
-        const fallbackPackages = [
-          { id: '1', name: 'Pacote Básico', price: 50.0, description: 'Pacote básico de participação' },
-          { id: '2', name: 'Pacote Premium', price: 100.0, description: 'Pacote premium com benefícios extras' },
-          { id: '3', name: 'Pacote VIP', price: 150.0, description: 'Pacote VIP com todos os benefícios' }
-        ]
-        setPackages(fallbackPackages)
-      }
-
-      logAthleteSearch('FETCH_COMPLETE', {
-        athletesCount: formattedAthletes.length,
-        athleticsCount: userRole === 'admin' ? athletics.length : 0,
-        sportsCount: sports.length,
-        packagesCount: packages.length
-      })
-    } catch (error: any) {
-      logAthleteSearch('FETCH_ERROR', { error })
-      setFetchError(error.message || 'Erro desconhecido ao carregar dados')
-      console.error('Error fetching athlete data:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user, userRole, searchParams, athletics.length, packages.length, sports.length])
-
+  // Determinar athleticId para representantes
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (userRole === 'athletic' && userAthletic) {
+      setAthleticId(userAthletic.id)
+    }
+  }, [userRole, userAthletic])
+
+  // Construir filtros para a lista de atletas
+  const filters = useMemo(() => {
+    const baseFilters: any = {}
+
+    if (userRole === 'admin') {
+      const athleticFilter = searchParams.get('athletic')
+      if (athleticFilter && athleticFilter !== 'all') {
+        baseFilters.athleticId = athleticFilter
+      }
+    } else if (userRole === 'athletic' && athleticId) {
+      baseFilters.athleticId = athleticId
+    }
+
+    return baseFilters
+  }, [userRole, searchParams, athleticId])
+
+  const { athletes, loading: isLoading, error, refetch } = useAthletesList(filters)
+
+  // Tratar erros
+  useEffect(() => {
+    if (error) {
+      setFetchError(error)
+    } else {
+      setFetchError(null)
+    }
+  }, [error])
 
   return {
     athletes,
-    setAthletes,
     athletics,
     sports,
     packages,
     isLoading,
     athleticId,
     fetchError,
-    refetch: fetchData
+    refetch
   }
 }
 
@@ -1118,7 +950,7 @@ const StatisticsCards = ({ athletes }: { athletes: Athlete[] }) => {
 export default function AthletesPage() {
   const { user } = useAuth()
   const { toast } = useToast()
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const { role: userRole } = useUserData()
   const [isUserAthlete, setIsUserAthlete] = useState(false)
 
   // UI State
@@ -1145,33 +977,17 @@ export default function AthletesPage() {
   const [selectedAthleteForRejection, setSelectedAthleteForRejection] = useState<Athlete | null>(null)
   const [isRejectionLoading, setIsRejectionLoading] = useState(false)
 
-  const { athletes, setAthletes, athletics, sports, packages, isLoading, athleticId, fetchError, refetch } =
-    useAthletes(user, userRole)
+  const { athletes, athletics, sports, packages, isLoading, athleticId, fetchError, refetch } = useAthletesOptimized(
+    user,
+    userRole
+  )
 
-  // Fetch user role
+  // Verificar se o usuário é atleta
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) return
-
-      logAthleteSearch('FETCHING_USER_ROLE', { userId: user.id })
+    const checkUserAthlete = async () => {
+      if (!user?.id) return
 
       try {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        if (userError) {
-          logAthleteSearch('USER_ROLE_ERROR', { error: userError })
-          throw userError
-        }
-
-        if (userData) {
-          setUserRole(userData.role)
-          logAthleteSearch('USER_ROLE_SUCCESS', { role: userData.role })
-        }
-
         const { data: athleteData, error: athleteError } = await supabase
           .from('athletes')
           .select('id')
@@ -1179,19 +995,17 @@ export default function AthletesPage() {
           .maybeSingle()
 
         if (athleteError) {
-          logAthleteSearch('USER_ATHLETE_CHECK_ERROR', { error: athleteError })
+          console.warn('Error checking user athlete status:', athleteError)
         } else {
           setIsUserAthlete(!!athleteData)
-          logAthleteSearch('USER_ATHLETE_CHECK_SUCCESS', { isAthlete: !!athleteData })
         }
       } catch (error) {
-        logAthleteSearch('FETCH_USER_ROLE_ERROR', { error })
-        console.warn('Error fetching user role:', error)
+        console.warn('Error checking user athlete status:', error)
       }
     }
 
-    fetchUserRole()
-  }, [user])
+    checkUserAthlete()
+  }, [user?.id])
 
   // Enhanced filtered and sorted athletes with logging
   const filteredAndSortedAthletes = useMemo(() => {
@@ -1299,24 +1113,14 @@ export default function AthletesPage() {
 
   // Handlers
   const handleApproveAthlete = async (athleteId: string) => {
-    logAthleteSearch('APPROVE_ATHLETE_START', { athleteId })
     try {
-      const { error } = await supabase.from('athletes').update({ status: 'approved' }).eq('id', athleteId)
-
-      if (error) throw error
-
-      setAthletes((prev) =>
-        prev.map((athlete) => (athlete.id === athleteId ? { ...athlete, status: 'approved' } : athlete))
-      )
-
-      logAthleteSearch('APPROVE_ATHLETE_SUCCESS', { athleteId })
+      await athleteService.updateStatus(athleteId, 'approved')
 
       toast({
         title: '✅ Atleta aprovado!',
         description: 'O atleta foi aprovado com sucesso e pode participar das competições.'
       })
     } catch (error) {
-      logAthleteSearch('APPROVE_ATHLETE_ERROR', { athleteId, error })
       toast({
         title: '❌ Erro na aprovação',
         description: 'Não foi possível aprovar o atleta. Tente novamente.',
@@ -1338,23 +1142,10 @@ export default function AthletesPage() {
     if (!selectedAthleteForRejection) return
 
     setIsRejectionLoading(true)
-    logAthleteSearch('REJECT_ATHLETE_START', { athleteId: selectedAthleteForRejection.id })
 
     try {
       // Update athlete status to rejected
-      const { error } = await supabase
-        .from('athletes')
-        .update({ status: 'rejected' })
-        .eq('id', selectedAthleteForRejection.id)
-
-      if (error) throw error
-
-      // Update local state
-      setAthletes((prev) =>
-        prev.map((athlete) =>
-          athlete.id === selectedAthleteForRejection.id ? { ...athlete, status: 'rejected' } : athlete
-        )
-      )
+      await athleteService.updateStatus(selectedAthleteForRejection.id, 'rejected')
 
       // Create WhatsApp message and URL
       const message = formatWhatsAppRejectionMessage(selectedAthleteForRejection.user.name, customMessage)
@@ -1364,12 +1155,6 @@ export default function AthletesPage() {
       setWhatsappRejectionDialogOpen(false)
       setSelectedAthleteForRejection(null)
 
-      logAthleteSearch('REJECT_ATHLETE_SUCCESS', {
-        athleteId: selectedAthleteForRejection.id,
-        whatsappUrl,
-        customMessage
-      })
-
       toast({
         title: '⚠️ Atleta rejeitado',
         description: 'O atleta foi rejeitado e será notificado via WhatsApp.'
@@ -1378,7 +1163,6 @@ export default function AthletesPage() {
       // Open WhatsApp
       window.open(whatsappUrl, '_blank')
     } catch (error) {
-      logAthleteSearch('REJECT_ATHLETE_ERROR', { athleteId: selectedAthleteForRejection.id, error })
       toast({
         title: '❌ Erro na rejeição',
         description: 'Não foi possível rejeitar o atleta. Tente novamente.',
@@ -1430,16 +1214,9 @@ export default function AthletesPage() {
     if (!selectedAthlete || !selectedAthlete.athlete_packages?.length) return
 
     setIsWhatsAppLoading(true)
-    logAthleteSearch('WHATSAPP_SEND_START', { athleteId: selectedAthlete.id })
 
     try {
-      const { error } = await supabase.from('athletes').update({ wpp_sent: true }).eq('id', selectedAthlete.id)
-
-      if (error) throw error
-
-      setAthletes((prev) =>
-        prev.map((athlete) => (athlete.id === selectedAthlete.id ? { ...athlete, wpp_sent: true } : athlete))
-      )
+      await athleteService.updateWhatsAppStatus(selectedAthlete.id, true)
 
       const athletePackage = selectedAthlete.athlete_packages[0]
       const message = formatWhatsAppMessage(
@@ -1452,11 +1229,6 @@ export default function AthletesPage() {
       setWhatsappDialogOpen(false)
       setSelectedAthlete(null)
 
-      logAthleteSearch('WHATSAPP_SEND_SUCCESS', {
-        athleteId: selectedAthlete.id,
-        whatsappUrl
-      })
-
       toast({
         title: '📱 WhatsApp enviado!',
         description: 'O status foi atualizado e você será redirecionado para o WhatsApp.'
@@ -1464,10 +1236,6 @@ export default function AthletesPage() {
 
       window.open(whatsappUrl, '_blank')
     } catch (error) {
-      logAthleteSearch('WHATSAPP_SEND_ERROR', {
-        athleteId: selectedAthlete.id,
-        error
-      })
       console.error('Error updating WhatsApp status:', error)
       toast({
         title: '❌ Erro ao enviar WhatsApp',
@@ -1695,7 +1463,7 @@ export default function AthletesPage() {
         isOpen={documentDialogOpen}
         onClose={() => setDocumentDialogOpen(false)}
         documentUrl={documentUrl}
-        title="Documento do Atleta"
+        title='Documento do Atleta'
       />
 
       {/* WhatsApp Confirmation Dialog */}
