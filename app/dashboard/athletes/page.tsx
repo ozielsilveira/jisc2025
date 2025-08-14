@@ -73,7 +73,7 @@ type Athlete = {
   sports: Array<{
     id: string
     name: string
-    type: 'sport' | 'bar_game'
+    type: 'sport' | 'boteco'
   }>
   athlete_packages?: Array<{
     id: string
@@ -1179,7 +1179,7 @@ export default function AthletesPage() {
     logAthleteSearch('SHARE_LINK_START', { athleticId })
 
     try {
-      const link = `${window.location.origin}/register?type=athlete&athletic=${athleticId}`
+      const link = `${window.location.origin}/register?type=athlete&athletic=${athleticId}&source=dashboard`
       await navigator.clipboard.writeText(link)
 
       logAthleteSearch('SHARE_LINK_SUCCESS', { link })

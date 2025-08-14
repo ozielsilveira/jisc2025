@@ -11,8 +11,13 @@ export async function generateMetadata(
   { searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
+  console.log('SearchParams recebidos:', searchParams);
+  
   const type = Array.isArray(searchParams.type) ? searchParams.type[0] : searchParams.type
   const athleticId = Array.isArray(searchParams.athletic) ? searchParams.athletic[0] : searchParams.athletic
+  const source = Array.isArray(searchParams.source) ? searchParams.source[0] : searchParams.source
+  
+  console.log('Valores extraídos:', { type, athleticId, source });
   
   let title = 'Cadastro - JISC 2025'
   let description = 'Cadastre-se no JISC 2025! Inscreva-se como atleta, representante de atlética ou compre ingressos para o maior campeonato universitário do Brasil.'
@@ -43,6 +48,8 @@ export async function generateMetadata(
     }
   }
 
+  console.log('Gerando metadados com:', { title, description });
+  
   const metadata: Metadata = {
     title,
     description,
@@ -57,7 +64,10 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
-      url: 'https://jisc.com.br/register' + (type ? `?type=${type}` : '') + (athleticId ? `&athletic=${athleticId}` : ''),
+      url: 'https://jisc.com.br/register' + 
+        (type ? `?type=${type}` : '') + 
+        (athleticId ? `&athletic=${athleticId}` : '') +
+        (source ? `&source=${source}` : ''),
       siteName: 'JISC 2025',
       locale: 'pt_BR',
       type: 'website'
@@ -70,10 +80,14 @@ export async function generateMetadata(
       site: '@jisc202'
     },
     alternates: {
-      canonical: 'https://jisc.com.br/register' + (type ? `?type=${type}` : '') + (athleticId ? `&athletic=${athleticId}` : '')
+      canonical: 'https://jisc.com.br/register' + 
+        (type ? `?type=${type}` : '') + 
+        (athleticId ? `&athletic=${athleticId}` : '') +
+        (source ? `&source=${source}` : '')
     }
   }
 
+  console.log('Metadados finais:', JSON.stringify(metadata, null, 2));
   return metadata
 }
 
