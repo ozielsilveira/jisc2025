@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JISC 2025</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        width: 1200px;
+        height: 630px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .background-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+          radial-gradient(circle at 20% 80%, #c200f720 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, #c200f715 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, #c200f710 0%, transparent 50%);
+      }
+
+      .content {
+        text-align: center;
+        z-index: 10;
+        padding: 60px;
+        max-width: 1000px;
+      }
+
+      .logo {
+        font-size: 48px;
+        font-weight: 900;
+        color: #c200f7;
+        margin-bottom: 20px;
+        text-shadow: 0 0 30px #c200f740;
+      }
+
+      .title {
+        font-size: 72px;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 20px;
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        font-size: 36px;
+        font-weight: 600;
+        color: #c200f7;
+        margin-bottom: 30px;
+        opacity: 0.9;
+      }
+
+      .description {
+        font-size: 24px;
+        color: #ffffff80;
+        font-weight: 500;
+        margin-bottom: 40px;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #c200f7;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #c200f7;
+        border-radius: 50%;
+        opacity: 0.6;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-20px) rotate(180deg);
+        }
+      }
+
+      .particle:nth-child(1) {
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+      .particle:nth-child(2) {
+        top: 20%;
+        left: 80%;
+        animation-delay: 1s;
+      }
+      .particle:nth-child(3) {
+        top: 60%;
+        left: 20%;
+        animation-delay: 2s;
+      }
+      .particle:nth-child(4) {
+        top: 80%;
+        left: 70%;
+        animation-delay: 3s;
+      }
+      .particle:nth-child(5) {
+        top: 30%;
+        left: 60%;
+        animation-delay: 4s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background-pattern"></div>
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+    <div class="content">
+      <div class="logo">🏆</div>
+      <h1 class="title">JISC 2025</h1>
+      <h2 class="subtitle">Jogos Interuniversitários Sociais e Culturais</h2>
+      <p class="description">Maior campeonato universitário do Brasil</p>
+      <div class="badge">jisc.com.br</div>
+    </div>
+  </body>
+</html>
