@@ -181,7 +181,7 @@ export default function Home() {
 
                   <p className='text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-12'>
                     A maior competição universitária com diversas modalidades esportivas e de boteco. Junte-se a nós
-                    para dias de competição, diversão e networking!
+                    para dias de competição, diversão e integração!
                   </p>
 
                   <div className='mb-12 w-full max-w-2xl'>
@@ -265,19 +265,19 @@ export default function Home() {
               <div className='grid grid-cols-2 md:grid-cols-4 gap-8'>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    20+
+                    +20
                   </div>
                   <p className='text-white/70'>Modalidades</p>
                 </div>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    10+
+                    5
                   </div>
                   <p className='text-white/70'>Universidades</p>
                 </div>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    1k+
+                    +900
                   </div>
                   <p className='text-white/70'>Atletas</p>
                 </div>

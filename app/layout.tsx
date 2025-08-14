@@ -13,14 +13,37 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'JISC - Campeonato Universitário',
+  title: {
+    default: 'JISC 2025 - Jogos Interuniversitários Sociais e Culturais',
+    template: '%s | JISC 2025'
+  },
   description:
-    'Plataforma de gerenciamento do campeonato universitário JISC - Jogos Interuniversitários Sociais e Culturais',
-  generator: 'v0.dev',
-  keywords: ['JISC', 'campeonato universitário', 'esportes', 'competição', 'universidade'],
-  authors: [{ name: 'JISC Organization' }],
+    'Participe do maior campeonato universitário do Brasil! JISC 2025 - Jogos Interuniversitários Sociais e Culturais. Competições esportivas, jogos de boteco e muito mais. Inscreva-se agora!',
+  keywords: [
+    'JISC',
+    'JISC 2025',
+    'campeonato universitário',
+    'jogos universitários',
+    'esportes universitários',
+    'competição universitária',
+    'universidade',
+    'atlética',
+    'esportes',
+    'boteco',
+    'competição'
+  ],
+  authors: [{ name: 'JISC Organization', url: 'https://jisc.com.br' }],
   creator: 'JISC Organization',
   publisher: 'JISC Organization',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false
+  },
+  metadataBase: new URL('https://jisc.com.br'),
+  alternates: {
+    canonical: '/'
+  },
   robots: {
     index: true,
     follow: true,
@@ -35,15 +58,37 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://jisc.vercel.app',
-    title: 'JISC - Campeonato Universitário',
-    description: 'Plataforma de gerenciamento do campeonato universitário JISC',
-    siteName: 'JISC'
+    url: 'https://jisc.com.br',
+    title: 'JISC 2025 - Jogos Interuniversitários Sociais e Culturais',
+    description:
+      'Participe do maior campeonato universitário do Brasil! Competições esportivas, jogos de boteco e muito mais. Inscreva-se agora!',
+    siteName: 'JISC 2025',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'JISC 2025 - Jogos Interuniversitários Sociais e Culturais'
+      }
+    ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'JISC - Campeonato Universitário',
-    description: 'Plataforma de gerenciamento do campeonato universitário JISC'
+    title: 'JISC 2025 - Jogos Interuniversitários Sociais e Culturais',
+    description:
+      'Participe do maior campeonato universitário do Brasil! Competições esportivas, jogos de boteco e muito mais.',
+    images: ['/og-image.jpg'],
+    creator: '@jisc2025',
+    site: '@jisc2025'
+  },
+  other: {
+    'theme-color': '#0456FC',
+    'msapplication-TileColor': '#0456FC',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'JISC 2025',
+    'mobile-web-app-capable': 'yes',
+    'msapplication-tap-highlight': 'no'
   }
 }
 

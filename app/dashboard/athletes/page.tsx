@@ -265,8 +265,9 @@ const WhatsAppStatusBadge = ({ sent }: { sent: boolean }) => {
   return (
     <Badge
       variant='outline'
-      className={`text-sm font-medium px-3 py-1 ${sent ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-600 border-slate-200'
-        }`}
+      className={`text-sm font-medium px-3 py-1 ${
+        sent ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+      }`}
     >
       {sent ? (
         <>
@@ -292,10 +293,11 @@ const SportsBadges = ({ sports }: { sports: Athlete['sports'] }) => {
         <Badge
           key={sport.id}
           variant='secondary'
-          className={`text-xs font-medium px-2.5 py-1 ${sport.type === 'sport'
+          className={`text-xs font-medium px-2.5 py-1 ${
+            sport.type === 'sport'
               ? 'bg-blue-50 text-blue-700 border-blue-200'
               : 'bg-purple-50 text-purple-700 border-purple-200'
-            }`}
+          }`}
         >
           {sport.name}
         </Badge>
@@ -801,10 +803,11 @@ const AthleteListItem = ({
                   variant='outline'
                   size='sm'
                   onClick={() => onWhatsApp(athlete)}
-                  className={`h-10 px-4 font-medium border transition-colors ${athlete.wpp_sent
+                  className={`h-10 px-4 font-medium border transition-colors ${
+                    athlete.wpp_sent
                       ? 'border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400'
                       : 'border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400'
-                    }`}
+                  }`}
                 >
                   <MessageCircle className='h-4 w-4 mr-2' />
                   {athlete.wpp_sent ? 'Reenviar mensagem' : 'Enviar mensagem'}
@@ -1530,10 +1533,11 @@ function AthleteCard({ athlete, userRole, onApprove, onReject, onWhatsApp, onVie
                 <Badge
                   key={sport.id}
                   variant='secondary'
-                  className={`text-xs font-medium px-2 py-1 ${sport.type === 'sport'
+                  className={`text-xs font-medium px-2 py-1 ${
+                    sport.type === 'sport'
                       ? 'bg-blue-50 text-blue-700 border-blue-200'
                       : 'bg-purple-50 text-purple-700 border-purple-200'
-                    }`}
+                  }`}
                 >
                   {sport.name}
                 </Badge>
@@ -1592,10 +1596,11 @@ function AthleteCard({ athlete, userRole, onApprove, onReject, onWhatsApp, onVie
                   variant='outline'
                   size='sm'
                   onClick={() => onWhatsApp(athlete)}
-                  className={`h-9 px-3 text-xs sm:text-sm font-medium border transition-colors ${athlete.wpp_sent
+                  className={`h-9 px-3 text-xs sm:text-sm font-medium border transition-colors ${
+                    athlete.wpp_sent
                       ? 'border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400'
                       : 'border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400'
-                    }`}
+                  }`}
                 >
                   <MessageCircle className='h-3 w-3 sm:h-4 sm:w-4 mr-1.5' />
                   <span className='hidden sm:inline'>{athlete.wpp_sent ? 'Reenviar mensagem' : 'Enviar mensagem'}</span>
