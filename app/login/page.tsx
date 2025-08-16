@@ -39,23 +39,22 @@ export default function LoginPage() {
       if (userError) throw userError
 
       if (userData.role === 'athletic') {
-        const { data: athleticData, error: athleticError } = await supabase
-          .from('athletics')
-          .select('university, logo_url')
-          .eq('representative_id', userData.id)
-          .single()
+        toast({
+          title: 'Login bem-sucedido!',
+          description: 'Você será redirecionado para a listagem de atletas.',
+          variant: 'success'
+        })
+        router.push('/dashboard/athletes')
+      }
 
-        if (athleticError) throw athleticError
+      if (userData.role === 'athletes') {
+        toast({
+          title: 'Login bem-sucedido!',
+          description: 'Por favor, complete o seu cadastro nas configurações.',
+          variant: 'success'
+        })
 
-        if (!athleticData.university || !athleticData.logo_url) {
-          toast({
-            title: 'Login bem-sucedido!',
-            description: 'Por favor, complete o cadastro da sua atlética nas configurações.',
-            variant: 'success'
-          })
-          router.push('/dashboard/athletes')
-          return
-        }
+        router.push('/dashboard/profile')
       }
 
       toast({
@@ -63,7 +62,8 @@ export default function LoginPage() {
         description: 'Você será redirecionado para o painel.',
         variant: 'success'
       })
-      router.push('/dashboard/profile')
+
+      router.push('/dashboard')
     } catch (error) {
       console.warn('Error signing in:', error)
       if (error instanceof Error) {

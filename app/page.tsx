@@ -47,30 +47,118 @@ export default function Home() {
   }, [])
 
   // Dados para os cards de funcionalidades
-  const features = [
+  // Dados para os cards de benefícios. Em vez de listar funcionalidades técnicas,
+  // destacamos benefícios claros para o usuário, seguindo a orientação de priorizar
+  // benefícios sobre características【819055788477698†L258-L272】.
+  const benefits = [
     {
-      title: 'Gestão de Atletas',
-      description: 'Cadastro e gerenciamento de jogadores das atléticas participantes.',
+      title: 'Integração',
+      description: 'Conheça estudantes de toda região, forme novas amizades e conexões.',
       icon: Users,
-      animation: 'athletes'
+      animation: 'network'
     },
     {
-      title: 'Modalidades',
-      description: 'Diversas modalidades esportivas e de boteco para todos os perfis.',
+      title: 'Diversão Garantida',
+      description: 'Participe de competições esportivas e de boteco que unem desafio e entretenimento.',
       icon: Medal,
-      animation: 'medal'
+      animation: 'fun'
     },
     {
-      title: 'Agenda de Jogos',
-      description: 'Controle da agenda e horários dos jogos para todas as modalidades.',
-      icon: Calendar,
-      animation: 'calendar'
+      title: 'Crescimento Pessoal',
+      description: 'Desenvolva espírito de equipe, liderança e superação ao competir em alto nível.',
+      icon: Trophy,
+      animation: 'growth'
     },
     {
-      title: 'Ingressos',
-      description: 'Venda e administração de ingressos para a festa pós-jogos.',
+      title: 'Festa Inesquecível',
+      description: 'Celebre com shows e atrações nacionais na festa de encerramento do JISC.',
       icon: Ticket,
-      animation: 'ticket'
+      animation: 'party'
+    }
+  ]
+
+  // Dados para a seção "Como funciona?". Cada passo ajuda o visitante a entender
+  // como participar em três etapas simples. Explicar o processo reduz a incerteza
+  // e aumenta as conversões【192654050897376†L163-L169】.
+  const steps = [
+    {
+      title: 'Chame sua atlética',
+      description: 'Inscreva-se como atleta e preencha seu cadastro em poucos minutos.',
+      icon: Users
+    },
+    {
+      title: 'Compita e comemore',
+      description: 'Participe dos jogos, acumule pontos e comemore na grande festa de encerramento.',
+      icon: Trophy
+    },
+    {
+      title: 'Não perca a festa!',
+      description: 'Participe da melhor festa universitária do Sul de Santa Catarina!',
+      icon: Calendar
+    }
+  ]
+
+  // Dados de preços para diferentes tipos de inscrição. Os planos são claros e
+  // orientam o usuário na escolha, com CTAs em cada plano. Transparência de
+  // preços é fundamental para ajudar o usuário a decidir【192654050897376†L163-L169】.
+  const pricingOptions = [
+    {
+      name: 'Atleta',
+      price: 'R$65',
+      features: ['Participação em todas as modalidades', 'Acesso aos jogos de boteco', 'Camiseta oficial'],
+      highlight: false
+    },
+    {
+      name: 'Atleta + Festa',
+      price: 'R$80',
+      features: [
+        'Participação em todas as modalidades',
+        'Acesso aos jogos de boteco',
+        'Acesso à festa de encerramento'
+      ],
+      highlight: true
+    },
+    {
+      name: 'Atleta + Aloja',
+      price: 'R$90',
+      features: ['Participação em todas as modalidades', 'Acesso aos jogos de boteco', 'Alojamento durante os eventos'],
+      highlight: false
+    },
+    {
+      name: 'Atleta + Aloja + Festa',
+      price: 'R$110',
+      features: [
+        'Participação em todas as modalidades',
+        'Acesso aos jogos de boteco',
+        'Acesso à festa de encerramento',
+        'Alojamento durante os eventos'
+      ],
+      highlight: false
+    }
+  ]
+
+  // Perguntas frequentes. Utilizamos elementos <details> para acessibilidade sem
+  // dependência de JavaScript.
+  const faqs = [
+    {
+      question: 'Como faço minha inscrição?',
+      answer:
+        'Chame sua atlética e em seguida, preencha seus dados pessoais e finalize o pagamento.'
+    },
+    {
+      question: 'Qual é o valor da inscrição e o que está incluído?',
+      answer:
+        'O plano de atleta custa R$65 e inclui participação em todas as modalidades.'
+    },
+    {
+      question: 'Quando e onde será o evento?',
+      answer:
+        'O JISC 2025 acontecerá de 3 a 7 de outubro de 2025 em Criciúma, Santa Catarina.'
+    },
+    {
+      question: 'Sobre a festa de encerramento?',
+      answer:
+        'O Ingresso é garantido chamando as atléticas e ela ocorre no dia 11 de outubro de 2025 no Garden Gastropub em Criciúma, Santa Catarina.'
     }
   ]
 
@@ -87,25 +175,25 @@ export default function Home() {
           </div>
           <nav className='hidden md:flex items-center space-x-8'>
             <a
-              href='#features'
+              href='#beneficios'
               className='text-white hover:text-[#C200F7] transition-colors text-sm font-medium cursor-pointer'
-              aria-label='Ver funcionalidades da plataforma'
+              aria-label='Ver benefícios do evento'
             >
-              Funcionalidades
+              Benefícios
             </a>
             <a
-              href='#about'
+              href='#como-funciona'
               className='text-white hover:text-[#C200F7] transition-colors text-sm font-medium cursor-pointer'
-              aria-label='Conhecer mais sobre o JISC'
+              aria-label='Entenda como funciona o evento'
             >
-              Sobre
+              Como funciona
             </a>
             <a
-              href='#gallery'
+              href='#pricing'
               className='text-white hover:text-[#C200F7] transition-colors text-sm font-medium cursor-pointer'
-              aria-label='Ver galeria de fotos'
+              aria-label='Ver planos e valores de inscrição'
             >
-              Galeria
+              Planos
             </a>
             <a
               href='#testimonials'
@@ -113,6 +201,13 @@ export default function Home() {
               aria-label='Ver depoimentos'
             >
               Depoimentos
+            </a>
+            <a
+              href='#faq'
+              className='text-white hover:text-[#C200F7] transition-colors text-sm font-medium cursor-pointer'
+              aria-label='Perguntas frequentes'
+            >
+              FAQ
             </a>
             <a
               href='#contact'
@@ -181,36 +276,12 @@ export default function Home() {
 
                   <p className='text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-12'>
                     A maior competição universitária com diversas modalidades esportivas e de boteco. Junte-se a nós
-                    para dias de competição, diversão e networking!
+                    para dias de competição, diversão e Integração!
                   </p>
 
                   <div className='mb-12 w-full max-w-2xl'>
                     <CountdownTimer targetDate={targetDate} />
                   </div>
-
-                  {/* <div className='flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-md mx-auto'>
-                    <Link href='/register?type=athlete' className='w-full sm:w-auto'>
-                      <Button
-                        size='lg'
-                        className='w-full bg-[#C200F7] hover:bg-[#C200F7]/90 text-white font-medium text-base px-8 py-6 h-auto rounded-xl shadow-glow-purple transition-all duration-300 hover:scale-105'
-                        aria-label='Inscrever-se como atleta'
-                      >
-                        Inscrever-se como Atleta
-                        <ChevronRight className='ml-2 h-5 w-5 animate-bounce-x' />
-                      </Button>
-                    </Link>
-                    <Link href='/register?type=buyer&restricted=true' className='w-full sm:w-auto'>
-                      <Button
-                        size='lg'
-                        variant='outline'
-                        className='w-full bg-[#07F2F2] text-black hover:bg-[#07F2F2]/90 font-medium text-base px-8 py-6 h-auto rounded-xl transition-all duration-300 hover:scale-105'
-                        aria-label='Comprar ingressos para o evento'
-                      >
-                        Comprar Ingressos
-                        <Ticket className='ml-2 h-5 w-5 animate-pulse' />
-                      </Button>
-                    </Link>
-                  </div> */}
                 </div>
               </AnimatedSection>
             </div>
@@ -229,17 +300,12 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FAQ Section moved after testimonials. Removed from here to avoid duplicate positioning. */}
+
         {/* CTA rápida no meio da página */}
         <section className='py-6 bg-black dark:bg-black'>
           <div className='container mx-auto px-4'>
             <div className='flex flex-wrap justify-center gap-4 text-sm'>
-              <Link
-                href='/register?type=athlete'
-                className='flex items-center gap-2 px-4 py-2 bg-[#C200F7]/20 text-[#C200F7] rounded-full hover:bg-[#C200F7]/30 transition-colors'
-                aria-label='Inscrever-se como atleta'
-              >
-                <span>🔗</span> Quero competir!
-              </Link>
               <a
                 href='#gallery'
                 className='flex items-center gap-2 px-4 py-2 bg-[#07F2F2]/20 text-[#07F2F2] rounded-full hover:bg-[#07F2F2]/30 transition-colors cursor-pointer'
@@ -271,54 +337,164 @@ export default function Home() {
                 </div>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    10+
+                    5
                   </div>
                   <p className='text-white/70'>Universidades</p>
                 </div>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    1k+
+                    900+
                   </div>
                   <p className='text-white/70'>Atletas</p>
                 </div>
                 <div className='text-center'>
                   <div className='text-4xl md:text-5xl font-display font-bold text-[#C200F7] mb-2 tracking-wider'>
-                    1.5k+
+                    2.5k+
                   </div>
-                  <p className='text-white/70'>Espectadores</p>
+                  <p className='text-white/70'>Publico</p>
                 </div>
               </div>
             </div>
           </section>
         </AnimatedSection>
 
-        {/* Features Section com design moderno e animações */}
-        <section id='features' className='py-24 bg-black dark:bg-black scroll-mt-20'>
+        {/* Partners Section */}
+        {/* <AnimatedSection>
+          <section className='py-16 bg-black dark:bg-black'>
+            <div className='container mx-auto px-4 text-center'>
+              <h2 className='text-2xl md:text-3xl font-display font-bold mb-8 tracking-wide text-white'>
+                Patrocinadores e Universidades Participantes
+              </h2>
+              <p className='text-white/70 max-w-3xl mx-auto mb-10'>
+                Empresas e instituições que apoiam o JISC e tornam esse evento possível. O apoio de
+                parceiros confiáveis aumenta a credibilidade e serve como prova social.
+              </p>
+              <div className='flex flex-wrap justify-center items-center gap-6'>
+                {/* Placeholder logos – podem ser substituídos por imagens reais de universidades ou patrocinadores */}
+        {/*
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={`partner-${idx}`}
+                    className='w-24 h-12 rounded-xl bg-[#07F2F2]/10 flex items-center justify-center border border-[#07F2F2]/20'
+                    aria-label='Logo de parceiro'
+                  >
+                    <span className='text-[#07F2F2] font-semibold'>Logo</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </AnimatedSection> */}
+
+        {/* Benefits Section: destaca como o evento ajuda o usuário em vez de listar características técnicas */}
+        <section id='beneficios' className='py-24 bg-black dark:bg-black scroll-mt-20'>
           <div className='container mx-auto px-4'>
             <AnimatedSection>
               <div className='text-center mb-16'>
                 <div className='inline-block bg-[#C200F7]/20 px-3 py-1 rounded-full text-[#C200F7] font-medium text-sm mb-4'>
-                  PLATAFORMA
+                  BENEFÍCIOS
                 </div>
                 <h2 className='text-3xl md:text-4xl font-display font-bold mb-4 tracking-wide text-white'>
-                  Funcionalidades da Plataforma
+                  Por que participar do JISC?
                 </h2>
                 <p className='text-white/70 max-w-2xl mx-auto'>
-                  Nossa plataforma oferece tudo o que você precisa para participar e acompanhar o campeonato
-                  universitário.
+                  Descubra o que o JISC oferece para você além das competições: conexões, diversão, crescimento e
+                  experiências inesquecíveis.
                 </p>
               </div>
             </AnimatedSection>
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
-              {features.map((feature, index) => (
-                <AnimatedSection key={feature.title} delay={0.1 * (index + 1)}>
+              {benefits.map((benefit, index) => (
+                <AnimatedSection key={benefit.title} delay={0.1 * (index + 1)}>
                   <FeatureCard
-                    title={feature.title}
-                    description={feature.description}
-                    icon={feature.icon}
-                    animation={feature.animation}
+                    title={benefit.title}
+                    description={benefit.description}
+                    icon={benefit.icon}
+                    animation={benefit.animation}
                   />
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How it Works Section */}
+        <section id='como-funciona' className='py-24 bg-black dark:bg-black scroll-mt-20'>
+          <div className='container mx-auto px-4'>
+            <AnimatedSection>
+              <div className='text-center mb-16'>
+                <div className='inline-block bg-[#C200F7]/20 px-3 py-1 rounded-full text-[#C200F7] font-medium text-sm mb-4'>
+                  COMO FUNCIONA
+                </div>
+                <h2 className='text-3xl md:text-4xl font-display font-bold mb-4 tracking-wide text-white'>
+                  Três Passos Simples para Participar
+                </h2>
+                <p className='text-white/70 max-w-2xl mx-auto'>
+                  Participar do JISC é fácil: siga estes passos e garanta sua vaga no maior campeonato universitário da
+                  região.
+                </p>
+              </div>
+            </AnimatedSection>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
+              {steps.map((step, index) => (
+                <AnimatedSection key={step.title} delay={0.1 * (index + 1)}>
+                  <div className='bg-[#0e0e0e] border border-[#C200F7]/20 rounded-xl p-8 flex flex-col items-center text-center h-full'>
+                    <div className='w-12 h-12 rounded-full bg-[#C200F7]/20 flex items-center justify-center mb-4'>
+                      {/* @ts-ignore */}
+                      <step.icon className='w-6 h-6 text-[#C200F7]' />
+                    </div>
+                    <h3 className='text-xl font-bold text-white mb-2'>{step.title}</h3>
+                    <p className='text-white/70'>{step.description}</p>
+                  </div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id='pricing' className='py-24 bg-black dark:bg-black scroll-mt-20'>
+          <div className='container mx-auto px-4'>
+            <AnimatedSection>
+              <div className='text-center mb-16'>
+                <div className='inline-block bg-[#C200F7]/20 px-3 py-1 rounded-full text-[#C200F7] font-medium text-sm mb-4'>
+                  PLANOS
+                </div>
+                <h2 className='text-3xl md:text-4xl font-display font-bold mb-4 tracking-wide text-white'>
+                  Escolha seu Plano
+                </h2>
+                <p className='text-white/70 max-w-2xl mx-auto'>
+                  Selecione o plano que melhor se encaixa no seu perfil. Não escondemos informações e todos os planos
+                  contam com uma chamada clara para ação, conforme recomendações de páginas de alta
+                  conversão【819055788477698†L304-L323】.
+                </p>
+              </div>
+            </AnimatedSection>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto'>
+              {pricingOptions.map((option, index) => (
+                <AnimatedSection key={option.name} delay={0.1 * (index + 1)}>
+                  <div
+                    className={`relative flex flex-col h-full p-8 rounded-xl border border-[#C200F7]/20 bg-[#0e0e0e] ${
+                      option.highlight ? 'shadow-glow-purple' : ''
+                    }`}
+                  >
+                    {option.highlight && (
+                      <span className='absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-xs font-bold rounded-full bg-[#C200F7] text-white'>
+                        Mais Popular
+                      </span>
+                    )}
+                    <h3 className='text-2xl font-bold text-white mb-4 text-center'>{option.name}</h3>
+                    <p className='text-4xl font-display font-bold text-[#C200F7] mb-4 text-center'>{option.price}</p>
+                    <ul className='space-y-3 mb-6 flex-1'>
+                      {option.features.map((feat) => (
+                        <li key={feat} className='flex items-center'>
+                          <ChevronRight className='h-4 w-4 text-[#07F2F2] mr-2' />
+                          <span className='text-white/70'>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </AnimatedSection>
               ))}
             </div>
@@ -339,8 +515,8 @@ export default function Home() {
                   </h2>
                   <div className='space-y-6'>
                     <p className='text-white/70'>
-                      O JISC (Jogos Interuniversitários Sociais e Culturais) é o maior evento universitário da região,
-                      reunindo estudantes de diversas instituições em competições esportivas e culturais.
+                      O JISC (Jogos Interatléticas de Santa Catarina) é o maior evento universitário da região do sul,
+                      reunindo estudantes de diversas instituições em competições esportivas.
                     </p>
                     <p className='text-white/70'>
                       Com mais de 20 modalidades diferentes, o JISC proporciona uma experiência única de integração,
@@ -363,7 +539,7 @@ export default function Home() {
                       <div className='w-10 h-10 rounded-full bg-[#C200F7]/20 flex items-center justify-center text-[#C200F7]'>
                         <Users className='w-5 h-5' />
                       </div>
-                      <span className='text-white/90 font-medium'>Networking</span>
+                      <span className='text-white/90 font-medium'>Integração</span>
                     </div>
                     <div className='flex items-center gap-2'>
                       <div className='w-10 h-10 rounded-full bg-[#C200F7]/20 flex items-center justify-center text-[#C200F7]'>
@@ -405,22 +581,13 @@ export default function Home() {
                             2
                           </div>
                           <div>
-                            <h4 className='font-bold text-white'>Ampla Participação</h4>
-                            <p className='text-white/70'>Participação de mais de 15 universidades</p>
-                          </div>
-                        </li>
-                        <li className='flex items-start'>
-                          <div className='flex items-center justify-center w-8 h-8 rounded-full bg-[#C200F7] text-white font-bold mr-4 mt-0.5 flex-shrink-0'>
-                            3
-                          </div>
-                          <div>
                             <h4 className='font-bold text-white'>Premiações</h4>
                             <p className='text-white/70'>Premiações para as atléticas campeãs</p>
                           </div>
                         </li>
                         <li className='flex items-start'>
                           <div className='flex items-center justify-center w-8 h-8 rounded-full bg-[#C200F7] text-white font-bold mr-4 mt-0.5 flex-shrink-0'>
-                            4
+                            3
                           </div>
                           <div>
                             <h4 className='font-bold text-white'>Festa de Encerramento</h4>
@@ -429,11 +596,11 @@ export default function Home() {
                         </li>
                         <li className='flex items-start'>
                           <div className='flex items-center justify-center w-8 h-8 rounded-full bg-[#C200F7] text-white font-bold mr-4 mt-0.5 flex-shrink-0'>
-                            5
+                            4
                           </div>
                           <div>
-                            <h4 className='font-bold text-white'>Networking</h4>
-                            <p className='text-white/70'>Networking com estudantes de diversas áreas</p>
+                            <h4 className='font-bold text-white'>Integração</h4>
+                            <p className='text-white/70'>Integração com estudantes de diversas áreas</p>
                           </div>
                         </li>
                       </ul>
@@ -525,6 +692,36 @@ export default function Home() {
           </div>
         </section>
 
+        {/* FAQ Section */}
+        <section id='faq' className='py-24 bg-black dark:bg-black scroll-mt-20'>
+          <div className='container mx-auto px-4'>
+            <AnimatedSection>
+              <div className='text-center mb-16'>
+                <div className='inline-block bg-[#C200F7]/20 px-3 py-1 rounded-full text-[#C200F7] font-medium text-sm mb-4'>
+                  PERGUNTAS FREQUENTES
+                </div>
+                <h2 className='text-3xl md:text-4xl font-display font-bold mb-4 tracking-wide text-white'>F.A.Q.</h2>
+                <p className='text-white/70 max-w-2xl mx-auto'>
+                  Resolvemos algumas das dúvidas mais comuns para ajudar você a tomar sua decisão final.
+                </p>
+              </div>
+            </AnimatedSection>
+            <div className='max-w-3xl mx-auto space-y-6'>
+              {faqs.map((faq, index) => (
+                <AnimatedSection key={faq.question} delay={0.1 * (index + 1)}>
+                  <details className='group border border-[#C200F7]/20 rounded-lg p-4 bg-[#0e0e0e]'>
+                    <summary className='cursor-pointer flex items-center justify-between text-white font-medium'>
+                      {faq.question}
+                      <span className='ml-2 text-[#07F2F2] group-open:rotate-90 transition-transform'>➜</span>
+                    </summary>
+                    <p className='mt-3 text-white/70'>{faq.answer}</p>
+                  </details>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section com design impactante */}
         <section className='py-24 bg-black text-white relative overflow-hidden dark:bg-black'>
           <div className='absolute inset-0 z-0'>
@@ -589,34 +786,13 @@ export default function Home() {
                           strokeLinecap='round'
                           strokeLinejoin='round'
                         >
-                          <path d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z'></path>
-                        </svg>
-                      </div>
-                      <div>
-                        <h4 className='font-bold text-white mb-1'>Telefone</h4>
-                        <p className='text-white/70'>(11) 99999-9999</p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-start'>
-                      <div className='w-10 h-10 rounded-full bg-[#C200F7]/20 flex items-center justify-center text-[#C200F7] mr-4 flex-shrink-0'>
-                        <svg
-                          xmlns='http://www.w3.org/2000/svg'
-                          className='h-5 w-5'
-                          viewBox='0 0 24 24'
-                          fill='none'
-                          stroke='currentColor'
-                          strokeWidth='2'
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                        >
                           <path d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'></path>
                           <polyline points='22,6 12,13 2,6'></polyline>
                         </svg>
                       </div>
                       <div>
                         <h4 className='font-bold text-white mb-1'>Email</h4>
-                        <p className='text-white/70'>contato@jisc.com.br</p>
+                        <p className='text-white/70'>jogosjisc@gmail.com</p>
                       </div>
                     </div>
 
@@ -638,7 +814,7 @@ export default function Home() {
                       </div>
                       <div>
                         <h4 className='font-bold text-white mb-1'>Endereço</h4>
-                        <p className='text-white/70'>Av. Universitária, 1000 - São Paulo/SP</p>
+                        <p className='text-white/70'>Av. Universitária, 1105 - Universitário, Criciúma - SC, 88806-000</p>
                       </div>
                     </div>
                   </div>
@@ -767,7 +943,7 @@ export default function Home() {
                 <Image src='/logo.svg' alt='JISC Logo' width={50} height={50} className='mr-3' />
               </div>
               <p className='text-white/70 mb-6'>
-                O maior campeonato universitário da região, unindo esporte, cultura e networking.
+                O maior campeonato universitário da região, unindo esporte, cultura e integração.
               </p>
               <div className='flex space-x-4'>
                 <a
@@ -791,32 +967,42 @@ export default function Home() {
               <ul className='space-y-4'>
                 <li>
                   <a
-                    href='#features'
+                    href='#beneficios'
                     className='text-white/70 hover:text-[#C200F7] transition-colors flex items-center cursor-pointer'
-                    aria-label='Ver funcionalidades da plataforma'
+                    aria-label='Ver benefícios do evento'
                   >
                     <ChevronRight className='h-4 w-4 mr-2' />
-                    Funcionalidades
+                    Benefícios
                   </a>
                 </li>
                 <li>
                   <a
-                    href='#about'
+                    href='#como-funciona'
                     className='text-white/70 hover:text-[#C200F7] transition-colors flex items-center cursor-pointer'
-                    aria-label='Conhecer mais sobre o JISC'
+                    aria-label='Entenda como funciona o evento'
                   >
                     <ChevronRight className='h-4 w-4 mr-2' />
-                    Sobre
+                    Como Funciona
                   </a>
                 </li>
                 <li>
                   <a
-                    href='#testimonials'
+                    href='#pricing'
                     className='text-white/70 hover:text-[#C200F7] transition-colors flex items-center cursor-pointer'
-                    aria-label='Ver depoimentos'
+                    aria-label='Ver planos e valores de inscrição'
                   >
                     <ChevronRight className='h-4 w-4 mr-2' />
-                    Depoimentos
+                    Planos
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href='#faq'
+                    className='text-white/70 hover:text-[#C200F7] transition-colors flex items-center cursor-pointer'
+                    aria-label='Perguntas frequentes'
+                  >
+                    <ChevronRight className='h-4 w-4 mr-2' />
+                    FAQ
                   </a>
                 </li>
                 <li>
@@ -840,23 +1026,3 @@ export default function Home() {
     </div>
   )
 }
-
-{
-  /* Add global styles to prevent horizontal overflow */
-}
-;<style jsx global>{`
-  html,
-  body {
-    overflow-x: hidden;
-  }
-
-  /* Ensure all sections are within the viewport width */
-  .container {
-    max-width: 100%;
-  }
-
-  /* Adjust header styles to remove any white lines */
-  header {
-    border-bottom: none;
-  }
-`}</style>
