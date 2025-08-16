@@ -142,18 +142,15 @@ export default function Home() {
   const faqs = [
     {
       question: 'Como faço minha inscrição?',
-      answer:
-        'Chame sua atlética e em seguida, preencha seus dados pessoais e finalize o pagamento.'
+      answer: 'Chame sua atlética e em seguida, preencha seus dados pessoais e finalize o pagamento.'
     },
     {
       question: 'Qual é o valor da inscrição e o que está incluído?',
-      answer:
-        'O plano de atleta custa R$65 e inclui participação em todas as modalidades.'
+      answer: 'O plano de atleta custa R$65 e inclui participação em todas as modalidades.'
     },
     {
       question: 'Quando e onde será o evento?',
-      answer:
-        'O JISC 2025 acontecerá de 3 a 7 de outubro de 2025 em Criciúma, Santa Catarina.'
+      answer: 'O JISC 2025 acontecerá de 3 a 7 de outubro de 2025 em Criciúma, Santa Catarina.'
     },
     {
       question: 'Sobre a festa de encerramento?',
@@ -814,7 +811,9 @@ export default function Home() {
                       </div>
                       <div>
                         <h4 className='font-bold text-white mb-1'>Endereço</h4>
-                        <p className='text-white/70'>Av. Universitária, 1105 - Universitário, Criciúma - SC, 88806-000</p>
+                        <p className='text-white/70'>
+                          Av. Universitária, 1105 - Universitário, Criciúma - SC, 88806-000
+                        </p>
                       </div>
                     </div>
                   </div>
