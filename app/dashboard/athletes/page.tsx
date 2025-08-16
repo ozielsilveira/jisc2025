@@ -73,7 +73,7 @@ type Athlete = {
   sports: Array<{
     id: string
     name: string
-    type: 'sport' | 'bar_game'
+    type: 'sport' | 'boteco'
   }>
   athlete_packages?: Array<{
     id: string
@@ -96,7 +96,7 @@ type Athletic = {
 type Sport = {
   id: string
   name: string
-  type: 'sport' | 'bar_game'
+  type: 'sport' | 'boteco'
 }
 
 type Package = {
