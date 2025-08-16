@@ -1,35 +1,76 @@
 import type { Metadata } from 'next'
-import RegisterPageClient from '@/components/register-page-client'
+import RegisterClientPage from './page.client'
 
-/**
- * Metadata for the registration page.
- *
- * This metadata is used by Next.js to inject SEO‑friendly tags into the <head>
- * of the HTML document. It defines a canonical title and description for the
- * signup page on jisc.com.br.  When the page is shared on social networks or
- * indexed by search engines, these values are used to present a meaningful
- * preview instead of a generic GUID URL.
- *
- * See Next.js documentation for more details on the Metadata API:
- * https://nextjs.org/learn/dashboard-app/adding-metadata
- */
 export const metadata: Metadata = {
-  title: 'Cadastro | JISC',
+  title: 'Cadastro JISC - Maior Campeonato Universitário do Sul do Brasil',
   description:
     'Crie sua conta no JISC para participar do maior campeonato universitário do sul do Brasil, comprar pacotes dos jogos e festas e gerenciar sua atlética.',
-  metadataBase: new URL('https://jisc.com.br/register')
+
+  keywords: [
+    'JISC',
+    'campeonato universitário',
+    'sul do Brasil',
+    'atlética',
+    'esportes universitários',
+    'jogos universitários',
+    'cadastro',
+    'registro',
+    'competição esportiva'
+  ],
+
+  authors: [{ name: 'JISC - Jogos Integrados de Santa Catarina' }],
+  creator: 'JISC',
+  publisher: 'JISC',
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1
+    }
+  },
+
+  metadataBase: new URL('https://jisc.com.br/'),
+
+  alternates: {
+    canonical: '/register'
+  },
+
+  openGraph: {
+    title: 'Cadastro JISC - Maior Campeonato Universitário do Sul do Brasil',
+    description:
+      'Crie sua conta no JISC para participar do maior campeonato universitário do sul do Brasil, comprar pacotes dos jogos e festas e gerenciar sua atlética.',
+    url: 'https://jisc.com.br/register',
+    siteName: 'JISC',
+    locale: 'pt_BR',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image-register.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'JISC - Cadastro no maior campeonato universitário do sul do Brasil'
+      }
+    ]
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Cadastro JISC - Maior Campeonato Universitário do Sul do Brasil',
+    description:
+      'Crie sua conta no JISC para participar do maior campeonato universitário do sul do Brasil, comprar pacotes dos jogos e festas e gerenciar sua atlética.',
+    images: ['/og-image-register.jpg'],
+    creator: '@jisc_oficial'
+  },
+
+  category: 'Sports',
+  classification: 'University Sports Championship'
 }
 
-/**
- * Server wrapper component for the registration page.
- *
- * This file is intentionally kept as a server component (it does not use
- * `use client`) so that the metadata defined above can be exported.  The
- * interactive logic and state management for the registration form lives in
- * `page.client.tsx`, which is a client component.  Keeping the page as a
- * server component allows Next.js to inject metadata into the HTML during
- * server rendering while still using client‑side hooks inside the form.
- */
 export default function RegisterPage() {
-  return <RegisterPageClient />
+  return <RegisterClientPage />
 }
