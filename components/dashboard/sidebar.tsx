@@ -1,74 +1,52 @@
+// src/components/dashboard-sidebar.tsx
 'use client'
 
 import type React from 'react'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
-import * as Icons from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import * as Icons from 'lucide-react'
+import { useEffect } from 'react'
+import { useUserRole } from '@/hooks/use-user-role'
 
-type UserRole = 'buyer' | 'athlete' | 'athletic' | 'admin'
-
-interface DashboardSidebarProps {
+type DashboardSidebarProps = {
   isMobileMenuOpen: boolean
   setIsMobileMenuOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
+const NAV_ITEMS = [
+  {
+    category: 'Principal',
+    items: [
+      { label: 'Dashboard', icon: 'Home', href: '/dashboard', roles: ['buyer', 'athlete', 'athletic', 'admin'] },
+      { label: 'Cadastro', icon: 'User', href: '/dashboard/profile', roles: ['athlete'] }
+    ]
+  },
+  {
+    category: 'Gestão',
+    items: [
+      { label: 'Atletas', icon: 'Medal', href: '/dashboard/athletes', roles: ['athletic', 'admin'] },
+      { label: 'Atléticas', icon: 'Trophy', href: '/dashboard/athletics', roles: ['admin'] },
+      { label: 'Modalidades', icon: 'Users', href: '/dashboard/sports', roles: ['admin'] }
+    ]
+  },
+  {
+    category: 'Competição',
+    items: [{ label: 'Pacotes', icon: 'Package', href: '/dashboard/packages', roles: ['athletic', 'admin'] }]
+  },
+  {
+    category: 'Configurações',
+    items: [{ label: 'Configurações', icon: 'Settings', href: '/dashboard/settings', roles: ['athletic', 'admin'] }]
+  }
+]
+
 export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: DashboardSidebarProps) {
   const { user, signOut } = useAuth()
-  const [userRole, setUserRole] = useState<UserRole | null>(null)
+  const { role: userRole } = useUserRole(user?.id ?? null)
   const pathname = usePathname()
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) return
-      try {
-        const { data, error } = await supabase.from('users').select('role').eq('id', user.id).single()
-        if (error) throw error
-        setUserRole(data.role as UserRole)
-      } catch (error) {
-        console.error('Error fetching user role:', error)
-      }
-    }
-    fetchUserRole()
-  }, [user])
-
-  const navItems = [
-    {
-      category: 'Principal',
-      items: [
-        { label: 'Dashboard', icon: 'Home', href: '/dashboard', roles: ['buyer', 'athlete', 'athletic', 'admin'] },
-        { label: 'Cadastro', icon: 'User', href: '/dashboard/profile', roles: ['athlete'] }
-      ]
-    },
-    {
-      category: 'Gestão',
-      items: [
-        { label: 'Atletas', icon: 'Medal', href: '/dashboard/athletes', roles: ['athletic', 'admin'] },
-        { label: 'Atléticas', icon: 'Trophy', href: '/dashboard/athletics', roles: ['admin'] },
-        { label: 'Modalidades', icon: 'Users', href: '/dashboard/sports', roles: ['admin'] }
-      ]
-    },
-    {
-      category: 'Competição',
-      items: [{ label: 'Pacotes', icon: 'Package', href: '/dashboard/packages', roles: ['athletic', 'admin'] }]
-    },
-    {
-      category: 'Financeiro',
-      items: []
-    },
-    {
-      category: 'Configurações',
-      items: [{ label: 'Configurações', icon: 'Settings', href: '/dashboard/settings', roles: ['athletic', 'admin'] }]
-    }
-  ]
-
-  const handleLinkClick = () => {
-    setIsMobileMenuOpen(false)
-  }
-
+  const handleLinkClick = () => setIsMobileMenuOpen(false)
   const handleKeyDown = (event: React.KeyboardEvent, href: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -77,23 +55,19 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
     }
   }
 
-  // Enhanced keyboard navigation for mobile menu
+  // Permitir fechar o menu móvel com ESC
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      const handleEscape = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          setIsMobileMenuOpen(false)
-        }
-      }
-
-      document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
+    if (!isMobileMenuOpen) return
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileMenuOpen(false)
     }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
   }, [isMobileMenuOpen, setIsMobileMenuOpen])
 
   const SidebarContent = () => (
     <div className='flex flex-col h-full bg-white dark:bg-gray-800'>
-      {/* Header - only show on mobile */}
+      {/* Cabeçalho - Mobile */}
       <div className='md:hidden p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between'>
         <div>
           <h2 className='text-xl font-bold text-[#0456FC]'>JISC</h2>
@@ -110,15 +84,17 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
         </Button>
       </div>
 
-      {/* Header - desktop only */}
+      {/* Cabeçalho - Desktop */}
       <div className='hidden md:block p-4 text-center border-b border-gray-200 dark:border-gray-700'>
         <h2 className='text-2xl font-bold text-[#0456FC]'>JISC</h2>
         <p className='text-sm text-gray-500 dark:text-gray-400'>Campeonato Universitário</p>
       </div>
 
       <nav className='flex-1 overflow-y-auto p-4 space-y-6' role='navigation' aria-label='Menu principal'>
-        {navItems.map((category) => {
-          const filteredItems = category.items.filter((item) => userRole && item.roles.includes(userRole))
+        {NAV_ITEMS.map((category) => {
+          const filteredItems = category.items.filter(
+            (item) => userRole && item.roles.includes(userRole)
+          )
           if (filteredItems.length === 0) return null
 
           return (
@@ -130,7 +106,6 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
                 {filteredItems.map((item) => {
                   const Icon = Icons[item.icon as keyof typeof Icons] as React.ElementType
                   const isActive = pathname === item.href
-
                   return (
                     <Link
                       key={item.href}
@@ -175,7 +150,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
 
   return (
     <>
-      {/* Mobile Sidebar Overlay */}
+      {/* Sidebar móvel (overlay) */}
       {isMobileMenuOpen && (
         <div
           className='fixed inset-0 z-50 md:hidden'
@@ -183,13 +158,14 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
           aria-modal='true'
           aria-labelledby='mobile-menu-title'
         >
+          {/* overlay/backdrop */}
           <div
             className='absolute inset-0 bg-black/50 backdrop-blur-sm'
             onClick={() => setIsMobileMenuOpen(false)}
             onTouchStart={() => setIsMobileMenuOpen(false)}
             aria-hidden='true'
           />
-
+          {/* Conteúdo do menu móvel */}
           <div
             id='mobile-sidebar'
             className='relative z-10 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-800 shadow-xl safe-left'
@@ -204,8 +180,8 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <aside className='hidden md:flex md:flex-col md:w-64 md:flex-shrink-0 md:h-screen md:sticky md:top-0 md:shadow-lg'>
+      {/* Sidebar fixa no desktop */}
+      <aside className='hidden md:block md:fixed md:inset-y-0 md:left-0 md:w-64 md:z-40 md:shadow-lg'>
         <SidebarContent />
       </aside>
     </>

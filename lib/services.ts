@@ -12,6 +12,9 @@ export interface UserProfile {
   role: string
 }
 
+export type SortField = 'name' | 'created_at' | 'status' | 'athletic'
+export type SortOrder = 'asc' | 'desc'
+
 export interface Sport {
   id: string
   name: string
@@ -350,7 +353,7 @@ export const athleteService = {
 
           // Filtro de modalidade
           if (filters.sportId && filters.sportId !== 'all') {
-            const hasSport = athlete.sports.some((sport) => sport.id === filters.sportId)
+            const hasSport = athlete.sports.some((sport: any) => sport.id === filters.sportId)
             if (!hasSport) return false
           }
 
