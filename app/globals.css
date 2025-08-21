@@ -132,6 +132,24 @@
     clip: auto;
     white-space: normal;
   }
+
+  /* Prevent horizontal scroll and ensure layout containers don't overflow the viewport. 
+     These rules were previously defined inline in the page component; moving them to the global
+     stylesheet centralizes layout control. */
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Ensure containers stretch across the width on smaller screens */
+  .container {
+    max-width: 100%;
+  }
+
+  /* Remove default border under the header to keep the design clean */
+  header {
+    border-bottom: none;
+  }
 }
 
 @layer utilities {

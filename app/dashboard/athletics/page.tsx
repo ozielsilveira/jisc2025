@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase'
 import { Building, Copy, School, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Athletic = {
   id: string
@@ -32,6 +33,7 @@ type Athletic = {
 }
 
 export default function AthleticsPage() {
+  const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
   const [athletics, setAthletics] = useState<Athletic[]>([])
@@ -39,7 +41,6 @@ export default function AthleticsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [referralLinks, setReferralLinks] = useState<{ [key: string]: string }>({})
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false)
-  const [registrationLink, setRegistrationLink] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,20 +111,6 @@ export default function AthleticsPage() {
     fetchData()
   }, [user, userRole, toast])
 
-  const copyReferralLink = (athleticId: string) => {
-    navigator.clipboard.writeText(referralLinks[athleticId])
-    toast({
-      title: 'Link copiado',
-      description: 'Link de referência copiado para a área de transferência.'
-    })
-  }
-
-  const openLinkDialog = () => {
-    const link = `${window.location.origin}/register?type=athletic`
-    setRegistrationLink(link)
-    setIsLinkDialogOpen(true)
-  }
-
   const copyToClipboard = (text: string) => {
     const textArea = document.createElement('textarea')
     textArea.value = text
@@ -133,7 +120,8 @@ export default function AthleticsPage() {
       document.execCommand('copy')
       toast({
         title: 'Link copiado',
-        description: 'Link de registro para atléticas copiado para a área de transferência.'
+        description: 'Link de registro para atléticas copiado para a área de transferência.',
+        variant: 'success'
       })
     } catch (err) {
       console.warn('Erro ao copiar link', err)
@@ -305,7 +293,8 @@ export default function AthleticsPage() {
                             )
                             toast({
                               title: 'Link copiado',
-                              description: 'Link de referência para atlética copiado para a área de transferência.'
+                              description: 'Link de referência para atlética copiado para a área de transferência.',
+                              variant: 'success'
                             })
                           } else {
                             console.warn('Clipboard API não suportada ou indisponível')
