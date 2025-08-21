@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     items: [
       { label: 'Atletas', icon: 'Medal', href: '/dashboard/athletes', roles: ['athletic', 'admin'] },
       { label: 'Atléticas', icon: 'Trophy', href: '/dashboard/athletics', roles: ['admin'] },
-      { label: 'Modalidades', icon: 'Users', href: '/dashboard/sports', roles: ['admin'] }
+      { label: 'Relatório', icon: 'FileText', href: '/dashboard/report', roles: ['admin'] },
     ]
   },
   {
@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   },
   {
     category: 'Configurações',
-    items: [{ label: 'Configurações', icon: 'Settings', href: '/dashboard/settings', roles: ['athletic', 'admin'] }]
+    items: [{ label: 'Configurações', icon: 'Settings', href: '/dashboard/settings', roles: ['admin'] }]
   }
 ]
 
@@ -92,9 +92,7 @@ export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen
 
       <nav className='flex-1 overflow-y-auto p-4 space-y-6' role='navigation' aria-label='Menu principal'>
         {NAV_ITEMS.map((category) => {
-          const filteredItems = category.items.filter(
-            (item) => userRole && item.roles.includes(userRole)
-          )
+          const filteredItems = category.items.filter((item) => userRole && item.roles.includes(userRole))
           if (filteredItems.length === 0) return null
 
           return (

@@ -107,12 +107,22 @@ export default function RegisterPage() {
   const restricted = searchParams.get('restricted') === 'true'
   const athleticReferral = searchParams.get('athletic')
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    email: string
+    password: string
+    confirmPassword: string
+    cpf: string | null
+    phone: string
+    role: 'buyer' | 'athlete' | 'athletic'
+    athletic_id: string
+    package_id: string
+  }>({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    cpf: '',
+    cpf: null,
     phone: '',
     role: defaultType as 'buyer' | 'athlete' | 'athletic',
     athletic_id: athleticReferral || '',
@@ -191,7 +201,8 @@ export default function RegisterPage() {
     }
   }
 
-  const formatCPF = (value: string) => {
+  const formatCPF = (value: string | null) => {
+    if (!value) return ''
     const numbers = value.replace(/\D/g, '')
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
   }
@@ -256,7 +267,7 @@ export default function RegisterPage() {
       return false
     }
 
-    if (formData.role !== 'athletic') {
+    if (formData.role == 'athlete' && formData.cpf) {
       // Validação do CPF (formato e dígitos verificadores)
       const cpf = formData.cpf.replace(/[^\d]/g, '')
       if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
@@ -343,24 +354,23 @@ export default function RegisterPage() {
     if (!validateForm()) return
 
     setIsLoading(true)
+    // First, check if user already exists in auth
+    const { data: existingAuth, error: existingAuthError } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password
+    })
+
+    if (existingAuth.user) {
+      toast({
+        title: 'Usuário já existe',
+        description: 'Este e-mail já está cadastrado. Por favor, faça login.',
+        variant: 'destructive'
+      })
+      router.push('/login')
+      return
+    }
 
     try {
-      // First, check if user already exists in auth
-      const { data: existingAuth } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      })
-
-      if (existingAuth.user) {
-        toast({
-          title: 'Usuário já existe',
-          description: 'Este e-mail já está cadastrado. Por favor, faça login.',
-          variant: 'destructive'
-        })
-        router.push('/login')
-        return
-      }
-
       // Create new user in auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -410,7 +420,8 @@ export default function RegisterPage() {
 
         toast({
           title: '🎉 Cadastro realizado com sucesso!',
-          description: 'Complete o cadastro da sua atlética nas configurações após fazer login.'
+          description: 'Complete o cadastro da sua atlética nas configurações após fazer login.',
+          variant: 'success'
         })
         router.push('/login')
         return
@@ -449,7 +460,8 @@ export default function RegisterPage() {
         description:
           selectedPackage?.category === 'games' || selectedPackage?.category === 'combined'
             ? 'Sua solicitação será analisada pela atlética antes de prosseguir com o pagamento.'
-            : 'Você pode fazer login agora.'
+            : 'Você pode fazer login agora.',
+        variant: 'success'
       })
       router.push('/login')
     } catch (error) {

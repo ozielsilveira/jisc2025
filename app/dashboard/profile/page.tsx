@@ -262,7 +262,7 @@ export default function ProfilePage() {
   const { athlete, loading: athleteLoading, refetch: refetchAthlete } = useAthleteData(user?.id)
 
   const isLoading = profileLoading || sportsLoading || athleteLoading
-  const athleteStatus = athlete?.status || null
+  const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
 
   // File replacement state - optimized for real-time updates
   const [isReplacingDocument, setIsReplacingDocument] = useState(false)
@@ -515,13 +515,13 @@ export default function ProfilePage() {
         .single()
 
       if (updateError) {
-        // Revert optimistic update on error
-        setAthlete(athlete)
+        // Refetch the latest athlete data on error
+        refetchAthlete()
         throw updateError
       }
 
-      // Confirm the update with server data
-      setAthlete(updatedAthlete)
+      // Confirm the update by refetching the latest data
+      refetchAthlete()
 
       // Reset replacement state
       if (type === 'document') {
@@ -656,7 +656,7 @@ export default function ProfilePage() {
       })
       return
     }
-
+    setAthleteStatus('sent')
     setIsSubmitting(true)
     setUploadProgress((prev) => ({ ...prev, registration: 0 }))
     setUploadStatus((prev) => ({ ...prev, registration: 'uploading' }))

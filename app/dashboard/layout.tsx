@@ -57,7 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </main>
         </div>
-        {process.env.NODE_ENV === 'development' && <CacheDebug />}
+        {/* {process.env.NODE_ENV === 'development' && <CacheDebug />} */}
       </div>
     </ThemeProvider>
   )

@@ -1,12 +1,13 @@
 'use client'
 
-// Inspired by react-hot-toast library
 import * as React from 'react'
-
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast'
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_REMOVE_DELAY = 1000
+
+/** tempo padrão em milissegundos que o toast ficará visível */
+const TOAST_AUTO_DISMISS_DELAY = 1500
 
 type ToasterToast = ToastProps & {
   id: string
@@ -25,7 +26,6 @@ const actionTypes = {
 } as const
 
 let count = 0
-
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
@@ -56,12 +56,12 @@ interface State {
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+const autoDismissTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
-
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
     dispatch({
@@ -69,7 +69,6 @@ const addToRemoveQueue = (toastId: string) => {
       toastId: toastId
     })
   }, TOAST_REMOVE_DELAY)
-
   toastTimeouts.set(toastId, timeout)
 }
 
@@ -80,18 +79,14 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT)
       }
-
     case 'UPDATE_TOAST':
       return {
         ...state,
         toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t))
       }
-
     case 'DISMISS_TOAST': {
       const { toastId } = action
-
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // aciona a fila de remoção
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -99,25 +94,14 @@ export const reducer = (state: State, action: Action): State => {
           addToRemoveQueue(toast.id)
         })
       }
-
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false
-              }
-            : t
-        )
+        toasts: state.toasts.map((t) => (t.id === toastId || toastId === undefined ? { ...t, open: false } : t))
       }
     }
     case 'REMOVE_TOAST':
       if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: []
-        }
+        return { ...state, toasts: [] }
       }
       return {
         ...state,
@@ -127,27 +111,36 @@ export const reducer = (state: State, action: Action): State => {
 }
 
 const listeners: Array<(state: State) => void> = []
-
 let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
+  listeners.forEach((listener) => listener(memoryState))
 }
 
-type Toast = Omit<ToasterToast, 'id'>
+type Toast = Omit<ToasterToast, 'id'> & {
+  /** permite especificar um tempo customizado; se omitido usa `TOAST_AUTO_DISMISS_DELAY` */
+  duration?: number
+}
 
-function toast({ ...props }: Toast) {
+function toast({ duration = TOAST_AUTO_DISMISS_DELAY, ...props }: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const dismiss = () => {
+    // cancela o temporizador de auto‑dismiss se ainda não tiver sido disparado
+    const autoTimer = autoDismissTimeouts.get(id)
+    if (autoTimer) {
+      clearTimeout(autoTimer)
+      autoDismissTimeouts.delete(id)
+    }
+    dispatch({ type: 'DISMISS_TOAST', toastId: id })
+  }
+
+  const update = (toastProps: ToasterToast) =>
     dispatch({
       type: 'UPDATE_TOAST',
-      toast: { ...props, id }
+      toast: { ...toastProps, id }
     })
-  const dismiss = () => dispatch({ type: 'DISMISS_TOAST', toastId: id })
 
   dispatch({
     type: 'ADD_TOAST',
@@ -155,24 +148,25 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      position: 'bottom', // Default position for mobile
-      swipeDirection: 'up', // Default swipe direction
+      position: 'bottom',
+      swipeDirection: 'up',
       onOpenChange: (open) => {
         if (!open) dismiss()
       }
     }
   })
 
-  return {
-    id: id,
-    dismiss,
-    update
-  }
+  // agenda o fechamento automático após o tempo definido
+  const autoTimer = setTimeout(() => {
+    dismiss()
+  }, duration)
+  autoDismissTimeouts.set(id, autoTimer)
+
+  return { id, dismiss, update }
 }
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
-
   React.useEffect(() => {
     listeners.push(setState)
     return () => {

@@ -1,3 +1,11 @@
+/*
+ * Hooks refactor: unify repetitive data-fetching logic into a reusable helper
+ * and expose resource-specific hooks with dependency injection. Each hook
+ * uses the same pattern for loading, error handling, invalidation and
+ * refetching while remaining independent of the underlying services. The
+ * services themselves should implement cache and invalidation semantics.
+ */
+
 import { useAuth } from '@/components/auth-provider'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -13,249 +21,130 @@ import {
   type Sport,
   type UserProfile
 } from '@/lib/services'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 
-// Hook para dados do usuário com cache
-export const useUserData = () => {
+/**
+ * Generic hook to manage loading, error handling and refetching for any
+ * asynchronous data source. It accepts a fetcher function and an
+ * invalidator to clear cached data. Dependencies can be provided to
+ * trigger refetches when external values change. The return signature
+ * includes the loaded data, loading state, error message and a refetch
+ * function.
+ */
+function useCachedResource<T>(fetchFn: () => Promise<T>, invalidateFn: () => void, deps: any[] = []) {
+  const { toast } = useToast()
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await fetchFn()
+      setData(result)
+    } catch (err: any) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar dados'
+      setError(message)
+      toast({ title: 'Erro ao carregar dados', description: message, variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchFn, toast])
+
+  const refetch = useCallback(() => {
+    invalidateFn()
+    fetchData()
+  }, [invalidateFn, fetchData])
+
+  // use a derived dependency array for useEffect to avoid React's
+  // 'final argument passed to useEffect changed size between renders' error.
+  // We map the deps array to a single stringified value which always
+  // results in an array of constant length (either 0 or 1). This
+  // prevents the array size from changing when the caller passes a
+  // different number of dependencies between renders.
+  const effectDeps = useMemo(() => {
+    if (!deps || deps.length === 0) return []
+    return [JSON.stringify(deps)]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deps])
+
+  useEffect(() => {
+    fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, effectDeps)
+
+  return { data, loading, error, refetch }
+}
+
+// Hook for user profile and role data
+export function useUserData() {
   const { user } = useAuth()
-  const { toast } = useToast()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [role, setRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
+  // Compose a fetch function that returns both profile and role; if
+  // user is undefined, short-circuit to null values.
   const fetchUserData = useCallback(async () => {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
+    if (!user?.id) return { profile: null as UserProfile | null, role: null as string | null }
+    const [profile, role] = await Promise.all([userService.getProfile(user.id), userService.getRole(user.id)])
+    return { profile, role }
+  }, [user?.id])
 
-    setLoading(true)
-    setError(null)
+  const invalidate = useCallback(() => {
+    if (user?.id) userService.invalidateUser(user.id)
+  }, [user?.id])
 
-    try {
-      const [profileData, roleData] = await Promise.all([userService.getProfile(user.id), userService.getRole(user.id)])
-
-      setProfile(profileData)
-      setRole(roleData)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados do usuário'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar dados',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.id, toast])
-
-  const refetch = useCallback(() => {
-    if (user?.id) {
-      userService.invalidateUser(user.id)
-      fetchUserData()
-    }
-  }, [user?.id, fetchUserData])
-
-  useEffect(() => {
-    fetchUserData()
-  }, [fetchUserData])
+  const { data, loading, error, refetch } = useCachedResource(fetchUserData, invalidate, [user?.id])
 
   return {
-    profile,
-    role,
+    profile: data?.profile ?? null,
+    role: data?.role ?? null,
     loading,
     error,
     refetch
   }
 }
 
-// Hook para modalidades com cache
-export const useSports = () => {
-  const { toast } = useToast()
-  const [sports, setSports] = useState<Sport[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchSports = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await sportsService.getAll()
-      setSports(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar modalidades'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar modalidades',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  const refetch = useCallback(() => {
-    sportsService.invalidate()
-    fetchSports()
-  }, [fetchSports])
-
-  useEffect(() => {
-    fetchSports()
-  }, [fetchSports])
-
-  return {
-    sports,
-    loading,
-    error,
-    refetch
-  }
+// Hook for sports list with cache
+export function useSports() {
+  const fetchSports = useCallback(() => sportsService.getAll(), [])
+  const invalidate = useCallback(() => sportsService.invalidate(), [])
+  const { data, loading, error, refetch } = useCachedResource<Sport[]>(fetchSports, invalidate)
+  return { sports: data ?? [], loading, error, refetch }
 }
 
-// Hook para atléticas com cache
-export const useAthletics = () => {
-  const { toast } = useToast()
-  const [athletics, setAthletics] = useState<Athletic[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchAthletics = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await athleticsService.getAll()
-      setAthletics(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar atléticas'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar atléticas',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  const refetch = useCallback(() => {
-    athleticsService.invalidate()
-    fetchAthletics()
-  }, [fetchAthletics])
-
-  useEffect(() => {
-    fetchAthletics()
-  }, [fetchAthletics])
-
-  return {
-    athletics,
-    loading,
-    error,
-    refetch
-  }
+// Hook for athletics list with cache
+export function useAthletics() {
+  const fetchAthletics = useCallback(() => athleticsService.getAll(), [])
+  const invalidate = useCallback(() => athleticsService.invalidate(), [])
+  const { data, loading, error, refetch } = useCachedResource<Athletic[]>(fetchAthletics, invalidate)
+  return { athletics: data ?? [], loading, error, refetch }
 }
 
-// Hook para pacotes com cache
-export const usePackages = () => {
-  const { toast } = useToast()
-  const [packages, setPackages] = useState<Package[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchPackages = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await packagesService.getAll()
-      setPackages(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar pacotes'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar pacotes',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  const refetch = useCallback(() => {
-    packagesService.invalidate()
-    fetchPackages()
-  }, [fetchPackages])
-
-  useEffect(() => {
-    fetchPackages()
-  }, [fetchPackages])
-
-  return {
-    packages,
-    loading,
-    error,
-    refetch
-  }
+// Hook for packages list with cache
+export function usePackages() {
+  const fetchPackages = useCallback(() => packagesService.getAll(), [])
+  const invalidate = useCallback(() => packagesService.invalidate(), [])
+  const { data, loading, error, refetch } = useCachedResource<Package[]>(fetchPackages, invalidate)
+  return { packages: data ?? [], loading, error, refetch }
 }
 
-// Hook para dados de atleta com cache
-export const useAthleteData = (userId?: string) => {
-  const { toast } = useToast()
-  const [athlete, setAthlete] = useState<Athlete | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
+// Hook for a single athlete record by user ID with cache
+export function useAthleteData(userId?: string) {
   const fetchAthleteData = useCallback(async () => {
-    if (!userId) {
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await athleteService.getByUserId(userId)
-      setAthlete(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados do atleta'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar dados do atleta',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [userId, toast])
-
-  const refetch = useCallback(() => {
-    if (userId) {
-      athleteService.invalidateAthlete(userId)
-      fetchAthleteData()
-    }
-  }, [userId, fetchAthleteData])
-
-  useEffect(() => {
-    fetchAthleteData()
-  }, [fetchAthleteData])
-
-  return {
-    athlete,
-    loading,
-    error,
-    refetch
-  }
+    if (!userId) return null
+    return await athleteService.getByUserId(userId)
+  }, [userId])
+  const invalidate = useCallback(() => {
+    if (userId) athleteService.invalidateAthlete(userId)
+  }, [userId])
+  const { data, loading, error, refetch } = useCachedResource<Athlete | null>(fetchAthleteData, invalidate, [userId])
+  return { athlete: data, loading, error, refetch }
 }
 
-// Hook para lista de atletas com cache e filtros
-export const useAthletesList = (
+// Hook for list of athletes according to optional filters. When filters
+// change the list will refetch automatically. Cache invalidation is
+// delegated to the service.
+export function useAthletesList(
   filters: {
     userRole?: string
     athleticId?: string
@@ -263,146 +152,69 @@ export const useAthletesList = (
     status?: string
     sportId?: string
   } = {}
-) => {
-  const { toast } = useToast()
-  const [athletes, setAthletes] = useState<Athlete[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+) {
+  // Destructure individual filter values so they can be used as stable
+  // dependencies. Passing an object directly as a dependency to
+  // useCachedResource would cause the effect to run on every render,
+  // potentially leading to an infinite loop if the object is newly
+  // allocated each time. Primitive values are stable when unchanged.
+  const { userRole, athleticId, searchTerm, status, sportId } = filters
 
-  const fetchAthletes = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const data = await athleteService.getList(filters)
-      setAthletes(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar atletas'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar atletas',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [filters, toast])
-
-  const refetch = useCallback(() => {
-    athleteService.invalidateList()
-    fetchAthletes()
-  }, [fetchAthletes])
-
-  useEffect(() => {
-    fetchAthletes()
-  }, [fetchAthletes])
-
-  return {
-    athletes,
-    loading,
-    error,
-    refetch
-  }
+  // Prepare a fetcher that closes over the current filters. It depends on
+  // the individual primitives rather than the entire object. This ensures
+  // that when none of the filter values change, the function reference
+  // remains stable and the effect does not re-run unnecessarily.
+  const fetchAthletes = useCallback(
+    () => athleteService.getList(filters),
+    [userRole, athleticId, searchTerm, status, sportId]
+  )
+  const invalidate = useCallback(() => athleteService.invalidateList(), [])
+  const { data, loading, error, refetch } = useCachedResource<Athlete[]>(fetchAthletes, invalidate, [
+    userRole,
+    athleticId,
+    searchTerm,
+    status,
+    sportId
+  ])
+  return { athletes: data ?? [], loading, error, refetch }
 }
 
-// Hook para dados estáticos (carrega tudo de uma vez)
-export const useStaticData = () => {
-  const { toast } = useToast()
-  const [data, setData] = useState<{
+// Hook to load all static data (sports, athletics and packages) at once
+export function useStaticData() {
+  const fetchStatic = useCallback(() => staticDataService.loadAll(), [])
+  const invalidate = useCallback(() => staticDataService.invalidateAll(), [])
+  const { data, loading, error, refetch } = useCachedResource<{
     sports: Sport[]
     athletics: Athletic[]
     packages: Package[]
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchStaticData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const staticData = await staticDataService.loadAll()
-      setData(staticData)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar dados'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar dados',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
-
-  const refetch = useCallback(() => {
-    staticDataService.invalidateAll()
-    fetchStaticData()
-  }, [fetchStaticData])
-
-  useEffect(() => {
-    fetchStaticData()
-  }, [fetchStaticData])
-
+  }>(fetchStatic, invalidate)
   return {
-    sports: data?.sports || [],
-    athletics: data?.athletics || [],
-    packages: data?.packages || [],
+    sports: data?.sports ?? [],
+    athletics: data?.athletics ?? [],
+    packages: data?.packages ?? [],
     loading,
     error,
     refetch
   }
 }
 
-// Hook para atlética por representante
-export const useAthleticByRepresentative = (representativeId?: string) => {
-  const { toast } = useToast()
-  const [athletic, setAthletic] = useState<Athletic | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+// Hook to fetch athletic by representative ID with cache
+export function useAthleticByRepresentative(representativeId?: string) {
+  const { user } = useAuth()
+  const id = representativeId ?? user?.id
 
   const fetchAthletic = useCallback(async () => {
-    if (!representativeId) {
-      setLoading(false)
-      return
-    }
+    if (!id) return null
+    return await athleticsService.getByRepresentative(id)
+  }, [id])
 
-    setLoading(true)
-    setError(null)
+  const invalidate = useCallback(() => {
+    athleticsService.invalidate()
+  }, [])
 
-    try {
-      const data = await athleticsService.getByRepresentative(representativeId)
-      setAthletic(data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar atlética'
-      setError(errorMessage)
-      toast({
-        title: 'Erro ao carregar atlética',
-        description: errorMessage,
-        variant: 'destructive'
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [representativeId, toast])
+  const { data, loading, error, refetch } = useCachedResource<Athletic | null>(fetchAthletic, invalidate, [id])
 
-  const refetch = useCallback(() => {
-    if (representativeId) {
-      athleticsService.invalidate()
-      fetchAthletic()
-    }
-  }, [representativeId, fetchAthletic])
-
-  useEffect(() => {
-    fetchAthletic()
-  }, [fetchAthletic])
-
-  return {
-    athletic,
-    loading,
-    error,
-    refetch
-  }
+  return { athletic: data, loading, error, refetch }
 }
+
+export const usePackagesList = usePackages
