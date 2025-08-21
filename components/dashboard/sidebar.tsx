@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     items: [
       { label: 'Atletas', icon: 'Medal', href: '/dashboard/athletes', roles: ['athletic', 'admin'] },
       { label: 'Atléticas', icon: 'Trophy', href: '/dashboard/athletics', roles: ['admin'] },
-      { label: 'Relatório', icon: 'FileText', href: '/dashboard/report', roles: ['admin'] },
+      { label: 'Relatório', icon: 'FileText', href: '/dashboard/report', roles: ['admin'] }
     ]
   },
   {

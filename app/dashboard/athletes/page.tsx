@@ -111,9 +111,9 @@ export default function AthletesPage() {
                 const link = `${window.location.origin}/register?type=athlete&athletic=${c.filters.athleticId}`
                 await navigator.clipboard.writeText(link)
                 toast({
-                  title: "Link copiado",
-                  description: "Link de cadastro copiado para a área de transferência",
-                  variant: "success",
+                  title: 'Link copiado',
+                  description: 'Link de cadastro copiado para a área de transferência',
+                  variant: 'success'
                 })
               }}
               className='bg-blue-600 hover:bg-blue-700'
@@ -275,11 +275,13 @@ export default function AthletesPage() {
         athlete={selected}
         isOpen={approveOpen}
         isLoading={loadingApprove}
-        preview={(custom) => formatApproveMessage(
-          selected.user.name,
-          selected.athlete_packages[0].package.name,
-          selected.athlete_packages[0].package.price
-        )}
+        preview={(custom) =>
+          formatApproveMessage(
+            selected.user.name,
+            selected.athlete_packages[0].package.name,
+            selected.athlete_packages[0].package.price
+          )
+        }
         onConfirm={confirmWhatsAppApprove}
         onClose={() => {
           setApproveOpen(false)
