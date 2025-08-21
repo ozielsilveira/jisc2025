@@ -1,7 +1,8 @@
 import AuthProvider from '@/components/auth-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
-import type React from 'react'
+import type { Metadata } from 'next'
+import React from 'react'
 import './globals.css'
 import { Inter } from 'next/font/google'
 
@@ -10,6 +11,16 @@ const inter = Inter({
   display: 'swap',
   variable: '--font-inter'
 })
+
+export const metadata: Metadata = {
+  title: 'JISC 2025',
+  description: 'Jornada de Inovação e Sustentabilidade Corporativa',
+  icons: {
+    icon: '/LOGO desenho.svg',
+    shortcut: '/LOGO desenho.svg',
+    apple: '/LOGO desenho.svg',
+  },
+}
 
 export default function RootLayout({
   children
