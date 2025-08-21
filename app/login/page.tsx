@@ -47,7 +47,7 @@ export default function LoginPage() {
         router.push('/dashboard/athletes')
       }
 
-      if (userData.role === 'athletes') {
+      if (userData.role === 'athlete') {
         toast({
           title: 'Login bem-sucedido!',
           description: 'Por favor, complete o seu cadastro nas configurações.',
@@ -57,13 +57,15 @@ export default function LoginPage() {
         router.push('/dashboard/profile')
       }
 
-      toast({
-        title: 'Login bem-sucedido!',
-        description: 'Você será redirecionado para o painel.',
-        variant: 'success'
-      })
+      if (userData.role === 'admin') {
+        toast({
+          title: 'Login bem-sucedido!',
+          description: 'Você será redirecionado para o painel.',
+          variant: 'success'
+        })
 
-      router.push('/dashboard')
+        router.push('/dashboard')
+      }
     } catch (error) {
       console.warn('Error signing in:', error)
       if (error instanceof Error) {

@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 
-const DashboardStats = dynamic(() => import('./dashboard-stats'), {
+const DashboardStats = dynamic(() => import('./dashboard/stats'), {
   loading: () => (
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-6'>
       {Array.from({ length: 3 }).map((_, i) => (
@@ -14,12 +14,12 @@ const DashboardStats = dynamic(() => import('./dashboard-stats'), {
   ssr: false
 })
 
-const DashboardHighlights = dynamic(() => import('./dashboard-highlights'), {
+const DashboardHighlights = dynamic(() => import('./dashboard/highlights'), {
   loading: () => <div className='h-80 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse' />,
   ssr: false
 })
 
-const DashboardQuickActions = dynamic(() => import('./dashboard-quick-actions'), {
+const DashboardQuickActions = dynamic(() => import('./dashboard/quick-actions'), {
   loading: () => (
     <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
       {Array.from({ length: 6 }).map((_, i) => (

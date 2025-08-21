@@ -1,3 +1,4 @@
+import { devLog } from '@/application/shared/log'
 import { cache, CACHE_KEYS, createCacheKey, invalidateCache } from './cache'
 import { supabase } from './supabase'
 
@@ -11,6 +12,9 @@ export interface UserProfile {
   gender: string
   role: string
 }
+
+export type SortField = 'name' | 'created_at' | 'status' | 'athletic'
+export type SortOrder = 'asc' | 'desc'
 
 export interface Sport {
   id: string
@@ -350,7 +354,7 @@ export const athleteService = {
 
           // Filtro de modalidade
           if (filters.sportId && filters.sportId !== 'all') {
-            const hasSport = athlete.sports.some((sport) => sport.id === filters.sportId)
+            const hasSport = athlete.sports.some((sport: any) => sport.id === filters.sportId)
             if (!hasSport) return false
           }
 
