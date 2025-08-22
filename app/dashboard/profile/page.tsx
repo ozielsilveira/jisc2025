@@ -360,6 +360,7 @@ export default function ProfilePage() {
         setIsReplacingEnrollment(parsed.isReplacingEnrollment || false)
         setUploadProgress(parsed.uploadProgress || {})
         setUploadStatus(parsed.uploadStatus || {})
+        
 
         // Show recovery message if there were files
         if (parsed.documentFile || parsed.enrollmentFile || parsed.newDocumentFile || parsed.newEnrollmentFile) {
@@ -850,8 +851,8 @@ export default function ProfilePage() {
   )
 
   const QuickSportsSelector = () => {
-    const sportsData = sports.filter((sport) => sport.type === 'sport')
-    const botecoData = sports.filter((sport) => sport.type === 'boteco')
+    const sportsData = sports
+    //const botecoData = sports.filter((sport) => sport.type === 'boteco')
 
     return (
       <div className='space-y-6'>
@@ -889,54 +890,6 @@ export default function ProfilePage() {
                         relative p-3 sm:p-4 lg:p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 active:scale-95
                         ${colors}
                         ${isSelected ? 'ring-4 ring-blue-500 ring-opacity-30' : ''}
-                      `}
-                    >
-                      {/* Selection indicator */}
-                      {isSelected && (
-                        <div className='absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg'>
-                          <CheckCircle className='h-3 w-3 sm:h-4 sm:w-4 text-white' />
-                        </div>
-                      )}
-                      <div className='flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3'>
-                        <div
-                          className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${
-                            isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
-                          }`}
-                        >
-                          <Icon className='h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8' />
-                        </div>
-                        <span className='font-medium text-xs sm:text-sm text-center leading-tight break-words'>
-                          {sport.name}
-                        </span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Boteco Section */}
-          {botecoData.length > 0 && (
-            <div className='space-y-4'>
-              <div className='flex items-center space-x-2'>
-                <Gamepad2 className='h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0' />
-                <h4 className='font-semibold text-purple-800 text-sm sm:text-base'>Jogos de Boteco</h4>
-              </div>
-              <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 lg:gap-4'>
-                {botecoData.map((sport) => {
-                  const isSelected = selectedSports.includes(sport.id)
-                  const Icon = getSportIcon(sport.name, sport.type)
-                  const colors = getSportColors(sport.type, isSelected)
-
-                  return (
-                    <button
-                      key={sport.id}
-                      onClick={() => handleSportToggle(sport.id)}
-                      className={`
-                        relative p-3 sm:p-4 lg:p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 active:scale-95
-                        ${colors}
-                        ${isSelected ? 'ring-4 ring-purple-500 ring-opacity-30' : ''}
                       `}
                     >
                       {/* Selection indicator */}
@@ -1182,7 +1135,7 @@ export default function ProfilePage() {
                                 2
                               </div>
                               <h3 className='text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left'>
-                                Atestado de Matrícula
+                                Atestado de Matrícula / Certificado
                               </h3>
                               {athlete?.enrollment_document_url && (
                                 <div className='flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start'>

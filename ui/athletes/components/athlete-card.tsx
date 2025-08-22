@@ -89,7 +89,7 @@ export default function AthleteCard({ athlete, userRole, onViewDoc, onApprove, o
             )}
           </div>
 
-          {(userRole === 'admin' || userRole === 'athletic') && athlete.status === 'sent' && (
+          {(userRole === 'admin' || userRole === 'athletic') && athlete.status === 'sent' || athlete.status === 'rejected' && (
             <div className='flex gap-3'>
               <Button
                 variant='outline'
