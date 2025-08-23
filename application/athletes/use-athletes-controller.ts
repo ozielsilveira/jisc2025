@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -14,6 +14,7 @@ import { Athlete, SortField, SortOrder } from '@/domain/athletes/entities'
 import { IAthleteService } from '@/domain/athletes/ports'
 import { applyFilters, sortAthletes, UiFilters } from './filters'
 import { buildWhatsAppUrl, formatApproveMessage, formatRejectMessage } from './whatsapp'
+import { invalidateCache } from '@/lib/cache'
 
 export function useAthletesController(service: IAthleteService) {
   const { toast } = useToast()
@@ -60,7 +61,19 @@ export function useAthletesController(service: IAthleteService) {
   // Só busca atletas se o filtro de atlética estiver definido
   const isReady = filters.athleticId !== undefined
 
-  const { athletes, loading, error, refetch } = useAthletesList(isReady ? filters : undefined)
+  const {
+    athletes,
+    loading: athletesLoading,
+    error,
+    refetch
+  } = useAthletesList(isReady ? filters : undefined)
+
+  const isLoading = roleLoading || (userRole === 'athletic' && athleticLoading) || athletesLoading
+
+  const refetchWithCacheClear = useCallback(() => {
+    invalidateCache.athletesList()
+    refetch()
+  }, [refetch])
 
   // derivados
   const filteredSorted = useMemo(() => {
@@ -77,11 +90,11 @@ export function useAthletesController(service: IAthleteService) {
     filters.whatsapp !== 'all'
 
   // actions
-  async function approve(id: string) {
+  async function approve(id:string) {
     try {
       await service.updateStatus(id, 'approved')
       toast({ title: '✅ Atleta aprovado!', description: 'O atleta foi aprovado com sucesso.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na aprovação', description: 'Tente novamente.', variant: 'destructive' })
     }
@@ -100,7 +113,7 @@ export function useAthletesController(service: IAthleteService) {
       const url = openApproveWhatsApp(a)
       if (url) window.open(url, '_blank')
       toast({ title: '📱 WhatsApp enviado!', description: 'Status atualizado e WhatsApp aberto.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro ao enviar WhatsApp', description: 'Tente novamente.', variant: 'destructive' })
     }
@@ -117,7 +130,7 @@ export function useAthletesController(service: IAthleteService) {
       const url = buildWhatsAppUrl(a.user.phone, msg)
       window.open(url, '_blank')
       toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na rejeição', description: 'Tente novamente.', variant: 'destructive' })
     }
@@ -134,9 +147,9 @@ export function useAthletesController(service: IAthleteService) {
     packages,
     // estado e derivados
     userRole,
-    loading,
+    loading: isLoading,
     error,
-    refetch,
+    refetch: refetchWithCacheClear,
     filters,
     setFilters,
     sortField,
