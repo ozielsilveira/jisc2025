@@ -129,7 +129,7 @@ export function useAthletesController(service: IAthleteService) {
       const msg = buildRejectPreview(a, custom)
       const url = buildWhatsAppUrl(a.user.phone, msg)
       window.location.href = url
-      toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.' })
+      toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.', variant: 'destructive' })
       refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na rejeição', description: 'Tente novamente.', variant: 'destructive' })
