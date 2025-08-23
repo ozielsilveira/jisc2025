@@ -111,7 +111,7 @@ export function useAthletesController(service: IAthleteService) {
     try {
       await service.updateWhatsAppStatus(a.id, true)
       const url = openApproveWhatsApp(a)
-      if (url) window.open(url, '_blank')
+      if (url) window.location.href = url
       toast({ title: '📱 WhatsApp enviado!', description: 'Status atualizado e WhatsApp aberto.' })
       refetchWithCacheClear()
     } catch (e) {
@@ -128,7 +128,7 @@ export function useAthletesController(service: IAthleteService) {
       await service.updateStatus(a.id, 'rejected')
       const msg = buildRejectPreview(a, custom)
       const url = buildWhatsAppUrl(a.user.phone, msg)
-      window.open(url, '_blank')
+      window.location.href = url
       toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.' })
       refetchWithCacheClear()
     } catch (e) {
