@@ -145,37 +145,28 @@ export function useAthleteData(userId?: string) {
 // change the list will refetch automatically. Cache invalidation is
 // delegated to the service.
 export function useAthletesList(
-  filters: {
+  filters?: {
     userRole?: string
     athleticId?: string
     searchTerm?: string
     status?: string
     sportId?: string
-  } = {}
+  }
 ) {
-  // Destructure individual filter values so they can be used as stable
-  // dependencies. Passing an object directly as a dependency to
-  // useCachedResource would cause the effect to run on every render,
-  // potentially leading to an infinite loop if the object is newly
-  // allocated each time. Primitive values are stable when unchanged.
-  const { userRole, athleticId, searchTerm, status, sportId } = filters
+  // O hook agora pode ser desabilitado passando `filters` como undefined.
+  // Prepara um fetcher que retorna uma lista vazia se os filtros não
+  // estiverem definidos, evitando uma chamada de API desnecessária.
+  const fetchAthletes = useCallback(async () => {
+    if (!filters) return []
+    return athleteService.getList(filters)
+  }, [filters])
 
-  // Prepare a fetcher that closes over the current filters. It depends on
-  // the individual primitives rather than the entire object. This ensures
-  // that when none of the filter values change, the function reference
-  // remains stable and the effect does not re-run unnecessarily.
-  const fetchAthletes = useCallback(
-    () => athleteService.getList(filters),
-    [userRole, athleticId, searchTerm, status, sportId]
-  )
   const invalidate = useCallback(() => athleteService.invalidateList(), [])
-  const { data, loading, error, refetch } = useCachedResource<Athlete[]>(fetchAthletes, invalidate, [
-    userRole,
-    athleticId,
-    searchTerm,
-    status,
-    sportId
-  ])
+
+  // A dependência agora é o objeto de filtros em si. O `useCachedResource`
+  // lida com a serialização para evitar re-fetches desnecessários.
+  const { data, loading, error, refetch } = useCachedResource<Athlete[]>(fetchAthletes, invalidate, [filters])
+
   return { athletes: data ?? [], loading, error, refetch }
 }
 

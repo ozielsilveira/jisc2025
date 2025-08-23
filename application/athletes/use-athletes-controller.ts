@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -14,10 +14,15 @@ import { Athlete, SortField, SortOrder } from '@/domain/athletes/entities'
 import { IAthleteService } from '@/domain/athletes/ports'
 import { applyFilters, sortAthletes, UiFilters } from './filters'
 import { buildWhatsAppUrl, formatApproveMessage, formatRejectMessage } from './whatsapp'
+import { invalidateCache } from '@/lib/cache'
 
 export function useAthletesController(service: IAthleteService) {
   const { toast } = useToast()
-  const { role: userRole } = useUserData()
+  const {
+    role: userRole,
+    loading: roleLoading,
+    profile
+  } = useUserData()
   const searchParams = useSearchParams()
 
   // cache: listas base
@@ -26,12 +31,12 @@ export function useAthletesController(service: IAthleteService) {
   const { packages } = usePackages()
 
   // descobre athletic do representante
-  const { athletic: userAthletic } = useAthleticByRepresentative(undefined as any) // o provider de auth injeta no topo
+  const { athletic: userAthletic, loading: athleticLoading } = useAthleticByRepresentative(profile?.id)
 
   // estado de filtro/ordem
   const [filters, setFilters] = useState<UiFilters>({
     searchTerm: '',
-    athleticId: 'all',
+    athleticId: undefined, // Começa indefinido para evitar busca inicial
     status: 'all',
     sportId: 'all',
     whatsapp: 'all'
@@ -39,20 +44,36 @@ export function useAthletesController(service: IAthleteService) {
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
-  // limita athleticId para representantes
+  // Aguarda dados do usuário para definir o filtro inicial de atlética
   useEffect(() => {
+    if (roleLoading || (userRole === 'athletic' && athleticLoading)) return
+
     if (userRole === 'athletic' && userAthletic) {
       setFilters((prev) => ({ ...prev, athleticId: userAthletic.id }))
     } else if (userRole === 'admin') {
       const p = searchParams.get('athletic')
-      if (p && p !== 'all') setFilters((prev) => ({ ...prev, athleticId: p as any }))
+      setFilters((prev) => ({ ...prev, athleticId: p || 'all' }))
+    } else {
+      setFilters((prev) => ({ ...prev, athleticId: 'all' }))
     }
-  }, [userRole, userAthletic, searchParams])
+  }, [userRole, roleLoading, userAthletic, athleticLoading, searchParams])
 
-  // busca atletas (já vem cacheado pelo seu hook)
-  const { athletes, loading, error, refetch } = useAthletesList({
-    athleticId: filters.athleticId === 'all' ? undefined : filters.athleticId
-  } as any)
+  // Só busca atletas se o filtro de atlética estiver definido
+  const isReady = filters.athleticId !== undefined
+
+  const {
+    athletes,
+    loading: athletesLoading,
+    error,
+    refetch
+  } = useAthletesList(isReady ? filters : undefined)
+
+  const isLoading = roleLoading || (userRole === 'athletic' && athleticLoading) || athletesLoading
+
+  const refetchWithCacheClear = useCallback(() => {
+    invalidateCache.athletesList()
+    refetch()
+  }, [refetch])
 
   // derivados
   const filteredSorted = useMemo(() => {
@@ -69,11 +90,11 @@ export function useAthletesController(service: IAthleteService) {
     filters.whatsapp !== 'all'
 
   // actions
-  async function approve(id: string) {
+  async function approve(id:string) {
     try {
       await service.updateStatus(id, 'approved')
       toast({ title: '✅ Atleta aprovado!', description: 'O atleta foi aprovado com sucesso.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na aprovação', description: 'Tente novamente.', variant: 'destructive' })
     }
@@ -92,7 +113,7 @@ export function useAthletesController(service: IAthleteService) {
       const url = openApproveWhatsApp(a)
       if (url) window.open(url, '_blank')
       toast({ title: '📱 WhatsApp enviado!', description: 'Status atualizado e WhatsApp aberto.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro ao enviar WhatsApp', description: 'Tente novamente.', variant: 'destructive' })
     }
@@ -109,14 +130,26 @@ export function useAthletesController(service: IAthleteService) {
       const url = buildWhatsAppUrl(a.user.phone, msg)
       window.open(url, '_blank')
       toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.' })
-      refetch()
+      refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na rejeição', description: 'Tente novamente.', variant: 'destructive' })
     }
   }
 
   function clearFilters() {
-    setFilters({ searchTerm: '', athleticId: 'all', status: 'all', sportId: 'all', whatsapp: 'all' })
+    const baseFilters = {
+      searchTerm: '',
+      athleticId: 'all', // Default for admin
+      status: 'all',
+      sportId: 'all',
+      whatsapp: 'all'
+    }
+
+    if (userRole === 'athletic') {
+      baseFilters.athleticId = userAthletic?.id || 'all'
+    }
+
+    setFilters(baseFilters)
   }
 
   return {
@@ -126,9 +159,9 @@ export function useAthletesController(service: IAthleteService) {
     packages,
     // estado e derivados
     userRole,
-    loading,
+    loading: isLoading,
     error,
-    refetch,
+    refetch: refetchWithCacheClear,
     filters,
     setFilters,
     sortField,
