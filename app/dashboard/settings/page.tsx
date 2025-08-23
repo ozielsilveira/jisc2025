@@ -172,7 +172,8 @@ export default function SettingsPage() {
 
       toast({
         title: 'Perfil atualizado',
-        description: 'Suas informações de perfil foram atualizadas com sucesso.'
+        description: 'Suas informações de perfil foram atualizadas com sucesso.',
+        variant: 'success'
       })
     } catch (error) {
       console.warn('Error updating profile:', error)
@@ -241,7 +242,8 @@ export default function SettingsPage() {
 
       toast({
         title: 'Configurações atualizadas',
-        description: 'Suas preferências foram atualizadas com sucesso.'
+        description: 'Suas preferências foram atualizadas com sucesso.',
+        variant: 'success'
       })
     } catch (error) {
       console.warn('Error updating settings:', error)

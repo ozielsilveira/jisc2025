@@ -367,7 +367,7 @@ export default function ProfilePage() {
           toast({
             title: 'Sessão restaurada',
             description: 'Seus arquivos foram recuperados. Por favor, selecione-os novamente para continuar.',
-            variant: 'default'
+            variant: 'success'
           })
           setHasUnsavedFiles(true)
         }
@@ -541,7 +541,7 @@ export default function ProfilePage() {
       toast({
         title: 'Arquivo substituído com sucesso!',
         description: `${type === 'document' ? 'Documento' : 'Atestado de matrícula'} foi atualizado.`,
-        variant: 'default'
+        variant: 'success'
       })
     } catch (error) {
       console.error('Error replacing file:', error)

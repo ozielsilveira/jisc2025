@@ -240,7 +240,8 @@ export default function PackagesPage() {
 
         toast({
           title: 'Pacote atualizado com sucesso',
-          description: 'O pacote foi atualizado no sistema.'
+          description: 'O pacote foi atualizado no sistema.',
+          variant: 'success'
         })
       } else {
         // Create new package
@@ -251,7 +252,8 @@ export default function PackagesPage() {
 
         toast({
           title: 'Pacote criado com sucesso',
-          description: 'O pacote foi adicionado ao sistema.'
+          description: 'O pacote foi adicionado ao sistema.',
+          variant: 'success'
         })
       }
 
@@ -323,7 +325,8 @@ export default function PackagesPage() {
 
       toast({
         title: 'Pacote excluído com sucesso',
-        description: 'O pacote foi removido do sistema.'
+        description: 'O pacote foi removido do sistema.',
+        variant: 'success'
       })
 
       // Update packages list
@@ -392,7 +395,8 @@ export default function PackagesPage() {
 
       toast({
         title: 'Pacote selecionado',
-        description: 'Você será redirecionado para a página de pagamento.'
+        description: 'Você será redirecionado para a página de pagamento.',
+        variant: 'success'
       })
 
       // Redirect to payment page
@@ -434,7 +438,8 @@ export default function PackagesPage() {
       // Show approval message
       toast({
         title: 'Solicitação enviada',
-        description: 'Sua solicitação será analisada pela atlética antes de prosseguir com o pagamento.'
+        description: 'Sua solicitação será analisada pela atlética antes de prosseguir com o pagamento.',
+        variant: 'success'
       })
 
       // Reset state
