@@ -34,7 +34,7 @@ export function WhatsAppRejectDialog({ athlete, isOpen, isLoading, preview, onCo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='w-[95vw] max-w-2xl lg:max-w-3xl p-0 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[85vh] flex flex-col'>
+      <DialogContent className='w-full max-w-2xl p-0 rounded-2xl sm:rounded-3xl overflow-hidden max-h-[85vh] flex flex-col'>
         <div className='bg-gradient-to-br from-red-500 to-rose-600 px-4 sm:px-6 py-6 sm:py-8 text-center text-white flex-shrink-0'>
           <div className='w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4'>
             <XCircle className='h-8 w-8 sm:h-10 sm:w-10  text-red-700' />
