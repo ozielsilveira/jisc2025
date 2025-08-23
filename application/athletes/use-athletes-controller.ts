@@ -17,7 +17,11 @@ import { buildWhatsAppUrl, formatApproveMessage, formatRejectMessage } from './w
 
 export function useAthletesController(service: IAthleteService) {
   const { toast } = useToast()
-  const { role: userRole } = useUserData()
+  const {
+    role: userRole,
+    loading: roleLoading,
+    profile
+  } = useUserData()
   const searchParams = useSearchParams()
 
   // cache: listas base
@@ -26,12 +30,12 @@ export function useAthletesController(service: IAthleteService) {
   const { packages } = usePackages()
 
   // descobre athletic do representante
-  const { athletic: userAthletic } = useAthleticByRepresentative(undefined as any) // o provider de auth injeta no topo
+  const { athletic: userAthletic, loading: athleticLoading } = useAthleticByRepresentative(profile?.id)
 
   // estado de filtro/ordem
   const [filters, setFilters] = useState<UiFilters>({
     searchTerm: '',
-    athleticId: 'all',
+    athleticId: undefined, // Começa indefinido para evitar busca inicial
     status: 'all',
     sportId: 'all',
     whatsapp: 'all'
@@ -39,20 +43,24 @@ export function useAthletesController(service: IAthleteService) {
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
-  // limita athleticId para representantes
+  // Aguarda dados do usuário para definir o filtro inicial de atlética
   useEffect(() => {
+    if (roleLoading || (userRole === 'athletic' && athleticLoading)) return
+
     if (userRole === 'athletic' && userAthletic) {
       setFilters((prev) => ({ ...prev, athleticId: userAthletic.id }))
     } else if (userRole === 'admin') {
       const p = searchParams.get('athletic')
-      if (p && p !== 'all') setFilters((prev) => ({ ...prev, athleticId: p as any }))
+      setFilters((prev) => ({ ...prev, athleticId: p || 'all' }))
+    } else {
+      setFilters((prev) => ({ ...prev, athleticId: 'all' }))
     }
-  }, [userRole, userAthletic, searchParams])
+  }, [userRole, roleLoading, userAthletic, athleticLoading, searchParams])
 
-  // busca atletas (já vem cacheado pelo seu hook)
-  const { athletes, loading, error, refetch } = useAthletesList({
-    athleticId: filters.athleticId === 'all' ? undefined : filters.athleticId
-  } as any)
+  // Só busca atletas se o filtro de atlética estiver definido
+  const isReady = filters.athleticId !== undefined
+
+  const { athletes, loading, error, refetch } = useAthletesList(isReady ? filters : undefined)
 
   // derivados
   const filteredSorted = useMemo(() => {
