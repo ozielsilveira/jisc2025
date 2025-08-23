@@ -61,7 +61,14 @@ export function useAthletesController(service: IAthleteService) {
   // Só busca atletas se o filtro de atlética estiver definido
   const isReady = filters.athleticId !== undefined
 
-  const { athletes, loading, error, refetch } = useAthletesList(isReady ? filters : undefined)
+  const {
+    athletes,
+    loading: athletesLoading,
+    error,
+    refetch
+  } = useAthletesList(isReady ? filters : undefined)
+
+  const isLoading = roleLoading || (userRole === 'athletic' && athleticLoading) || athletesLoading
 
   const refetchWithCacheClear = useCallback(() => {
     invalidateCache.athletesList()
@@ -140,7 +147,7 @@ export function useAthletesController(service: IAthleteService) {
     packages,
     // estado e derivados
     userRole,
-    loading,
+    loading: isLoading,
     error,
     refetch: refetchWithCacheClear,
     filters,
