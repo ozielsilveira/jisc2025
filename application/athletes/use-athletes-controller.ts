@@ -93,7 +93,7 @@ export function useAthletesController(service: IAthleteService) {
   async function approve(id:string) {
     try {
       await service.updateStatus(id, 'approved')
-      toast({ title: '✅ Atleta aprovado!', description: 'O atleta foi aprovado com sucesso.' })
+      toast({ title: '✅ Atleta aprovado!', description: 'O atleta foi aprovado com sucesso.', variant: 'success' })
       refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro na aprovação', description: 'Tente novamente.', variant: 'destructive' })
@@ -111,8 +111,8 @@ export function useAthletesController(service: IAthleteService) {
     try {
       await service.updateWhatsAppStatus(a.id, true)
       const url = openApproveWhatsApp(a)
-      if (url) window.open(url, '_blank')
-      toast({ title: '📱 WhatsApp enviado!', description: 'Status atualizado e WhatsApp aberto.' })
+      if (url) window.location.href = url
+      toast({ title: '📱 WhatsApp enviado!', description: 'Status atualizado e WhatsApp aberto.', variant: 'success' })
       refetchWithCacheClear()
     } catch (e) {
       toast({ title: '❌ Erro ao enviar WhatsApp', description: 'Tente novamente.', variant: 'destructive' })
@@ -128,7 +128,7 @@ export function useAthletesController(service: IAthleteService) {
       await service.updateStatus(a.id, 'rejected')
       const msg = buildRejectPreview(a, custom)
       const url = buildWhatsAppUrl(a.user.phone, msg)
-      window.open(url, '_blank')
+      window.location.href = url
       toast({ title: '⚠️ Atleta rejeitado', description: 'Mensagem aberta no WhatsApp.' })
       refetchWithCacheClear()
     } catch (e) {
