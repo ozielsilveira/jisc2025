@@ -164,7 +164,7 @@ export function FileUpload({
                 <Check className='h-8 w-8 text-green-500' />
               </div>
               <div className='min-w-0 flex-1'>
-                <p className='text-sm font-medium text-gray-900 truncate'>{selectedFile.name}</p>
+                <p className='text-sm font-medium text-gray-900 break-all'>{selectedFile.name}</p>
                 <p className='text-sm text-gray-500'>{formatFileSize(selectedFile.size)}</p>
               </div>
             </div>
