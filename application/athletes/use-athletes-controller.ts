@@ -137,7 +137,19 @@ export function useAthletesController(service: IAthleteService) {
   }
 
   function clearFilters() {
-    setFilters({ searchTerm: '', athleticId: 'all', status: 'all', sportId: 'all', whatsapp: 'all' })
+    const baseFilters = {
+      searchTerm: '',
+      athleticId: 'all', // Default for admin
+      status: 'all',
+      sportId: 'all',
+      whatsapp: 'all'
+    }
+
+    if (userRole === 'athletic') {
+      baseFilters.athleticId = userAthletic?.id || 'all'
+    }
+
+    setFilters(baseFilters)
   }
 
   return {
