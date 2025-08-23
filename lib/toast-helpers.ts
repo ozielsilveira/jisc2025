@@ -28,7 +28,7 @@ export const showInfoToast = (title: string, description?: string) => {
   toast({
     title,
     description,
-    variant: 'default'
+    variant: 'success'
   })
 }
 
@@ -36,7 +36,7 @@ export const showLoadingToast = (title: string, description?: string) => {
   return toast({
     title,
     description,
-    variant: 'default'
+    variant: 'success'
     // Don't auto-dismiss loading toasts
   })
 }
