@@ -118,7 +118,7 @@ export default function AthletesPage() {
               }}
               className='bg-blue-600 hover:bg-blue-700'
             >
-              <Share2 className='h-4 w-4 mr-2' /> Copiar link de cadastro
+              <Share2 className='h-4 w-4 mr-2' /> Link do cadastro de Atleta
             </Button>
           )}
           <Button variant='outline' onClick={c.refetch}>
