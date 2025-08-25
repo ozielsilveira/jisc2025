@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign } from 'lucide-react'
 import { useAthletesList, usePackagesList } from '@/hooks/use-cached-data'
 
-export function ValorTotal({ athleticId }: { athleticId: string }) {
+export function ValorAReceber({ athleticId }: { athleticId: string }) {
   const {
     athletes,
     loading: athletesLoading,
@@ -18,7 +18,6 @@ export function ValorTotal({ athleticId }: { athleticId: string }) {
     return total + athleteTotal;
   }, 0);
 
-
   const loading = athletesLoading || packagesLoading
   const error = athletesError || packagesError
 
@@ -26,7 +25,7 @@ export function ValorTotal({ athleticId }: { athleticId: string }) {
     return (
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-          <CardTitle className='text-sm font-medium'>Valor Total</CardTitle>
+          <CardTitle className='text-sm font-medium'>Valor a Receber</CardTitle>
           <DollarSign className='h-4 w-4 text-muted-foreground' />
         </CardHeader>
         <CardContent>
@@ -40,7 +39,7 @@ export function ValorTotal({ athleticId }: { athleticId: string }) {
     return (
       <Card>
         <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-          <CardTitle className='text-sm font-medium'>Valor Total</CardTitle>
+          <CardTitle className='text-sm font-medium'>Valor a Receber</CardTitle>
           <DollarSign className='h-4 w-4 text-muted-foreground' />
         </CardHeader>
         <CardContent>
@@ -54,7 +53,7 @@ export function ValorTotal({ athleticId }: { athleticId: string }) {
   return (
     <Card>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-        <CardTitle className='text-sm font-medium'>Valor Total</CardTitle>
+        <CardTitle className='text-sm font-medium'>Valor a Receber</CardTitle>
         <DollarSign className='h-4 w-4 text-muted-foreground' />
       </CardHeader>
       <CardContent>
