@@ -20,7 +20,7 @@ type AthleticData = {
 
 export default function SettingsPage() {
   const { user } = useAuth()
-  const { role, isLoading: roleIsLoading } = useUserRole(user?.id)
+  const { role, isLoading: roleIsLoading } = useUserRole(user?.id ?? null)
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
