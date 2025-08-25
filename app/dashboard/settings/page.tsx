@@ -12,8 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import { useTheme } from '@/contexts/theme-context'
 import { supabase } from '@/lib/supabase'
-import { Bell, Save } from 'lucide-react'
+import { Bell, Save, FileUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useUserRole } from '@/hooks/use-user-role'
+import { uploadFileToR2 } from '@/actions/upload'
 
 type UserSettings = {
   id: string
@@ -23,19 +25,29 @@ type UserSettings = {
   language: string
 }
 
+type AthleticData = {
+  id: string
+  statute_url: string | null
+}
+
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { role } = useUserRole(user?.id)
   const { toast } = useToast()
   const { theme, setTheme } = useTheme()
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [tableExists, setTableExists] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const [profile, setProfile] = useState({
     name: '',
     email: '',
     phone: ''
   })
+
+  const [athleticData, setAthleticData] = useState<AthleticData | null>(null)
 
   const [settings, setSettings] = useState<UserSettings>({
     id: '',
@@ -53,7 +65,7 @@ export default function SettingsPage() {
         // Fetch user profile
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('name, email, phone')
+          .select('name, email, phone, role') // Fetch role as well
           .eq('id', user.id)
           .single()
 
@@ -64,6 +76,21 @@ export default function SettingsPage() {
           email: userData.email || '',
           phone: userData.phone || ''
         })
+
+        // If the user is an athletic representative, fetch their athletic's data
+        if (userData.role === 'athletic') {
+          const { data: athletic, error: athleticError } = await supabase
+            .from('athletics')
+            .select('id, statute_url')
+            .eq('representative_id', user.id)
+            .single()
+
+          if (athleticError) {
+            console.warn("Could not fetch athletic's data:", athleticError)
+          } else {
+            setAthleticData(athletic)
+          }
+        }
 
         // Check if user_settings table exists
         const { error: tableCheckError } = await supabase.from('user_settings').select('count').limit(1)
@@ -139,6 +166,61 @@ export default function SettingsPage() {
 
     fetchUserData()
   }, [user, toast])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0])
+    } else {
+      setSelectedFile(null)
+    }
+  }
+
+  const handleStatuteUpload = async () => {
+    if (!selectedFile || !user || !athleticData) {
+      toast({
+        title: 'Seleção de arquivo necessária',
+        description: 'Por favor, selecione um arquivo para enviar.',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    setIsUploading(true)
+    const formData = new FormData()
+    formData.append('file', selectedFile)
+
+    try {
+      const result = await uploadFileToR2(formData, user.id, 'document', athleticData.statute_url || undefined)
+
+      if (result.success && result.url) {
+        const { error: updateError } = await supabase
+          .from('athletics')
+          .update({ statute_url: result.url })
+          .eq('id', athleticData.id)
+
+        if (updateError) throw updateError
+
+        setAthleticData((prev) => ({ ...prev!, statute_url: result.url }))
+        toast({
+          title: 'Upload Concluído',
+          description: 'Seu estatuto foi enviado com sucesso.',
+          variant: 'success'
+        })
+        setSelectedFile(null) // Reset file input
+      } else {
+        throw new Error(result.message || 'Falha no upload do arquivo.')
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      toast({
+        title: 'Erro no Upload',
+        description: error.message || 'Não foi possível enviar o seu estatuto.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -278,6 +360,7 @@ export default function SettingsPage() {
             <TabsTrigger value='profile'>Perfil</TabsTrigger>
             {/* <TabsTrigger value="preferences">Preferências</TabsTrigger> */}
             <TabsTrigger value='notifications'>Notificações</TabsTrigger>
+            {role === 'athletic' && <TabsTrigger value='documents'>Documentos</TabsTrigger>}
           </TabsList>
 
           <TabsContent value='profile' className='space-y-4'>
@@ -376,6 +459,51 @@ export default function SettingsPage() {
               </CardFooter>
             </Card>
           </TabsContent>
+
+          {role === 'athletic' && athleticData && (
+            <TabsContent value='documents' className='space-y-4'>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Documentos da Atlética</CardTitle>
+                  <CardDescription>
+                    Faça o upload e gerencie o estatuto da sua atlética. Este documento é obrigatório.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='statute'>Estatuto da Atlética</Label>
+                    {athleticData.statute_url ? (
+                      <div className='flex items-center space-x-4'>
+                        <p className='text-sm text-muted-foreground'>Estatuto enviado.</p>
+                        <Button variant='outline' size='sm' asChild>
+                          <a href={athleticData.statute_url} target='_blank' rel='noopener noreferrer'>
+                            Ver Documento
+                          </a>
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className='text-sm text-destructive'>Nenhum estatuto enviado.</p>
+                    )}
+                  </div>
+                  <div className='space-y-2'>
+                    <Label htmlFor='file-upload'>
+                      {athleticData.statute_url ? 'Substituir Estatuto' : 'Enviar Estatuto'}
+                    </Label>
+                    <Input id='file-upload' type='file' onChange={handleFileChange} accept='.pdf,.doc,.docx' />
+                    <p className='text-xs text-muted-foreground'>
+                      Tipos de arquivo permitidos: PDF, DOC, DOCX. Tamanho máximo: 10MB.
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={handleStatuteUpload} disabled={isUploading || !selectedFile}>
+                    <FileUp className='h-4 w-4 mr-2' />
+                    {isUploading ? 'Enviando...' : 'Enviar Documento'}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
