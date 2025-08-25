@@ -7,5 +7,8 @@ export const AthleteServiceSupabase: IAthleteService = {
   },
   async updateWhatsAppStatus(id, sent) {
     await sdk.updateWhatsAppStatus(id, sent)
+  },
+  async updateAdminApproval(id, isApproved) {
+    await sdk.updateAdminApproval(id, isApproved)
   }
 }
