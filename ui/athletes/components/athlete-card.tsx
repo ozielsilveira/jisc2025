@@ -13,9 +13,18 @@ type Props = {
   onApprove: (id: string) => void
   onReject: (id: string) => void
   onWhatsApp: (a: Athlete) => void
+  onAdminApprove: (id: string, isApproved: boolean) => void
 }
 
-export default function AthleteCard({ athlete, userRole, onViewDoc, onApprove, onReject, onWhatsApp }: Props) {
+export default function AthleteCard({
+  athlete,
+  userRole,
+  onViewDoc,
+  onApprove,
+  onReject,
+  onWhatsApp,
+  onAdminApprove
+}: Props) {
   const hasPackage = !!athlete.athlete_packages?.length
   return (
     <Card className='hover:shadow-lg transition-all border border-gray-200 bg-white'>
@@ -55,6 +64,41 @@ export default function AthleteCard({ athlete, userRole, onViewDoc, onApprove, o
                   athlete.athlete_packages![0].package.price
                 )}
               </p>
+            </div>
+          </div>
+        )}
+
+        {userRole === 'admin' && athlete.status === 'approved' && (
+          <div className='bg-yellow-50 rounded-lg p-4 border border-yellow-200 space-y-3'>
+            <h4 className='font-semibold text-yellow-800'>Aprovação Final do Administrador</h4>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm text-yellow-700'>
+                  {athlete.admin_approved === null && 'Aguardando avaliação.'}
+                  {athlete.admin_approved === true && 'O cadastro do atleta foi APROVADO.'}
+                  {athlete.admin_approved === false && 'O cadastro do atleta foi REJEITADO.'}
+                </p>
+              </div>
+              <div className='flex gap-3'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onAdminApprove(athlete.id, false)}
+                  className='border-red-300 text-red-700'
+                  disabled={athlete.admin_approved === false}
+                >
+                  <UserX className='h-4 w-4 mr-2' /> Rejeitar
+                </Button>
+                <Button
+                  size='sm'
+                  variant='outline'
+                  className='border-green-300 text-green-700'
+                  onClick={() => onAdminApprove(athlete.id, true)}
+                  disabled={athlete.admin_approved === true}
+                >
+                  <UserCheck className='h-4 w-4 mr-2' /> Aprovar
+                </Button>
+              </div>
             </div>
           </div>
         )}

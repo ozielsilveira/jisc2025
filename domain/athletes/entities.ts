@@ -11,6 +11,7 @@ export interface Athlete {
   created_at: string
   cnh_cpf_document_url: string
   wpp_sent: boolean
+  admin_approved: boolean | null
   user: { name: string; email: string; cpf: string; phone: string; gender: string }
   athletic: { name: string }
   sports: Array<{ id: string; name: string; type: SportType }>

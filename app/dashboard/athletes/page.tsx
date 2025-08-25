@@ -249,6 +249,7 @@ export default function AthletesPage() {
               onApprove={c.approve}
               onReject={() => openReject(a)}
               onWhatsApp={openWhatsAppApprove}
+              onAdminApprove={c.adminApprove}
             />
           ))
         )}

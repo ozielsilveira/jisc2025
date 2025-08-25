@@ -162,6 +162,18 @@ export function useAthletesController(service: IAthleteService) {
     setFilters(baseFilters)
   }
 
+  async function adminApprove(id: string, isApproved: boolean) {
+    try {
+      await service.updateAdminApproval(id, isApproved)
+
+      const message = isApproved ? 'Atleta aprovado pelo admin!' : 'Atleta rejeitado pelo admin.'
+      toast({ title: `✅ ${message}`, description: 'O status final do atleta foi atualizado.', variant: 'success' })
+      refetchWithCacheClear()
+    } catch (e: any) {
+      toast({ title: '❌ Erro na operação', description: e.message || 'Tente novamente.', variant: 'destructive' })
+    }
+  }
+
   return {
     // dados base
     athletics,
@@ -186,6 +198,7 @@ export function useAthletesController(service: IAthleteService) {
     openApproveWhatsApp,
     buildRejectPreview,
     rejectAndNotify,
-    clearFilters
+    clearFilters,
+    adminApprove
   }
 }

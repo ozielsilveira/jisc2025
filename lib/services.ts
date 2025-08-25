@@ -45,6 +45,7 @@ export interface Athlete {
   created_at: string
   cnh_cpf_document_url: string
   wpp_sent: boolean
+  admin_approved: boolean | null
   user: UserProfile
   athletic: Athletic
   sports: Sport[]
@@ -408,6 +409,31 @@ export const athleteService = {
     if (error) throw error
 
     // Invalidar cache relacionado
+    invalidateCache.athlete(athleteId)
+    invalidateCache.athletesList()
+  },
+
+  // Atualizar aprovação do admin
+  async updateAdminApproval(athleteId: string, isApproved: boolean): Promise<void> {
+    // 1. Obter usuário autenticado e sua role
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+    if (!user) throw new Error('Usuário não autenticado')
+
+    const userRole = await userService.getRole(user.id)
+
+    // 2. Validar se é admin
+    if (userRole !== 'admin') {
+      throw new Error('Apenas administradores podem executar esta ação.')
+    }
+
+    // 3. Atualizar o campo no banco de dados
+    const { error } = await supabase.from('athletes').update({ admin_approved: isApproved }).eq('id', athleteId)
+
+    if (error) throw error
+
+    // 4. Invalidar cache para garantir que a UI seja atualizada
     invalidateCache.athlete(athleteId)
     invalidateCache.athletesList()
   },
