@@ -17,29 +17,74 @@ type DashboardSidebarProps = {
 
 const NAV_ITEMS = [
   {
-    category: 'Principal',
+    category: 'Dashboard e Perfil',
     items: [
-      { label: 'Dashboard', icon: 'Home', href: '/dashboard', roles: ['buyer', 'athlete', 'athletic', 'admin'] },
-      { label: 'Cadastro', icon: 'User', href: '/dashboard/profile', roles: ['athlete'] }
-    ]
+      {
+        label: 'Dashboard',
+        icon: 'Home',
+        href: '/dashboard',
+        roles: ['athlete', 'athletic', 'admin'],
+      },
+      {
+        label: 'Meu Perfil',
+        icon: 'User',
+        href: '/dashboard/profile',
+        roles: ['athlete'],
+      },
+    ],
   },
   {
-    category: 'Gestão',
+    category: 'Gestão de Atletas',
     items: [
-      { label: 'Atletas', icon: 'Medal', href: '/dashboard/athletes', roles: ['athletic', 'admin'] },
-      { label: 'Atléticas', icon: 'Trophy', href: '/dashboard/athletics', roles: ['admin'] },
-      { label: 'Relatório', icon: 'FileText', href: '/dashboard/report', roles: ['admin'] }
-    ]
+      {
+        label: 'Atletas',
+        icon: 'Medal',
+        href: '/dashboard/athletes',
+        roles: ['athletic', 'admin'],
+      },
+      {
+        label: 'Atléticas',
+        icon: 'Trophy',
+        href: '/dashboard/athletics',
+        roles: ['admin'],
+      },
+    ],
+  },
+  {
+    category: 'Gestão Financeira',
+    items: [
+      {
+        label: 'Contas',
+        icon: 'DollarSign',
+        href: '/dashboard/report',
+        roles: ['admin', 'athletic'],
+      },
+    ],
   },
   {
     category: 'Competição',
-    items: [{ label: 'Pacotes', icon: 'Package', href: '/dashboard/packages', roles: ['athletic', 'admin'] }]
+    items: [
+      {
+        label: 'Pacotes',
+        icon: 'Package',
+        href: '/dashboard/packages',
+        roles: ['athletic', 'admin'],
+      },
+    ],
   },
   {
     category: 'Configurações',
-    items: [{ label: 'Estatuto', icon: 'FileText', href: '/dashboard/settings', roles: ['athletic'] }]
-  }
-]
+    items: [
+      {
+        label: 'Estatuto',
+        icon: 'FileText',
+        href: '/dashboard/settings',
+        roles: ['athletic'],
+      },
+    ],
+  },
+];
+
 
 export default function DashboardSidebar({ isMobileMenuOpen, setIsMobileMenuOpen }: DashboardSidebarProps) {
   const { user, signOut } = useAuth()
