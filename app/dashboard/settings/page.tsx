@@ -20,7 +20,7 @@ type AthleticData = {
 
 export default function SettingsPage() {
   const { user } = useAuth()
-  const { role, isLoading: roleIsLoading } = useUserRole(user?.id ?? null)
+  const { role, isLoading: roleIsLoading } = useUserRole(user?.id)
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
@@ -38,7 +38,7 @@ export default function SettingsPage() {
         const { data: athletic, error: athleticError } = await supabase
           .from('athletics')
           .select('id, statute_url')
-          .eq('representative_id', user?.id)
+          .eq('representative_id', user.id)
           .single()
 
         if (athleticError) {
@@ -187,8 +187,8 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleStatuteUpload} disabled={isUploading || !selectedFile} className='bg-blue-600 hover:bg-blue-700 text-white'>
-                <FileUp className='h-4 w-4 mr-2 text-white'  />
+              <Button onClick={handleStatuteUpload} disabled={isUploading || !selectedFile}>
+                <FileUp className='h-4 w-4 mr-2' />
                 {isUploading ? 'Enviando...' : 'Enviar Documento'}
               </Button>
             </CardFooter>

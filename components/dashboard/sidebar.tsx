@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   },
   {
     category: 'Configurações',
-    items: [{ label: 'Estatuto', icon: 'FileText', href: '/dashboard/settings', roles: ['admin', 'athletic'] }]
+    items: [{ label: 'Configurações', icon: 'Settings', href: '/dashboard/settings', roles: ['admin'] }]
   }
 ]
 

@@ -27,6 +27,7 @@ type Athletic = {
   university: string
   created_at: string
   updated_at: string
+  statute_url: string | null
   _count?: {
     athletes: number
   }
@@ -232,6 +233,19 @@ export default function AthleticsPage() {
                     <Users className='h-4 w-4 mr-2 text-gray-500' />
                     <span>{athletic._count?.athletes || 0} atletas cadastrados</span>
                   </div>
+
+                  {athletic.statute_url && (
+                    <div className='space-y-2'>
+                      <Label>Estatuto da Atlética</Label>
+                      <div>
+                        <Button variant='outline' asChild>
+                          <a href={athletic.statute_url} target='_blank' rel='noopener noreferrer'>
+                            Ver Documento
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* <div className="space-y-2">
                   <Label>Link de Referência para Atletas</Label>
