@@ -45,27 +45,36 @@ export function useAthletesController(service: IAthleteService) {
 
   // Aguarda dados do usuário para definir o filtro inicial de atlética
   useEffect(() => {
-    if (roleLoading || (userRole === 'athletic' && athleticLoading)) return
+    // Não faz nada até que os dados do usuário e da atlética (se aplicável) estejam prontos
+    if (roleLoading || (userRole === 'athletic' && athleticLoading)) {
+      return
+    }
 
-    if (userRole === 'athletic' && userAthletic) {
-      setFilters((prev) => ({ ...prev, athleticId: userAthletic.id }))
-    } else if (userRole === 'admin') {
+    // Define o filtro com base na role
+    if (userRole === 'admin') {
       const p = searchParams.get('athletic')
+      // Admin pode ver tudo ou uma atlética específica
       setFilters((prev) => ({ ...prev, athleticId: p || 'all' }))
+    } else if (userRole === 'athletic') {
+      // Role atlética SÓ PODE ver sua própria atlética.
+      // Se não tiver uma, o backend já vai barrar, mas setamos mesmo assim.
+      setFilters((prev) => ({ ...prev, athleticId: userAthletic?.id || 'none' }))
     } else {
-      setFilters((prev) => ({ ...prev, athleticId: 'all' }))
+      // Qualquer outro role não deve ver nenhuma atlética
+      setFilters((prev) => ({ ...prev, athleticId: 'none' }))
     }
   }, [userRole, roleLoading, userAthletic, athleticLoading, searchParams])
 
-  // Só busca atletas se o filtro de atlética estiver definido
-  const isReady = filters.athleticId !== undefined
+  // A busca agora é controlada pelo estado de 'athleticId'.
+  // Se for 'undefined' (inicial) ou 'none' (sem permissão), não busca.
+  const isReadyToFetch = filters.athleticId !== undefined && filters.athleticId !== 'none'
 
   const {
     athletes,
     loading: athletesLoading,
     error,
     refetch
-  } = useAthletesList(isReady ? filters : undefined)
+  } = useAthletesList(isReadyToFetch ? filters : undefined)
 
   const isLoading = roleLoading || (userRole === 'athletic' && athleticLoading) || athletesLoading
 
@@ -136,14 +145,18 @@ export function useAthletesController(service: IAthleteService) {
 
   function clearFilters() {
     const baseFilters = {
-      athleticId: 'all', // Default for admin
+      athleticId: 'all', // Padrão para admin
       status: 'all',
       sportId: 'all',
       whatsapp: 'all'
     }
 
+    // Para atlética, o filtro NUNCA deve ser 'all'.
+    // Ele deve ser o ID da sua atlética.
     if (userRole === 'athletic') {
-      baseFilters.athleticId = userAthletic?.id || 'all'
+      baseFilters.athleticId = userAthletic?.id || 'none'
+    } else if (userRole !== 'admin') {
+      baseFilters.athleticId = 'none'
     }
 
     setFilters(baseFilters)
