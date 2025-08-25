@@ -294,7 +294,17 @@ export const athleteService = {
       sportId?: string
     } = {}
   ): Promise<Athlete[]> {
-    const cacheKey = createCacheKey('athletes_list', filters)
+    // 1. Obter usuário autenticado
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
+    if (!user) return [] // Não deveria acontecer em rotas protegidas
+
+    // 2. Obter role do usuário
+    const userRole = await userService.getRole(user.id)
+
+    // 3. Modificar o cacheKey para incluir o userRole e o ID do usuário para garantir que o cache seja por usuário
+    const cacheKey = createCacheKey('athletes_list_v2', { ...filters, userId: user.id, userRole })
 
     const cached = cache.get<Athlete[]>(cacheKey)
     if (cached) {
@@ -319,11 +329,25 @@ export const athleteService = {
       )
       .order('created_at', { ascending: false })
 
-    // Aplicar filtros
-    if (filters.athleticId && filters.athleticId !== 'all') {
-      query = query.eq('athletic_id', filters.athleticId)
+    // 4. Aplicar filtros de segurança no backend
+    if (userRole === 'admin') {
+      // Admin pode filtrar por qualquer atlética
+      if (filters.athleticId && filters.athleticId !== 'all') {
+        query = query.eq('athletic_id', filters.athleticId)
+      }
+    } else if (userRole === 'athletic') {
+      // Atlética SÓ PODE ver seus próprios atletas, ignorando o filtro do client-side
+      const athletic = await athleticsService.getByRepresentative(user.id)
+      if (!athletic) {
+        return [] // Representante sem atlética não vê ninguém
+      }
+      query = query.eq('athletic_id', athletic.id)
+    } else {
+      // Outros roles (ex: 'athlete') não devem ver a lista
+      return []
     }
 
+    // Filtros de status (seguro, pode ser do client)
     if (filters.status && filters.status !== 'all') {
       query = query.eq('status', filters.status)
     }
@@ -332,7 +356,7 @@ export const athleteService = {
 
     if (error) throw error
 
-    // Formatar e filtrar dados
+    // Formatar e filtrar dados (filtros de UI que não impactam segurança)
     const formattedAthletes =
       data
         ?.map((athlete) => ({
@@ -341,18 +365,18 @@ export const athleteService = {
           athlete_packages: athlete.athlete_packages || []
         }))
         .filter((athlete) => {
-          // Filtro de busca
+          // Filtro de busca (client-side)
           if (filters.searchTerm) {
             const searchLower = filters.searchTerm.toLowerCase()
             const matchesSearch =
               athlete.user.name.toLowerCase().includes(searchLower) ||
               athlete.user.email.toLowerCase().includes(searchLower) ||
-              athlete.user.phone.includes(filters.searchTerm)
+              (athlete.user.phone && athlete.user.phone.includes(filters.searchTerm))
 
             if (!matchesSearch) return false
           }
 
-          // Filtro de modalidade
+          // Filtro de modalidade (client-side)
           if (filters.sportId && filters.sportId !== 'all') {
             const hasSport = athlete.sports.some((sport: any) => sport.id === filters.sportId)
             if (!hasSport) return false
