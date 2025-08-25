@@ -3,8 +3,12 @@ import { Separator } from '@/components/ui/separator'
 import { Receipt } from 'lucide-react'
 import { useAthletesList, usePackagesList } from '@/hooks/use-cached-data'
 
-export function ResumoPagamento() {
-  const { athletes, loading: athletesLoading, error: athletesError } = useAthletesList({ status: 'approved' })
+export function ResumoPagamento({ athleticId }: { athleticId: string }) {
+  const {
+    athletes,
+    loading: athletesLoading,
+    error: athletesError
+  } = useAthletesList({ status: 'approved', athleticId })
   const { packages, loading: packagesLoading, error: packagesError } = usePackagesList()
 
   const packageBreakdown = packages

@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users } from 'lucide-react'
 import { useAthletesList } from '@/hooks/use-cached-data'
 
-export function AtletasAprovados() {
-  const { athletes, loading, error } = useAthletesList({ status: 'approved' })
+export function AtletasAprovados({ athleticId }: { athleticId: string }) {
+  const { athletes, loading, error } = useAthletesList({ status: 'approved', athleticId })
 
   if (loading) {
     return (
