@@ -18,6 +18,7 @@ export function ValorTotal({ athleticId }: { athleticId: string }) {
     return total + athleteTotal;
   }, 0);
 
+
   const loading = athletesLoading || packagesLoading
   const error = athletesError || packagesError
 
