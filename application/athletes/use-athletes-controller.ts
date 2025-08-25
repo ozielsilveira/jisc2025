@@ -35,7 +35,6 @@ export function useAthletesController(service: IAthleteService) {
 
   // estado de filtro/ordem
   const [filters, setFilters] = useState<UiFilters>({
-    searchTerm: '',
     athleticId: undefined, // Começa indefinido para evitar busca inicial
     status: 'all',
     sportId: 'all',
@@ -83,7 +82,6 @@ export function useAthletesController(service: IAthleteService) {
   }, [athletes, filters, sortField, sortOrder])
 
   const hasActiveFilters =
-    !!filters.searchTerm ||
     filters.athleticId !== 'all' ||
     filters.status !== 'all' ||
     filters.sportId !== 'all' ||
@@ -138,7 +136,6 @@ export function useAthletesController(service: IAthleteService) {
 
   function clearFilters() {
     const baseFilters = {
-      searchTerm: '',
       athleticId: 'all', // Default for admin
       status: 'all',
       sportId: 'all',

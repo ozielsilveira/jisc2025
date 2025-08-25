@@ -1,7 +1,6 @@
 import { Athlete, SortField, SortOrder } from '@/domain/athletes/entities'
 
 export type UiFilters = {
-  searchTerm: string
   athleticId: string | 'all'
   status: 'all' | Athlete['status']
   sportId: string | 'all'
@@ -9,18 +8,12 @@ export type UiFilters = {
 }
 
 export function applyFilters(list: Athlete[], f: UiFilters): Athlete[] {
-  const st = f.searchTerm?.toLowerCase() ?? ''
   return list.filter((a) => {
-    const matchesSearch =
-      !st ||
-      a.user.name.toLowerCase().includes(st) ||
-      a.user.email.toLowerCase().includes(st) ||
-      a.user.phone.includes(f.searchTerm)
     const matchesAthletic = f.athleticId === 'all' || a.athletic_id === f.athleticId
     const matchesStatus = f.status === 'all' || a.status === f.status
     const matchesSport = f.sportId === 'all' || a.sports.some((s) => s.id === f.sportId)
     const matchesWpp = f.whatsapp === 'all' || (f.whatsapp === 'sent' ? a.wpp_sent : !a.wpp_sent)
-    return matchesSearch && matchesAthletic && matchesStatus && matchesSport && matchesWpp
+    return matchesAthletic && matchesStatus && matchesSport && matchesWpp
   })
 }
 
