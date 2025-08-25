@@ -7,7 +7,9 @@ export function ValorTotal() {
   const { packages, loading: packagesLoading, error: packagesError } = usePackagesList()
 
   const valorTotal = athletes.reduce((total, athlete) => {
-    const selectedPackage = packages.find((pkg) => pkg.id === athlete.athlete_packages?.[0].id)
+    const selectedPackage = athlete.athlete_packages?.[0]?.id
+      ? packages.find((pkg) => pkg.id === athlete.athlete_packages?.[0].id)
+      : null
     return total + (selectedPackage?.price || 0)
   }, 0)
 
