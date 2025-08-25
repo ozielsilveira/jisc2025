@@ -13,7 +13,9 @@ export function ResumoPagamento({ athleticId }: { athleticId: string }) {
 
   const packageBreakdown = packages
     .map((pkg) => {
-      const athletesWithPackage = athletes.filter((athlete) => athlete.athlete_packages?.some((ap) => ap.id === pkg.id))
+      const athletesWithPackage = athletes.filter((athlete) => 
+        athlete.athlete_packages?.some(ap => ap.package?.id === pkg.id)
+      )
       return {
         package: pkg,
         count: athletesWithPackage.length,

@@ -11,9 +11,12 @@ export function ValorAReceber({ athleticId }: { athleticId: string }) {
   const { packages, loading: packagesLoading, error: packagesError } = usePackagesList()
 
   const valorTotal = athletes.reduce((total, athlete) => {
-    const selectedPackage = packages.find((pkg) => pkg.id === athlete.athlete_packages?.[0].id)
-    return total + (selectedPackage?.price || 0)
-  }, 0)
+    const athletePackages = athlete.athlete_packages || [];
+    const athleteTotal = athletePackages.reduce((sum, ap) => {
+      return sum + (ap.package?.price || 0);
+    }, 0);
+    return total + athleteTotal;
+  }, 0);
 
   const loading = athletesLoading || packagesLoading
   const error = athletesError || packagesError

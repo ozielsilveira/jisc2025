@@ -44,11 +44,10 @@ function PagamentoAtletasContent() {
           </Select>
         </div>
       )}
-      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-2'>
         <AtletasAprovados athleticId={selectedAthletic} />
         <ValorTotal athleticId={selectedAthletic} />
-        <ValorAReceber athleticId={selectedAthletic} />
-        <div className='md:col-span-2 lg:col-span-3'>
+        <div className='md:col-span-2 '>
           <ResumoPagamento athleticId={selectedAthletic} />
         </div>
       </div>
