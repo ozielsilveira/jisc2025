@@ -200,7 +200,6 @@ const FileReplacementInterface = ({
             description={description}
             onFileChange={onFileChange}
             required={true}
-            capture={true}
           />
         </div>
 
@@ -1125,7 +1124,6 @@ export default function ProfilePage() {
                                   existingFileUrl={athlete?.cnh_cpf_document_url}
                                   onFileChange={handleDocumentChange}
                                   required={!athlete?.cnh_cpf_document_url}
-                                  capture={true}
                                 />
                               </div>
                             )}
@@ -1181,7 +1179,6 @@ export default function ProfilePage() {
                                   existingFileUrl={athlete?.enrollment_document_url}
                                   onFileChange={handleEnrollmentChange}
                                   required={!athlete?.enrollment_document_url}
-                                  capture={true}
                                 />
                               </div>
                             )}

@@ -17,7 +17,6 @@ interface FileUploadProps {
   required?: boolean
   accept?: string
   maxSize?: number // in MB
-  capture?: boolean
 }
 
 export function FileUpload({
@@ -29,7 +28,6 @@ export function FileUpload({
   required = false,
   accept = 'image/*,.pdf',
   maxSize = 5,
-  capture = false
 }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -157,7 +155,6 @@ export function FileUpload({
           onChange={handleInputChange}
           className='sr-only'
           aria-describedby={`${id}-description ${id}-error`}
-          capture={capture}
         />
 
         {selectedFile ? (
