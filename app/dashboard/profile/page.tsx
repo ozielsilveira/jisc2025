@@ -2,6 +2,7 @@
 
 import { uploadFileToR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -266,6 +267,60 @@ export default function ProfilePage() {
 
   const isLoading = profileLoading || sportsLoading || athleteLoading
   const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
+  const [isEditingSports, setIsEditingSports] = useState(false)
+  const [isUpdatingSports, setIsUpdatingSports] = useState(false)
+
+  const handleUpdateSports = async () => {
+    if (!athlete) return
+
+    setIsUpdatingSports(true)
+    try {
+      // 1. Delete existing sports
+      const { error: deleteError } = await supabase.from('athlete_sports').delete().eq('athlete_id', athlete.id)
+
+      if (deleteError) throw deleteError
+
+      // 2. Insert new sports
+      if (selectedSports.length > 0) {
+        const newAthleteSports = selectedSports.map((sportId) => ({
+          athlete_id: athlete.id,
+          sport_id: sportId
+        }))
+
+        const { error: insertError } = await supabase.from('athlete_sports').insert(newAthleteSports)
+
+        if (insertError) throw insertError
+      }
+
+      // 3. Refetch data and show success
+      await refetchAthlete()
+
+      toast({
+        title: 'Modalidades atualizadas!',
+        description: 'Sua lista de modalidades foi atualizada com sucesso.',
+        variant: 'success'
+      })
+
+      setIsEditingSports(false)
+    } catch (error: any) {
+      console.error('Error updating sports:', error)
+      toast({
+        title: 'Erro ao atualizar',
+        description: error.message || 'Não foi possível salvar suas alterações.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsUpdatingSports(false)
+    }
+  }
+
+  const handleCancelEditSports = () => {
+    // Reset selectedSports to the original state from the athlete data
+    if (athlete?.sports) {
+      setSelectedSports(athlete.sports.map((sport) => sport.id))
+    }
+    setIsEditingSports(false)
+  }
 
   // File replacement state - optimized for real-time updates
   const [isReplacingDocument, setIsReplacingDocument] = useState(false)
@@ -1038,6 +1093,59 @@ export default function ProfilePage() {
                           : 'Escolher Pacote'}
                       </Button>
                     </CardFooter>
+                  </Card>
+
+                  <Card className='shadow-lg w-full overflow-hidden'>
+                    <CardHeader>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center space-x-3'>
+                          <div className='p-2 bg-blue-500 bg-opacity-10 rounded-lg'>
+                            <Trophy className='h-6 w-6 text-blue-600' />
+                          </div>
+                          <div className='min-w-0'>
+                            <CardTitle className='text-lg sm:text-xl'>Minhas Modalidades</CardTitle>
+                            <CardDescription className='text-sm mt-1'>
+                              {isEditingSports
+                                ? 'Selecione as modalidades que deseja participar.'
+                                : 'As modalidades que você está participando.'}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        {!isEditingSports && (
+                          <Button variant='outline' onClick={() => setIsEditingSports(true)}>
+                            Alterar
+                          </Button>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {isEditingSports ? (
+                        <QuickSportsSelector />
+                      ) : athlete?.sports && athlete.sports.length > 0 ? (
+                        <div className='flex flex-wrap gap-2'>
+                          {athlete.sports.map((sport) => (
+                            <Badge key={sport.id} variant='secondary'>
+                              {sport.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Nenhuma modalidade selecionada.</p>
+                      )}
+                    </CardContent>
+                    {isEditingSports && (
+                      <CardFooter className='bg-gray-50 p-4 flex justify-end space-x-2'>
+                        <Button variant='ghost' onClick={handleCancelEditSports} disabled={isUpdatingSports}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleUpdateSports} disabled={isUpdatingSports}>
+                          {isUpdatingSports ? (
+                            <Loader2 className='h-4 w-4 animate-spin mr-2' />
+                          ) : null}
+                          {isUpdatingSports ? 'Salvando...' : 'Salvar Alterações'}
+                        </Button>
+                      </CardFooter>
+                    )}
                   </Card>
                 </>
               )}
