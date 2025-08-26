@@ -20,7 +20,6 @@ const MAX_FILE_SIZE_MB = 10
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024 // Convertendo para bytes
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_BUCKET_URL) {
-  console.warn('Cloudflare R2 environment variables are not fully configured. Uploads might fail.')
   throw new Error('Cloudflare R2 environment variables are not configured.')
 }
 
@@ -40,13 +39,11 @@ const getFileExtension = (file: File): string => {
 
   // Prioritize extension from filename if it seems valid
   if (filenameExt && filename.includes('.')) {
-    console.log(`[Upload Action] Extracted extension '${filenameExt}' from filename: '${filename}'`)
     return filenameExt
   }
 
   // Fallback to inferring from MIME type
   const mimeType = file.type
-  console.log(`[Upload Action] No valid extension in filename. Inferring from MIME type: '${mimeType}'`)
 
   const mimeToExt: { [key: string]: string } = {
     'image/jpeg': 'jpg',
@@ -59,13 +56,10 @@ const getFileExtension = (file: File): string => {
 
   const extFromMime = mimeToExt[mimeType]
   if (extFromMime) {
-    console.log(`[Upload Action] Inferred extension '${extFromMime}' from MIME type.`)
     return extFromMime
   }
 
-  // Final fallback if MIME type is unknown
-  console.warn(`[Upload Action] Could not infer extension from MIME type '${mimeType}'. Using fallback 'bin'.`)
-  return 'bin' // Use a generic extension if all else fails
+  return 'bin'
 }
 
 export async function uploadFileToR2(
@@ -84,17 +78,8 @@ export async function uploadFileToR2(
     return { success: false, message: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.` }
   }
 
-  // Use the robust helper function to get the file extension
   const fileExt = getFileExtension(file)
   const filePath = `${userId}/${fileType}_${Date.now()}.${fileExt}`
-
-  console.log(`[Upload Action] Uploading file. Details:
-    - User ID: ${userId}
-    - File Type: ${fileType}
-    - Original Filename: ${file.name}
-    - MIME Type: ${file.type}
-    - Determined Extension: ${fileExt}
-    - Final Path: ${filePath}`)
 
   try {
     // 1. Delete the previous file, if an old URL is provided
@@ -106,9 +91,8 @@ export async function uploadFileToR2(
           Key: oldFileKey
         })
         await S3.send(deleteCommand)
-        console.log(`[Upload Action] Old file ${oldFileKey} removed successfully.`)
       } else {
-        console.warn(`[Upload Action] Could not extract key from old file URL: ${oldFileUrl}`)
+        console.warn(`Could not extract key from old file URL: ${oldFileUrl}`)
       }
     }
 
@@ -126,10 +110,9 @@ export async function uploadFileToR2(
     await S3.send(command)
 
     const publicUrl = `${R2_PUBLIC_BUCKET_URL}/${filePath}`
-    console.log(`[Upload Action] File uploaded successfully. Public URL: ${publicUrl}`)
     return { success: true, url: publicUrl }
   } catch (error: any) {
-    console.error('[Upload Action] Error uploading to Cloudflare R2:', error)
+    console.error('Error uploading to Cloudflare R2:', error)
     return { success: false, message: error.message || 'Erro desconhecido ao fazer upload.' }
   }
 }
