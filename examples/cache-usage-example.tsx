@@ -1,7 +1,8 @@
 'use client'
 
 import { useAthletics, useSports, useStaticData, useUserData } from '@/hooks/use-cached-data'
-import { athleteService, invalidateCache } from '@/lib/services'
+import { invalidateCache } from '@/lib/cache'
+import { athleteService } from '@/lib/services'
 import React from 'react'
 
 // Exemplo 1: Usando hooks com cache
@@ -36,7 +37,6 @@ export const AthleteManagementExample = () => {
     try {
       // O serviço automaticamente invalida o cache
       await athleteService.updateStatus(athleteId, 'approved')
-      console.log('Atleta aprovado com sucesso!')
     } catch (error) {
       console.error('Erro ao aprovar atleta:', error)
     } finally {
@@ -47,7 +47,6 @@ export const AthleteManagementExample = () => {
   const handleInvalidateCache = () => {
     // Invalidar cache manualmente
     invalidateCache.athlete(athleteId)
-    console.log('Cache do atleta invalidado')
   }
 
   return (

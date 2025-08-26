@@ -1194,7 +1194,6 @@ export default function ProfilePage() {
                               id='terms'
                               checked={agreedToTerms}
                               onCheckedChange={(checked) => {
-                                console.log('Checkbox changed:', checked) // Debug log
                                 setAgreedToTerms(checked === true)
                               }}
                               className='mt-1 h-5 w-5 border-2 border-gray-400 data-[state=checked]:bg-[#0456FC] data-[state=checked]:border-[#0456FC] focus:ring-2 focus:ring-[#0456FC] focus:ring-offset-2 flex-shrink-0 self-center sm:self-start'

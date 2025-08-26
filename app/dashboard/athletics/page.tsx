@@ -60,9 +60,7 @@ export default function AthleticsPage() {
           throw userError
         }
 
-        console.log('User role data:', userData)
         setUserRole(userData.role)
-        console.log('User role:', userRole)
 
         // Fetch athletics
         const { data: athleticsData, error: athleticsError } = await supabase
