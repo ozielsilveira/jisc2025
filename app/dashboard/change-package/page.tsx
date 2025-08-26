@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { athleteService, packagesService } from '@/lib/services'
 
+
 type Package = {
   id: string
   name: string
@@ -25,13 +26,28 @@ export default function ChangePackagePage() {
   const [loading, setLoading] = React.useState(true)
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [currentPackageId, setCurrentPackageId] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    const fetchPackages = async () => {
+    const fetchData = async () => {
+      setLoading(true)
       try {
         const availablePackages = await packagesService.getAll()
         setPackages(availablePackages)
+
+        if (user) {
+          const athlete = await athleteService.getByUserId(user.id)
+          if (athlete && Array.isArray(athlete.athlete_packages)) {
+            const activeEntry = athlete.athlete_packages[0].package.id
+            
+            if (activeEntry && activeEntry !== currentPackageId) {
+              setCurrentPackageId(activeEntry)
+              setSelectedPackageId(null)
+            }
+          }
+        }
       } catch (error) {
+        console.error('Erro ao carregar dados de pacotes ou atleta:', error)
         toast({
           title: 'Erro ao carregar pacotes',
           description: 'Não foi possível buscar os pacotes disponíveis.',
@@ -42,8 +58,8 @@ export default function ChangePackagePage() {
       }
     }
 
-    fetchPackages()
-  }, [toast])
+    fetchData()
+  }, [user, toast])
 
   const handleSelectPackage = (packageId: string) => {
     setSelectedPackageId(packageId)
@@ -59,6 +75,15 @@ export default function ChangePackagePage() {
       return
     }
 
+    if (currentPackageId && selectedPackageId === currentPackageId) {
+      toast({
+        title: 'Pacote já ativo',
+        description: 'Este já é o seu pacote atual.',
+        variant: 'default'
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -68,12 +93,10 @@ export default function ChangePackagePage() {
         throw new Error('Atleta não encontrado. Não é possível alterar o pacote.')
       }
 
-      // Check if the athlete already has this package with a pending status
-      const existingPackage = athlete.athlete_packages?.find(
-        (p) => p.package.id === selectedPackageId && p.payment_status === 'pending'
+      const existingPending = athlete.athlete_packages?.find(
+        (p: any) => p.package.id === selectedPackageId && p.payment_status === 'pending'
       )
-
-      if (existingPackage) {
+      if (existingPending) {
         toast({
           title: 'Pacote já selecionado',
           description: 'Você já tem uma solicitação pendente para este pacote.',
@@ -83,16 +106,17 @@ export default function ChangePackagePage() {
         return
       }
 
-      const { error: insertError } = await supabase.from('athlete_packages').insert({
-        athlete_id: athlete.id,
+      const { error: insertError } = await supabase.from('athlete_packages').update({
         package_id: selectedPackageId,
         payment_status: 'pending'
-      })
+      }).eq('athlete_id', athlete.id)
 
       if (insertError) {
         throw insertError
       }
-
+      setCurrentPackageId(selectedPackageId)
+      setSelectedPackageId(null)
+      
       athleteService.invalidateAthlete(athlete.id)
       athleteService.invalidateList()
 
@@ -131,32 +155,51 @@ export default function ChangePackagePage() {
             </div>
           ) : (
             <div className='space-y-4'>
-              {packages.map((pkg) => (
-                <Card
-                  key={pkg.id}
-                  className={`cursor-pointer transition-all ${
-                    selectedPackageId === pkg.id ? 'border-2 border-[#0456FC] shadow-lg' : 'hover:shadow-md'
-                  }`}
-                  onClick={() => handleSelectPackage(pkg.id)}
-                >
-                  <CardHeader>
-                    <div className='flex items-center space-x-4'>
-                      <div className='p-3 bg-blue-100 rounded-lg'>
-                        <PackageIcon className='h-6 w-6 text-[#0456FC]' />
+              {packages.map((pkg) => {
+                const isSelected = selectedPackageId === pkg.id
+                const isCurrent = currentPackageId === pkg.id
+
+                let cardClasses = 'transition-all rounded-lg'
+                if (isCurrent) {
+                  cardClasses += ' border-2 border-green-500 bg-green-50 cursor-not-allowed'
+                } else if (isSelected) {
+                  cardClasses += ' border-2 border-[#0456FC] shadow-lg cursor-pointer'
+                } else {
+                  cardClasses += ' cursor-pointer hover:shadow-md'
+                }
+
+                return (
+                  <Card
+                    key={pkg.id}
+                    className={cardClasses}
+                    onClick={isCurrent ? undefined : () => handleSelectPackage(pkg.id)}
+                  >
+                    <CardHeader>
+                      <div className='flex items-center space-x-4'>
+                        <div className='p-3 bg-blue-100 rounded-lg'>
+                          <PackageIcon className='h-6 w-6 text-[#0456FC]' />
+                        </div>
+                        <div>
+                          <CardTitle>{pkg.name}</CardTitle>
+                          <CardDescription>{pkg.description}</CardDescription>
+                        </div>
+                        {/* Show a small label when this package is the athlete's current active package */}
+                        {isCurrent && (
+                          <span className='ml-auto text-sm font-semibold text-green-600'>Atual</span>
+                        )}
                       </div>
-                      <div>
-                        <CardTitle>{pkg.name}</CardTitle>
-                        <CardDescription>{pkg.description}</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className='text-2xl font-bold'>
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pkg.price)}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardHeader>
+                    <CardContent>
+                      <p className='text-2xl font-bold'>
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        }).format(pkg.price)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           )}
 
@@ -164,7 +207,11 @@ export default function ChangePackagePage() {
             <Button variant='outline' onClick={() => router.back()}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} disabled={!selectedPackageId || isSubmitting} className='bg-[#0456FC] hover:bg-[#0456FC]/90'>
+            <Button
+              onClick={handleSubmit}
+              disabled={!selectedPackageId || isSubmitting || selectedPackageId === currentPackageId}
+              className='bg-[#0456FC] hover:bg-[#0456FC]/90'
+            >
               {isSubmitting ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Confirmar Alteração'}
             </Button>
           </div>
