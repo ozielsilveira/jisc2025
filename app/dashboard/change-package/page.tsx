@@ -164,7 +164,7 @@ export default function ChangePackagePage() {
             <Button variant='outline' onClick={() => router.back()}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} disabled={!selectedPackageId || isSubmitting}>
+            <Button onClick={handleSubmit} disabled={!selectedPackageId || isSubmitting} className='bg-[#0456FC] hover:bg-[#0456FC]/90'>
               {isSubmitting ? <Loader2 className='h-4 w-4 animate-spin' /> : 'Confirmar Alteração'}
             </Button>
           </div>
