@@ -33,6 +33,41 @@ const S3 = new S3Client({
   }
 })
 
+// Helper function to determine file extension safely
+const getFileExtension = (file: File): string => {
+  const filename = file.name || ''
+  const filenameExt = filename.split('.').pop()?.toLowerCase()
+
+  // Prioritize extension from filename if it seems valid
+  if (filenameExt && filename.includes('.')) {
+    console.log(`[Upload Action] Extracted extension '${filenameExt}' from filename: '${filename}'`)
+    return filenameExt
+  }
+
+  // Fallback to inferring from MIME type
+  const mimeType = file.type
+  console.log(`[Upload Action] No valid extension in filename. Inferring from MIME type: '${mimeType}'`)
+
+  const mimeToExt: { [key: string]: string } = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/pjpeg': 'jpg',
+    'application/pdf': 'pdf',
+    'image/webp': 'webp',
+    'image/gif': 'gif'
+  }
+
+  const extFromMime = mimeToExt[mimeType]
+  if (extFromMime) {
+    console.log(`[Upload Action] Inferred extension '${extFromMime}' from MIME type.`)
+    return extFromMime
+  }
+
+  // Final fallback if MIME type is unknown
+  console.warn(`[Upload Action] Could not infer extension from MIME type '${mimeType}'. Using fallback 'bin'.`)
+  return 'bin' // Use a generic extension if all else fails
+}
+
 export async function uploadFileToR2(
   formData: FormData,
   userId: string,
@@ -43,37 +78,41 @@ export async function uploadFileToR2(
   if (!file) {
     return { success: false, message: 'Nenhum arquivo fornecido.' }
   }
-  console.log(file.size)
-  // Validação de tamanho de arquivo no lado do servidor
+
+  // Server-side file size validation
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return { success: false, message: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.` }
   }
 
-  const fileExt = file.name.split('.').pop()
-  const filePath = `${userId}/${fileType}_${Date.now()}.${fileExt}` // Chave do objeto no bucket
+  // Use the robust helper function to get the file extension
+  const fileExt = getFileExtension(file)
+  const filePath = `${userId}/${fileType}_${Date.now()}.${fileExt}`
+
+  console.log(`[Upload Action] Uploading file. Details:
+    - User ID: ${userId}
+    - File Type: ${fileType}
+    - Original Filename: ${file.name}
+    - MIME Type: ${file.type}
+    - Determined Extension: ${fileExt}
+    - Final Path: ${filePath}`)
 
   try {
-    // 1. Remover o arquivo anterior, se um URL antigo for fornecido
+    // 1. Delete the previous file, if an old URL is provided
     if (oldFileUrl) {
-      // Extrair a chave do objeto (caminho dentro do bucket) a partir do URL público
-      // Certifique-se de que R2_PUBLIC_BUCKET_URL termina com o nome do bucket,
-      // ou ajuste a lógica para remover apenas a parte base da URL.
       const oldFileKey = oldFileUrl.replace(`${R2_PUBLIC_BUCKET_URL}/`, '')
-
-      // Verificar se a chave foi extraída corretamente e não é o URL completo novamente
       if (oldFileKey && oldFileKey !== oldFileUrl) {
         const deleteCommand = new DeleteObjectCommand({
           Bucket: R2_BUCKET_NAME,
           Key: oldFileKey
         })
         await S3.send(deleteCommand)
-        console.log(`Arquivo antigo ${oldFileKey} removido com sucesso.`)
+        console.log(`[Upload Action] Old file ${oldFileKey} removed successfully.`)
       } else {
-        console.warn(`Não foi possível extrair a chave do arquivo antigo do URL: ${oldFileUrl}`)
+        console.warn(`[Upload Action] Could not extract key from old file URL: ${oldFileUrl}`)
       }
     }
 
-    // 2. Fazer upload do novo arquivo
+    // 2. Upload the new file
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
@@ -87,9 +126,10 @@ export async function uploadFileToR2(
     await S3.send(command)
 
     const publicUrl = `${R2_PUBLIC_BUCKET_URL}/${filePath}`
+    console.log(`[Upload Action] File uploaded successfully. Public URL: ${publicUrl}`)
     return { success: true, url: publicUrl }
   } catch (error: any) {
-    console.error('Erro ao fazer upload para Cloudflare R2:', error)
+    console.error('[Upload Action] Error uploading to Cloudflare R2:', error)
     return { success: false, message: error.message || 'Erro desconhecido ao fazer upload.' }
   }
 }
