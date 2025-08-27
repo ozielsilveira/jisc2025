@@ -983,14 +983,40 @@ export default function ProfilePage() {
             <TabsContent value='register' className='space-y-4 sm:space-y-6'>
               {/* Status Cards */}
               {athleteStatus === 'approved' && (
-                <div className='px-1 sm:px-0'>
+                <div className='space-y-6'>
                   <StatusCard
                     status='approved'
-                    title='Documentos Aprovados'
-                    description='Seus documentos foram aprovados. Bem-vindo ao time!'
+                    title='Cadastro Aprovado!'
+                    description='Parabéns! Seu cadastro foi analisado e aprovado. Você já faz parte do time.'
                     icon={CheckCircle}
                     iconColor='text-green-500'
                   />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Seus Documentos</CardTitle>
+                      <CardDescription>
+                        Estes são os documentos que você enviou. Eles não podem ser alterados.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                      {athlete?.cnh_cpf_document_url && (
+                        <UploadedFileDisplay
+                          url={athlete.cnh_cpf_document_url}
+                          label='Documento com foto'
+                          canReplace={false}
+                          fileType='document'
+                        />
+                      )}
+                      {athlete?.enrollment_document_url && (
+                        <UploadedFileDisplay
+                          url={athlete.enrollment_document_url}
+                          label='Atestado de matrícula'
+                          canReplace={false}
+                          fileType='enrollment'
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
