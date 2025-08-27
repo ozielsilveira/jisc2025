@@ -1,17 +1,17 @@
 'use client'
 
-import type React from 'react'
-import { useEffect, useState } from 'react'
+import { uploadFileToR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { useUserRole } from '@/hooks/use-user-role'
 import { supabase } from '@/lib/supabase'
 import { FileUp } from 'lucide-react'
-import { useUserRole } from '@/hooks/use-user-role'
-import { uploadFileToR2 } from '@/actions/upload'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 
 type AthleticData = {
   id: string
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         setSelectedFile(null)
         // Clear file input visually
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-        if(fileInput) fileInput.value = '';
+        if (fileInput) fileInput.value = '';
 
       } else {
         throw new Error(result.message || 'Falha no upload do arquivo.')
@@ -187,8 +187,8 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleStatuteUpload} disabled={isUploading || !selectedFile}>
-                <FileUp className='h-4 w-4 mr-2' />
+              <Button onClick={handleStatuteUpload} disabled={isUploading || !selectedFile} className="bg-blue-500 text-white">
+                <FileUp className='h-4 w-4 mr-2 text-white' />
                 {isUploading ? 'Enviando...' : 'Enviar Documento'}
               </Button>
             </CardFooter>
