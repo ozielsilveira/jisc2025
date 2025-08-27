@@ -13,7 +13,6 @@ interface DocumentModalProps {
 
 export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualizar Documento' }: DocumentModalProps) {
   const [isMobile, setIsMobile] = useState(false)
-  const [aspectRatio, setAspectRatio] = useState(16 / 9)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -28,49 +27,36 @@ export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualiza
 
   const isImage = documentUrl && /\.(jpg|jpeg|png|gif)$/i.test(documentUrl)
 
-  const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const { naturalWidth, naturalHeight } = event.currentTarget
-    setAspectRatio(naturalWidth / naturalHeight)
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn('p-0', isMobile ? 'max-w-[95vw] w-[95vw]' : 'max-w-4xl')}>
+      <DialogContent
+        className={cn(
+          'p-0 flex flex-col',
+          isMobile ? 'max-w-[95vw] w-[95vw] h-[80vh]' : 'max-w-6xl w-full h-[90vh]'
+        )}
+      >
         <DialogHeader className='p-6 pb-4'>
           <DialogTitle className='text-xl font-semibold text-gray-900'>{title}</DialogTitle>
         </DialogHeader>
 
         <div className='flex-1 min-h-0 px-6 pb-6'>
           {documentUrl ? (
-            <div
-              className={cn(
-                'w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50',
-                isMobile ? 'h-auto' : ''
-              )}
-              style={{
-                aspectRatio: isMobile && isImage ? 'auto' : aspectRatio,
-                height: !isMobile ? '70vh' : undefined
-              }}
-            >
+            <div className='w-full h-full rounded-lg border bg-gray-50 flex items-center justify-center overflow-hidden'>
               {isImage ? (
-                <div
-                  className='w-full h-full overflow-auto'
-                  style={{
-                    touchAction: 'pinch-zoom',
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
-                  <img
-                    src={documentUrl}
-                    alt='Documento'
-                    onLoad={handleImageLoad}
-                    className='w-full h-full object-contain'
-                    style={{
-                      maxWidth: 'none',
-                      touchAction: 'pinch-zoom'
-                    }}
-                  />
-                </div>
+                isMobile ? (
+                  <div className='w-full h-full overflow-auto' style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <img
+                      src={documentUrl}
+                      alt='Documento'
+                      style={{
+                        maxWidth: 'none',
+                        touchAction: 'pinch-zoom pan-y pan-x'
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <img src={documentUrl} alt='Documento' className='object-contain max-w-full max-h-full' />
+                )
               ) : (
                 <iframe src={documentUrl} className='w-full h-full' title='Documento' />
               )}
