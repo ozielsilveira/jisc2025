@@ -13,6 +13,7 @@ interface DocumentModalProps {
 
 export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualizar Documento' }: DocumentModalProps) {
   const [isMobile, setIsMobile] = useState(false)
+  const [aspectRatio, setAspectRatio] = useState(16 / 9)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -25,9 +26,16 @@ export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualiza
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const isImage = documentUrl && /\.(jpg|jpeg|png|gif)$/i.test(documentUrl)
+
+  const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget
+    setAspectRatio(naturalWidth / naturalHeight)
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn('max-h-[90vh] p-0', isMobile ? 'max-w-[95vw] w-[95vw]' : 'max-w-4xl')}>
+      <DialogContent className={cn('p-0', isMobile ? 'max-w-[95vw] w-[95vw]' : 'max-w-4xl')}>
         <DialogHeader className='p-6 pb-4'>
           <DialogTitle className='text-xl font-semibold text-gray-900'>{title}</DialogTitle>
         </DialogHeader>
@@ -37,10 +45,14 @@ export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualiza
             <div
               className={cn(
                 'w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50',
-                isMobile ? 'h-[70vh]' : 'h-[70vh]'
+                isMobile ? 'h-auto' : ''
               )}
+              style={{
+                aspectRatio: isMobile && isImage ? 'auto' : aspectRatio,
+                height: !isMobile ? '70vh' : undefined
+              }}
             >
-              {isMobile ? (
+              {isImage ? (
                 <div
                   className='w-full h-full overflow-auto'
                   style={{
@@ -49,8 +61,9 @@ export function DocumentModal({ isOpen, onClose, documentUrl, title = 'Visualiza
                   }}
                 >
                   <img
-                    src={documentUrl || '/placeholder.svg'}
+                    src={documentUrl}
                     alt='Documento'
+                    onLoad={handleImageLoad}
                     className='w-full h-full object-contain'
                     style={{
                       maxWidth: 'none',
