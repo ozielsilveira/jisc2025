@@ -191,9 +191,134 @@ export const packagesService = {
     return data
   },
 
+  // Buscar pacotes SEM cache (dados sempre frescos)
+  async getAllFresh(): Promise<Package[]> {
+    const { data, error } = await supabase.from('packages').select('*').order('price')
+
+    if (error) throw error
+
+    return data
+  },
+
   // Invalidar cache de pacotes
   invalidate() {
     cache.delete(CACHE_KEYS.PACKAGES)
+  }
+}
+
+export const athletePackagesService = {
+  // Atualizar ou criar pacote de atleta
+  async upsertPackage(athleteId: string, packageId: string, paymentStatus: string = 'pending'): Promise<void> {
+    // Verificar se já existe um registro
+    const { data: existing, error: fetchError } = await supabase
+      .from('athlete_packages')
+      .select('id')
+      .eq('athlete_id', athleteId)
+      .eq('package_id', packageId)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    if (existing) {
+      // Atualizar registro existente
+      const { error: updateError } = await supabase
+        .from('athlete_packages')
+        .update({
+          payment_status: paymentStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existing.id)
+
+      if (updateError) throw updateError
+    } else {
+      // Inserir novo registro
+      const { error: insertError } = await supabase
+        .from('athlete_packages')
+        .insert({
+          athlete_id: athleteId,
+          package_id: packageId,
+          payment_status: paymentStatus
+        })
+
+      if (insertError) throw insertError
+    }
+
+    // Invalidar cache relacionado
+    invalidateCache.athlete(athleteId)
+    invalidateCache.athletesList()
+  },
+
+  // Alterar pacote do atleta com regras de status
+  async changeAthletePackage(athleteId: string, packageId: string): Promise<void> {
+    // 1. Primeiro, obter o status atual do atleta
+    const { data: athlete, error: athleteError } = await supabase
+      .from('athletes')
+      .select('status')
+      .eq('id', athleteId)
+      .single()
+
+    if (athleteError) throw athleteError
+
+    // 2. Aplicar regras de status conforme especificado
+    let newStatus = athlete.status
+    switch (athlete.status) {
+      case 'approved':
+        newStatus = 'sent'
+        break
+      case 'sent':
+        newStatus = 'sent' // mantém sent
+        break
+      case 'pending':
+        newStatus = 'pending' // mantém pending
+        break
+      case 'rejected':
+        newStatus = 'rejected' // mantém rejected
+        break
+      default:
+        // Para outros status, mantém o atual
+        newStatus = athlete.status
+    }
+
+    // 3. Atualizar o status do atleta se necessário
+    if (newStatus !== athlete.status) {
+      const { error: statusUpdateError } = await supabase
+        .from('athletes')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', athleteId)
+
+      if (statusUpdateError) throw statusUpdateError
+    }
+
+    // 4. Atualizar ou criar o pacote
+    await this.upsertPackage(athleteId, packageId, 'pending')
+
+    // 5. Invalidar cache relacionado
+    invalidateCache.athlete(athleteId)
+    invalidateCache.athletesList()
+  },
+
+  // Buscar pacotes de um atleta
+  async getByAthleteId(athleteId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('athlete_packages')
+      .select(`
+        *,
+        package:packages!athlete_packages_package_id_fkey(*)
+      `)
+      .eq('athlete_id', athleteId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  // Invalidar cache de pacotes de atleta
+  invalidateByAthlete(athleteId: string) {
+    invalidateCache.athlete(athleteId)
+    invalidateCache.athletesList()
   }
 }
 
@@ -282,6 +407,43 @@ export const athleteService = {
     }
 
     cache.set(cacheKey, formattedAthlete, 5 * 60 * 1000)
+    return formattedAthlete
+  },
+
+  // Buscar atleta por usuário SEM cache (dados sempre frescos)
+  async getByUserIdFresh(userId: string): Promise<Athlete | null> {
+    const { data, error } = await supabase
+      .from('athletes')
+      .select(
+        `
+        *,
+        user:users!athletes_user_id_fkey(*),
+        athletic:athletics!athletes_athletic_id_fkey(*),
+        athlete_sports!athlete_sports_athlete_id_fkey(
+          sport:sports!athlete_sports_sport_id_fkey(*)
+        ),
+        athlete_packages!athlete_packages_athlete_id_fkey(
+          *,
+          package:packages!athlete_packages_package_id_fkey(*)
+        )
+      `
+      )
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+
+    if (!data) {
+      return null
+    }
+
+    // Formatar dados
+    const formattedAthlete = {
+      ...data,
+      sports: data.athlete_sports?.map((as: any) => as.sport).filter(Boolean) || [],
+      athlete_packages: data.athlete_packages || []
+    }
+
     return formattedAthlete
   },
 
