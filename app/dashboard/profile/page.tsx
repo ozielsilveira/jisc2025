@@ -484,7 +484,7 @@ export default function ProfilePage() {
         size: file.size
       })
 
-      if (!presignedUrlResult.success) {
+      if (!presignedUrlResult.success || !presignedUrlResult.data) {
         throw new Error(presignedUrlResult.message || 'Falha ao obter URL de upload.')
       }
 
@@ -662,7 +662,7 @@ export default function ProfilePage() {
       if (documentFile) {
         setCurrentUploadStep('Enviando documento...')
         const presignedUrlResult = await getPresignedUrl(user.id, 'document', documentFile)
-        if (!presignedUrlResult.success) throw new Error(presignedUrlResult.message)
+        if (!presignedUrlResult.success || !presignedUrlResult.data) throw new Error(presignedUrlResult.message)
         const { uploadUrl, publicUrl } = presignedUrlResult.data
         const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: documentFile })
         if (!uploadResponse.ok) throw new Error('Falha no upload do documento.')
@@ -674,7 +674,7 @@ export default function ProfilePage() {
       if (enrollmentFile) {
         setCurrentUploadStep('Enviando atestado de matrícula...')
         const presignedUrlResult = await getPresignedUrl(user.id, 'enrollment', enrollmentFile)
-        if (!presignedUrlResult.success) throw new Error(presignedUrlResult.message)
+        if (!presignedUrlResult.success || !presignedUrlResult.data) throw new Error(presignedUrlResult.message)
         const { uploadUrl, publicUrl } = presignedUrlResult.data
         const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: enrollmentFile })
         if (!uploadResponse.ok) throw new Error('Falha no upload do atestado.')
