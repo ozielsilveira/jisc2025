@@ -165,6 +165,7 @@ export default function AthletesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value='all'>Todos os Status</SelectItem>
+                  <SelectItem value='pending'>Pendentes</SelectItem>
                   <SelectItem value='sent'>Em análise</SelectItem>
                   <SelectItem value='approved'>Aprovado</SelectItem>
                   <SelectItem value='rejected'>Rejeitado</SelectItem>
