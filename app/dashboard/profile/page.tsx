@@ -1,5 +1,6 @@
 'use client'
 
+import { updateAthleteDocument } from '@/actions/athlete'
 import { uploadFileToR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -500,27 +501,9 @@ export default function ProfilePage() {
 
       setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
 
-      // Optimistic update - update UI immediately
-      const updateData: Partial<Athlete> = {
-        status: 'sent'
-      }
-
-      if (type === 'document') {
-        updateData.cnh_cpf_document_url = uploadResult.url
-      } else {
-        updateData.enrollment_document_url = uploadResult.url
-      }
-      const { data: updatedAthlete, error: updateError } = await supabase
-        .from('athletes')
-        .update(updateData)
-        .eq('id', athlete.id)
-        .select()
-        .single()
-
-      if (updateError) {
-        // Refetch the latest athlete data on error
-        refetchAthlete()
-        throw updateError
+      const dbUpdateResult = await updateAthleteDocument(athlete.id, type, uploadResult.url!)
+      if (!dbUpdateResult.success) {
+        throw new Error(dbUpdateResult.message || 'Erro ao atualizar o banco de dados.')
       }
 
       // Confirm the update by refetching the latest data
