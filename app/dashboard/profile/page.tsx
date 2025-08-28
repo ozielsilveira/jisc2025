@@ -262,7 +262,13 @@ export default function ProfilePage() {
   const { athlete, loading: athleteLoading, refetch: refetchAthlete } = useAthleteData(user?.id)
 
   const isLoading = profileLoading || sportsLoading || athleteLoading
-  const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
+  const [athleteStatus, setAthleteStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (athlete) {
+      setAthleteStatus(athlete.status)
+    }
+  }, [athlete])
 
   // File replacement state - optimized for real-time updates
   const [isReplacingDocument, setIsReplacingDocument] = useState(false)
@@ -293,35 +299,35 @@ export default function ProfilePage() {
     const filesToPersist = {
       documentFile: documentFile
         ? {
-            name: documentFile.name,
-            size: documentFile.size,
-            type: documentFile.type,
-            lastModified: documentFile.lastModified
-          }
+          name: documentFile.name,
+          size: documentFile.size,
+          type: documentFile.type,
+          lastModified: documentFile.lastModified
+        }
         : null,
       enrollmentFile: enrollmentFile
         ? {
-            name: enrollmentFile.name,
-            size: enrollmentFile.size,
-            type: enrollmentFile.type,
-            lastModified: enrollmentFile.lastModified
-          }
+          name: enrollmentFile.name,
+          size: enrollmentFile.size,
+          type: enrollmentFile.type,
+          lastModified: enrollmentFile.lastModified
+        }
         : null,
       newDocumentFile: newDocumentFile
         ? {
-            name: newDocumentFile.name,
-            size: newDocumentFile.size,
-            type: newDocumentFile.type,
-            lastModified: newDocumentFile.lastModified
-          }
+          name: newDocumentFile.name,
+          size: newDocumentFile.size,
+          type: newDocumentFile.type,
+          lastModified: newDocumentFile.lastModified
+        }
         : null,
       newEnrollmentFile: newEnrollmentFile
         ? {
-            name: newEnrollmentFile.name,
-            size: newEnrollmentFile.size,
-            type: newEnrollmentFile.type,
-            lastModified: newEnrollmentFile.lastModified
-          }
+          name: newEnrollmentFile.name,
+          size: newEnrollmentFile.size,
+          type: newEnrollmentFile.type,
+          lastModified: newEnrollmentFile.lastModified
+        }
         : null,
       selectedSports,
       agreedToTerms,
@@ -360,7 +366,7 @@ export default function ProfilePage() {
         setIsReplacingEnrollment(parsed.isReplacingEnrollment || false)
         setUploadProgress(parsed.uploadProgress || {})
         setUploadStatus(parsed.uploadStatus || {})
-        
+
 
         // Show recovery message if there were files
         if (parsed.documentFile || parsed.enrollmentFile || parsed.newDocumentFile || parsed.newEnrollmentFile) {
@@ -900,9 +906,8 @@ export default function ProfilePage() {
                       )}
                       <div className='flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3'>
                         <div
-                          className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${
-                            isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
-                          }`}
+                          className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
+                            }`}
                         >
                           <Icon className='h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8' />
                         </div>
@@ -1242,9 +1247,8 @@ export default function ProfilePage() {
                           </div>
                           {/* Visual feedback for checkbox state */}
                           <div
-                            className={`transition-all duration-200 rounded-lg p-3 border-2 ${
-                              agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                            }`}
+                            className={`transition-all duration-200 rounded-lg p-3 border-2 ${agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                              }`}
                           >
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
                               {agreedToTerms ? (
