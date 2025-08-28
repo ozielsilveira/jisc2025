@@ -143,6 +143,18 @@ export const invalidateCache = {
     cache.delete(CACHE_KEYS.ATHLETE_PACKAGES(athleteId))
   },
 
+  // Invalidar dados de um atleta por usuário
+  athleteByUser: (userId: string) => {
+    cache.delete(CACHE_KEYS.ATHLETE_BY_USER(userId))
+    // Also invalidate any athlete entries that might reference this user
+    const stats = cache.getStats()
+    stats.keys.forEach((key) => {
+      if (key.startsWith('athlete_') && key.includes(userId)) {
+        cache.delete(key)
+      }
+    })
+  },
+
   // Invalidar listas de atletas
   athletesList: () => {
     const stats = cache.getStats()

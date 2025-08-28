@@ -1,6 +1,7 @@
 'use client'
 
-import { uploadFileToR2 } from '@/actions/upload'
+import { updateAthleteDocument } from '@/actions/athlete'
+import { getPresignedUrl, deleteFileFromR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -34,6 +35,7 @@ import {
 } from 'lucide-react'
 import type React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useFileUpload } from '@/hooks/use-file-upload'
 
 type UserProfile = {
   id: string
@@ -269,7 +271,7 @@ export default function ProfilePage() {
   const [isReplacingEnrollment, setIsReplacingEnrollment] = useState(false)
   const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null)
   const [newEnrollmentFile, setNewEnrollmentFile] = useState<File | null>(null)
-  const [isUploadingReplacement, setIsUploadingReplacement] = useState(false)
+  // Removed: const [isUploadingReplacement, setIsUploadingReplacement] = useState(false)
 
   // Real-time upload progress state
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
@@ -360,7 +362,7 @@ export default function ProfilePage() {
         setIsReplacingEnrollment(parsed.isReplacingEnrollment || false)
         setUploadProgress(parsed.uploadProgress || {})
         setUploadStatus(parsed.uploadStatus || {})
-        
+
 
         // Show recovery message if there were files
         if (parsed.documentFile || parsed.enrollmentFile || parsed.newDocumentFile || parsed.newEnrollmentFile) {
@@ -457,75 +459,28 @@ export default function ProfilePage() {
     }
   }
 
-  const handleFileReplacement = async (file: File, type: 'document' | 'enrollment') => {
-    if (!user || !athlete) return
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      return
-    }
-
-    const uploadKey = `${type}-replacement`
-    setIsUploadingReplacement(true)
-    setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'uploading' }))
-    setUploadProgress((prev) => ({ ...prev, [uploadKey]: 0 }))
-
-    try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => ({
-          ...prev,
-          [uploadKey]: Math.min((prev[uploadKey] || 0) + 10, 90)
-        }))
-      }, 200)
-
-      progressIntervalsRef.current[uploadKey] = progressInterval
-
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const currentUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
-      const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
-
-      clearInterval(progressInterval)
-      delete progressIntervalsRef.current[uploadKey]
-
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.message || 'Erro ao fazer upload do arquivo.')
+  const { replaceFile: uploadReplaceFile, isUploading: isReplacingFile } = useFileUpload({
+    onSuccess: async (url: string, fileType: string) => {
+      console.log(`File replacement success callback for ${fileType}:`, url)
+      
+      // Update local state immediately
+      if (athlete) {
+        if (fileType === 'document') {
+          athlete.cnh_cpf_document_url = url
+        } else {
+          athlete.enrollment_document_url = url
+        }
+        athlete.status = 'sent'
+        
+        console.log(`Updated local athlete state for ${fileType}:`, {
+          documentUrl: athlete.cnh_cpf_document_url,
+          enrollmentUrl: athlete.enrollment_document_url,
+          status: athlete.status
+        })
       }
 
-      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
-
-      // Optimistic update - update UI immediately
-      let updateData: Partial<Athlete> = {}
-
-      if (type === 'document') {
-        updateData.cnh_cpf_document_url = uploadResult.url
-      } else {
-        updateData.enrollment_document_url = uploadResult.url
-      }
-      const { data: updatedAthlete, error: updateError } = await supabase
-        .from('athletes')
-        .update(updateData)
-        .eq('id', athlete.id)
-        .select()
-        .single()
-
-      if (updateError) {
-        // Refetch the latest athlete data on error
-        refetchAthlete()
-        throw updateError
-      }
-
-      // Confirm the update by refetching the latest data
-      refetchAthlete()
-
-      // Reset replacement state
-      if (type === 'document') {
+      // Reset UI state
+      if (fileType === 'document') {
         setIsReplacingDocument(false)
         setNewDocumentFile(null)
       } else {
@@ -533,31 +488,74 @@ export default function ProfilePage() {
         setNewEnrollmentFile(null)
       }
 
-      setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'success' }))
       setHasUnsavedFiles(false)
-
       sessionStorage.removeItem('profile-form-state')
+
+      // Wait a bit to ensure all operations are complete before refetching
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Refetch data to ensure consistency
+      try {
+        console.log('Refetching athlete data...')
+        await refetchAthlete()
+        console.log('Athlete data refetched successfully')
+      } catch (error) {
+        console.error('Error refetching athlete data:', error)
+        // Don't fail the operation if refetch fails
+      }
 
       toast({
         title: 'Arquivo substituído com sucesso!',
-        description: `${type === 'document' ? 'Documento' : 'Atestado de matrícula'} foi atualizado.`,
+        description: `${fileType === 'document' ? 'Documento' : 'Atestado de matrícula'} foi atualizado.`,
         variant: 'success'
       })
-    } catch (error) {
-      console.error('Error replacing file:', error)
-      setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'error' }))
+    },
+    onError: (error: Error) => {
+      console.error('File replacement error callback:', error)
       toast({
         title: 'Erro ao substituir arquivo',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado.',
+        description: error.message || 'Ocorreu um erro inesperado.',
         variant: 'destructive'
       })
-    } finally {
-      setIsUploadingReplacement(false)
-      // Clean up interval if it exists
-      if (progressIntervalsRef.current[uploadKey]) {
-        clearInterval(progressIntervalsRef.current[uploadKey])
-        delete progressIntervalsRef.current[uploadKey]
-      }
+    }
+  })
+
+  const handleFileReplacement = async (file: File, type: 'document' | 'enrollment') => {
+    if (!user || !athlete) return
+
+    // Capture the old file URL BEFORE starting the replacement process
+    const oldFileUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
+    
+    console.log(`Starting file replacement for ${type}:`, {
+      oldUrl: oldFileUrl,
+      newFile: file.name,
+      userId: user.id,
+      athleteId: athlete.id
+    })
+    
+    const result = await uploadReplaceFile(
+      file,
+      user.id,
+      type,
+      oldFileUrl,
+      async (url: string) => {
+        console.log(`Updating database with new URL for ${type}:`, url)
+        const updateResult = await updateAthleteDocument(athlete.id, type, url)
+        console.log(`Database update result for ${type}:`, updateResult)
+        return updateResult
+      },
+      `${type}-replacement`
+    )
+
+    if (!result.success) {
+      console.error('File replacement failed:', result.error)
+      toast({
+        title: 'Erro ao substituir arquivo',
+        description: result.error || 'Ocorreu um erro inesperado.',
+        variant: 'destructive'
+      })
+    } else {
+      console.log(`File replacement successful for ${type}:`, result.url)
     }
   }
 
@@ -669,31 +667,24 @@ export default function ProfilePage() {
       let documentUrl = athlete?.cnh_cpf_document_url
       if (documentFile) {
         setCurrentUploadStep('Enviando documento...')
-        const formDataDoc = new FormData()
-        formDataDoc.append('file', documentFile)
-        const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
-        }
-        documentUrl = uploadResult.url
+        const presignedUrlResult = await getPresignedUrl(user.id, 'document', documentFile)
+        if (!presignedUrlResult.success || !presignedUrlResult.data) throw new Error(presignedUrlResult.message)
+        const { uploadUrl, publicUrl } = presignedUrlResult.data
+        const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: documentFile })
+        if (!uploadResponse.ok) throw new Error('Falha no upload do documento.')
+        documentUrl = publicUrl
         setUploadProgress((prev) => ({ ...prev, registration: 40 }))
       }
 
       let enrollmentUrl = athlete?.enrollment_document_url
       if (enrollmentFile) {
         setCurrentUploadStep('Enviando atestado de matrícula...')
-        const formDataEnroll = new FormData()
-        formDataEnroll.append('file', enrollmentFile)
-        const uploadResult = await uploadFileToR2(
-          formDataEnroll,
-          user.id,
-          'enrollment',
-          athlete?.enrollment_document_url
-        )
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
-        }
-        enrollmentUrl = uploadResult.url
+        const presignedUrlResult = await getPresignedUrl(user.id, 'enrollment', enrollmentFile)
+        if (!presignedUrlResult.success || !presignedUrlResult.data) throw new Error(presignedUrlResult.message)
+        const { uploadUrl, publicUrl } = presignedUrlResult.data
+        const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: enrollmentFile })
+        if (!uploadResponse.ok) throw new Error('Falha no upload do atestado.')
+        enrollmentUrl = publicUrl
         setUploadProgress((prev) => ({ ...prev, registration: 60 }))
       }
 
@@ -983,14 +974,40 @@ export default function ProfilePage() {
             <TabsContent value='register' className='space-y-4 sm:space-y-6'>
               {/* Status Cards */}
               {athleteStatus === 'approved' && (
-                <div className='px-1 sm:px-0'>
+                <div className='space-y-6'>
                   <StatusCard
                     status='approved'
-                    title='Documentos Aprovados'
-                    description='Seus documentos foram aprovados. Bem-vindo ao time!'
+                    title='Cadastro Aprovado!'
+                    description='Parabéns! Seu cadastro foi analisado e aprovado. Você já faz parte do time.'
                     icon={CheckCircle}
                     iconColor='text-green-500'
                   />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Seus Documentos</CardTitle>
+                      <CardDescription>
+                        Estes são os documentos que você enviou. Eles não podem ser alterados.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                      {athlete?.cnh_cpf_document_url && (
+                        <UploadedFileDisplay
+                          url={athlete.cnh_cpf_document_url}
+                          label='Documento com foto'
+                          canReplace={false}
+                          fileType='document'
+                        />
+                      )}
+                      {athlete?.enrollment_document_url && (
+                        <UploadedFileDisplay
+                          url={athlete.enrollment_document_url}
+                          label='Atestado de matrícula'
+                          canReplace={false}
+                          fileType='enrollment'
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
@@ -1108,7 +1125,7 @@ export default function ProfilePage() {
                                 onCancel={() => handleCancelReplacement('document')}
                                 onConfirm={() => handleFileReplacement(newDocumentFile!, 'document')}
                                 selectedFile={newDocumentFile}
-                                isUploading={isUploadingReplacement}
+                                isUploading={isReplacingFile}
                                 fileType='document'
                               />
                             ) : (
@@ -1163,7 +1180,7 @@ export default function ProfilePage() {
                                 onCancel={() => handleCancelReplacement('enrollment')}
                                 onConfirm={() => handleFileReplacement(newEnrollmentFile!, 'enrollment')}
                                 selectedFile={newEnrollmentFile}
-                                isUploading={isUploadingReplacement}
+                                isUploading={isReplacingFile}
                                 fileType='enrollment'
                               />
                             ) : (
@@ -1247,7 +1264,7 @@ export default function ProfilePage() {
                             className='w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg'
                             disabled={
                               isSubmitting ||
-                              isUploadingReplacement ||
+                              isReplacingFile ||
                               (!documentFile && !athlete?.cnh_cpf_document_url) ||
                               (!enrollmentFile && !athlete?.enrollment_document_url) ||
                               selectedSports.length === 0 ||
