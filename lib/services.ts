@@ -442,6 +442,11 @@ export const athleteService = {
     invalidateCache.athlete(athleteId)
   },
 
+  // Invalidar cache de atleta por usuário
+  invalidateAthleteByUser(userId: string) {
+    invalidateCache.athleteByUser(userId)
+  },
+
   // Invalidar cache de listas
   invalidateList() {
     invalidateCache.athletesList()

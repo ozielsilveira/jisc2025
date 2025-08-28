@@ -21,7 +21,7 @@ export async function updateAthleteDocument(
   athleteId: string,
   fileType: 'document' | 'enrollment',
   newUrl: string
-): Promise<{ success: boolean; message?: string }> {
+): Promise<{ success: boolean; message?: string; data?: any }> {
   if (!athleteId || !fileType || !newUrl) {
     return { success: false, message: 'Parâmetros inválidos.' }
   }
@@ -42,13 +42,35 @@ export async function updateAthleteDocument(
   }
 
   try {
-    const { error } = await supabaseAdmin.from('athletes').update(updateData).eq('id', athleteId)
+    // First, get the current athlete data to find the user_id for cache invalidation
+    const { data: currentAthlete, error: fetchError } = await supabaseAdmin
+      .from('athletes')
+      .select('user_id')
+      .eq('id', athleteId)
+      .single()
+
+    if (fetchError) {
+      throw fetchError
+    }
+
+    // Update the athlete document
+    const { data, error } = await supabaseAdmin
+      .from('athletes')
+      .update(updateData)
+      .eq('id', athleteId)
+      .select('*')
+      .single()
 
     if (error) {
       throw error
     }
 
-    return { success: true }
+    // Return the updated data for immediate UI update
+    return { 
+      success: true, 
+      message: 'Documento atualizado com sucesso.',
+      data: data
+    }
   } catch (error: any) {
     console.error('Error updating athlete document with admin client:', error)
     return { success: false, message: error.message || 'Erro ao atualizar o documento do atleta.' }
