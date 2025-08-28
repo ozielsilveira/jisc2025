@@ -243,6 +243,28 @@ FOR SELECT USING (true);
 CREATE POLICY IF NOT EXISTS "Users can view all packages" ON packages
 FOR SELECT USING (true);
 
+-- Athlete Packages policies
+CREATE POLICY IF NOT EXISTS "Users can view their own athlete packages" ON athlete_packages
+FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM athletes WHERE id = athlete_id AND user_id = auth.uid()
+  )
+);
+
+CREATE POLICY IF NOT EXISTS "Users can insert their own athlete packages" ON athlete_packages
+FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM athletes WHERE id = athlete_id AND user_id = auth.uid()
+  )
+);
+
+CREATE POLICY IF NOT EXISTS "Users can update their own athlete packages" ON athlete_packages
+FOR UPDATE USING (
+  EXISTS (
+    SELECT 1 FROM athletes WHERE id = athlete_id AND user_id = auth.uid()
+  )
+);
+
 -- Tickets policies
 CREATE POLICY IF NOT EXISTS "Users can view all tickets" ON tickets
 FOR SELECT USING (true);
