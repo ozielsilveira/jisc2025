@@ -1,5 +1,6 @@
 'use server'
 
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 
 // Certifique-se de que estas variáveis de ambiente estão configuradas no seu ambiente Vercel
@@ -33,7 +34,7 @@ const S3 = new S3Client({
 })
 
 // Helper function to determine file extension safely
-const getFileExtension = (file: File): string => {
+const getFileExtension = (file: { name: string; type: string }): string => {
   const filename = file.name || ''
   const filenameExt = filename.split('.').pop()?.toLowerCase()
 
@@ -62,57 +63,68 @@ const getFileExtension = (file: File): string => {
   return 'bin'
 }
 
-export async function uploadFileToR2(
-  formData: FormData,
+
+export async function deleteFileFromR2(fileUrl: string) {
+  if (!fileUrl) {
+    return { success: false, message: 'Nenhuma URL de arquivo fornecida.' }
+  }
+
+  const fileKey = fileUrl.replace(`${R2_PUBLIC_BUCKET_URL}/`, '')
+  if (!fileKey || fileKey === fileUrl) {
+    console.warn(`Could not extract key from file URL: ${fileUrl}`)
+    return { success: false, message: 'URL de arquivo inválida.' }
+  }
+
+  const deleteCommand = new DeleteObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: fileKey
+  })
+
+  try {
+    await S3.send(deleteCommand)
+    return { success: true }
+  } catch (error: any) {
+    console.error(`Error deleting file from R2: ${fileKey}`, error)
+    return { success: false, message: 'Erro ao deletar arquivo antigo.' }
+  }
+}
+
+export async function getPresignedUrl(
   userId: string,
   fileType: 'document' | 'enrollment',
-  oldFileUrl?: string
+  file: { name: string; type: string; size: number }
 ) {
-  const file = formData.get('file') as File | null
   if (!file) {
     return { success: false, message: 'Nenhum arquivo fornecido.' }
   }
 
-  // Server-side file size validation
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return { success: false, message: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.` }
   }
 
   const fileExt = getFileExtension(file)
-  const filePath = `${userId}/${fileType}_${Date.now()}.${fileExt}`
+  const key = `${userId}/${fileType}_${Date.now()}.${fileExt}`
+
+  const putCommand = new PutObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    ContentType: file.type,
+    ContentLength: file.size
+  })
 
   try {
-    // 1. Delete the previous file, if an old URL is provided
-    if (oldFileUrl) {
-      const oldFileKey = oldFileUrl.replace(`${R2_PUBLIC_BUCKET_URL}/`, '')
-      if (oldFileKey && oldFileKey !== oldFileUrl) {
-        const deleteCommand = new DeleteObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: oldFileKey
-        })
-        await S3.send(deleteCommand)
-      } else {
-        console.warn(`Could not extract key from old file URL: ${oldFileUrl}`)
+    const signedUrl = await getSignedUrl(S3, putCommand, { expiresIn: 60 * 5 }) // 5 minutes
+    const publicUrl = `${R2_PUBLIC_BUCKET_URL}/${key}`
+
+    return {
+      success: true,
+      data: {
+        uploadUrl: signedUrl,
+        publicUrl: publicUrl
       }
     }
-
-    // 2. Upload the new file
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
-    const command = new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: filePath,
-      Body: buffer,
-      ContentType: file.type
-    })
-
-    await S3.send(command)
-
-    const publicUrl = `${R2_PUBLIC_BUCKET_URL}/${filePath}`
-    return { success: true, url: publicUrl }
   } catch (error: any) {
-    console.error('Error uploading to Cloudflare R2:', error)
-    return { success: false, message: error.message || 'Erro desconhecido ao fazer upload.' }
+    console.error('Error creating presigned URL:', error)
+    return { success: false, message: 'Erro ao criar URL de upload.' }
   }
 }
