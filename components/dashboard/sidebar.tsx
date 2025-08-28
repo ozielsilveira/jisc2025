@@ -30,7 +30,7 @@ const NAV_ITEMS = [
         icon: 'User',
         href: '/dashboard/profile',
         roles: ['athlete'],
-      },
+      }
     ],
   },
   {
@@ -80,6 +80,12 @@ const NAV_ITEMS = [
         icon: 'FileText',
         href: '/dashboard/settings',
         roles: ['athletic'],
+      },
+      {
+        label: 'Alterar Pacote',
+        icon: 'Package',
+        href: '/dashboard/change-package',
+        roles: ['athlete'],
       },
     ],
   },

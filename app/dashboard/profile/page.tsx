@@ -3,7 +3,7 @@
 import { uploadFileToR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FileUpload } from '@/components/ui/file-upload'
 import { Label } from '@/components/ui/label'
@@ -24,6 +24,7 @@ import {
   Gamepad2,
   Heart,
   Loader2,
+  Package as PackageIcon,
   RefreshCw,
   Target,
   Trophy,
@@ -32,6 +33,7 @@ import {
   X,
   Zap
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -156,6 +158,7 @@ const UploadedFileDisplay = ({
 export default function ProfilePage() {
   const { user } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   // Usar hooks com cache
   const { profile, loading: profileLoading, error: profileError } = useUserData()
@@ -768,15 +771,60 @@ export default function ProfilePage() {
             <TabsContent value='register' className='space-y-4 sm:space-y-6'>
               {/* Status Cards */}
               {athleteStatus === 'approved' && (
-                <div className='px-1 sm:px-0'>
-                  <StatusCard
-                    status='approved'
-                    title='Documentos Aprovados'
-                    description='Seus documentos foram aprovados. Bem-vindo ao time!'
-                    icon={CheckCircle}
-                    iconColor='text-green-500'
-                  />
-                </div>
+                <>
+                  <div className='px-1 sm:px-0'>
+                    <StatusCard
+                      status='approved'
+                      title='Documentos Aprovados'
+                      description='Seus documentos foram aprovados. Bem-vindo ao time!'
+                      icon={CheckCircle}
+                      iconColor='text-green-500'
+                    />
+                  </div>
+
+                  <Card className='shadow-lg w-full overflow-hidden'>
+                    <CardHeader>
+                      <div className='flex items-center space-x-3'>
+                        <div className='p-2 bg-purple-500 bg-opacity-10 rounded-lg'>
+                          <PackageIcon className='h-6 w-6 text-purple-600' />
+                        </div>
+                        <div className='min-w-0'>
+                          <CardTitle className='text-lg sm:text-xl'>Meu Pacote</CardTitle>
+                          <CardDescription className='text-sm mt-1'>
+                            Informações sobre seu pacote atual e opções.
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                      {athlete?.athlete_packages && athlete.athlete_packages.length > 0 ? (
+                        <div>
+                          <h3 className='font-bold text-lg'>
+                            {athlete.athlete_packages[athlete.athlete_packages.length - 1].package.name}
+                          </h3>
+                          <p className='text-sm text-gray-500'>
+                            {athlete.athlete_packages[athlete.athlete_packages.length - 1].package.description}
+                          </p>
+                          <div className='mt-2'>
+                            <p>
+                              <strong>Status do Pagamento:</strong>{' '}
+                              {athlete.athlete_packages[athlete.athlete_packages.length - 1].payment_status}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p>Nenhum pacote selecionado ainda.</p>
+                      )}
+                    </CardContent>
+                    <CardFooter className='bg-gray-50 p-4'>
+                      <Button onClick={() => router.push('/dashboard/change-package')}>
+                        {athlete?.athlete_packages && athlete.athlete_packages.length > 0
+                          ? 'Alterar Pacote'
+                          : 'Escolher Pacote'}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </>
               )}
 
               {athleteStatus === 'sent' && (
