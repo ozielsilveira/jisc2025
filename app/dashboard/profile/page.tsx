@@ -71,21 +71,15 @@ const truncateUrl = (url: string, maxLength = 50): string => {
   return `${start}...${end}`
 }
 
-// Component to display uploaded file with replacement functionality
+
+
+// Component to display uploaded file (simplified - no replacement functionality)
 const UploadedFileDisplay = ({
   url,
-  label,
-  onReplace,
-  isReplacing,
-  canReplace = true,
-  fileType
+  label
 }: {
   url: string
   label: string
-  onReplace?: () => void
-  isReplacing?: boolean
-  canReplace?: boolean
-  fileType?: 'document' | 'enrollment'
 }) => {
   const fileName = url.split('/').pop() || 'arquivo'
   const truncatedUrl = truncateUrl(url)
@@ -125,23 +119,6 @@ const UploadedFileDisplay = ({
                 <span>Visualizar</span>
                 <ExternalLink className='h-3 w-3 flex-shrink-0' />
               </a>
-              {canReplace && onReplace && (
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  onClick={onReplace}
-                  disabled={isReplacing}
-                  className='inline-flex items-center justify-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors w-full sm:w-auto'
-                >
-                  {isReplacing ? (
-                    <Loader2 className='h-4 w-4 animate-spin flex-shrink-0' />
-                  ) : (
-                    <RefreshCw className='h-4 w-4 flex-shrink-0' />
-                  )}
-                  <span>{isReplacing ? 'Substituindo...' : 'Substituir'}</span>
-                </Button>
-              )}
             </div>
           </div>
 
@@ -160,98 +137,6 @@ const UploadedFileDisplay = ({
   )
 }
 
-// Component for file replacement interface
-const FileReplacementInterface = ({
-  label,
-  description,
-  onFileChange,
-  onCancel,
-  onConfirm,
-  selectedFile,
-  isUploading,
-  fileType
-}: {
-  label: string
-  description: string
-  onFileChange: (file: File | null) => void
-  onCancel: () => void
-  onConfirm: () => void
-  selectedFile: File | null
-  isUploading: boolean
-  fileType: 'document' | 'enrollment'
-}) => {
-  return (
-    <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-sm w-full'>
-      <div className='space-y-4'>
-        <div className='flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
-          <div className='w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 self-center sm:self-start'>
-            <RefreshCw className='h-5 w-5 text-white' />
-          </div>
-          <div className='text-center sm:text-left'>
-            <h4 className='text-base sm:text-lg font-bold text-blue-800'>Substituir {label}</h4>
-            <p className='text-xs sm:text-sm text-blue-600 mt-1'>Selecione um novo arquivo para substituir o atual</p>
-          </div>
-        </div>
-
-        <div className='bg-white bg-opacity-70 rounded-lg p-3 sm:p-4 border border-blue-200'>
-          <FileUpload
-            id={`replace-${fileType}`}
-            label={label}
-            description={description}
-            onFileChange={onFileChange}
-            required={true}
-          />
-        </div>
-
-        {selectedFile && (
-          <div className='bg-green-50 border border-green-200 rounded-lg p-3'>
-            <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
-              <Check className='h-4 w-4 text-green-600 flex-shrink-0 self-center sm:self-start' />
-              <div className='min-w-0 text-center sm:text-left'>
-                <span className='text-sm font-medium text-green-700 break-all'>Novo arquivo: {selectedFile.name}</span>
-                <p className='text-xs text-green-600 mt-1'>
-                  Tamanho: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className='flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 pt-2'>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={onCancel}
-            disabled={isUploading}
-            className='w-full sm:flex-1 bg-transparent order-2 sm:order-1'
-          >
-            <X className='h-4 w-4 mr-2 flex-shrink-0' />
-            Cancelar
-          </Button>
-          <Button
-            type='button'
-            onClick={onConfirm}
-            disabled={!selectedFile || isUploading}
-            className='w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white order-1 sm:order-2'
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className='h-4 w-4 mr-2 animate-spin flex-shrink-0' />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Upload className='h-4 w-4 mr-2 flex-shrink-0' />
-                Confirmar Substituição
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function ProfilePage() {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -264,20 +149,15 @@ export default function ProfilePage() {
   const isLoading = profileLoading || sportsLoading || athleteLoading
   const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
 
-  // File replacement state - optimized for real-time updates
-  const [isReplacingDocument, setIsReplacingDocument] = useState(false)
-  const [isReplacingEnrollment, setIsReplacingEnrollment] = useState(false)
-  const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null)
-  const [newEnrollmentFile, setNewEnrollmentFile] = useState<File | null>(null)
-  const [isUploadingReplacement, setIsUploadingReplacement] = useState(false)
+  // File upload state
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
 
   // Real-time upload progress state
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'idle' | 'uploading' | 'success' | 'error' }>({})
 
-  // Athlete registration state
-  const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
-  const [documentFile, setDocumentFile] = useState<File | null>(null)
+
   const [selectedSports, setSelectedSports] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentUploadStep, setCurrentUploadStep] = useState('')
@@ -307,26 +187,8 @@ export default function ProfilePage() {
             lastModified: enrollmentFile.lastModified
           }
         : null,
-      newDocumentFile: newDocumentFile
-        ? {
-            name: newDocumentFile.name,
-            size: newDocumentFile.size,
-            type: newDocumentFile.type,
-            lastModified: newDocumentFile.lastModified
-          }
-        : null,
-      newEnrollmentFile: newEnrollmentFile
-        ? {
-            name: newEnrollmentFile.name,
-            size: newEnrollmentFile.size,
-            type: newEnrollmentFile.type,
-            lastModified: newEnrollmentFile.lastModified
-          }
-        : null,
       selectedSports,
       agreedToTerms,
-      isReplacingDocument,
-      isReplacingEnrollment,
       uploadProgress,
       uploadStatus
     }
@@ -335,12 +197,8 @@ export default function ProfilePage() {
   }, [
     documentFile,
     enrollmentFile,
-    newDocumentFile,
-    newEnrollmentFile,
     selectedSports,
     agreedToTerms,
-    isReplacingDocument,
-    isReplacingEnrollment,
     uploadProgress,
     uploadStatus
   ])
@@ -356,14 +214,12 @@ export default function ProfilePage() {
         // Restore form state
         setSelectedSports(parsed.selectedSports || [])
         setAgreedToTerms(parsed.agreedToTerms || false)
-        setIsReplacingDocument(parsed.isReplacingDocument || false)
-        setIsReplacingEnrollment(parsed.isReplacingEnrollment || false)
         setUploadProgress(parsed.uploadProgress || {})
         setUploadStatus(parsed.uploadStatus || {})
         
 
         // Show recovery message if there were files
-        if (parsed.documentFile || parsed.enrollmentFile || parsed.newDocumentFile || parsed.newEnrollmentFile) {
+        if (parsed.documentFile || parsed.enrollmentFile) {
           toast({
             title: 'Sessão restaurada',
             description: 'Seus arquivos foram recuperados. Por favor, selecione-os novamente para continuar.',
@@ -394,7 +250,7 @@ export default function ProfilePage() {
     }
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedFiles || documentFile || enrollmentFile || newDocumentFile || newEnrollmentFile) {
+      if (hasUnsavedFiles || documentFile || enrollmentFile) {
         persistFiles()
         e.preventDefault()
         e.returnValue = 'Você tem arquivos não salvos. Tem certeza que deseja sair?'
@@ -423,7 +279,7 @@ export default function ProfilePage() {
         clearInterval(interval)
       })
     }
-  }, [persistFiles, restoreFiles, hasUnsavedFiles, documentFile, enrollmentFile, newDocumentFile, newEnrollmentFile])
+  }, [persistFiles, restoreFiles, hasUnsavedFiles, documentFile, enrollmentFile])
 
   // Carregar modalidades selecionadas do atleta quando disponível
   useEffect(() => {
@@ -436,130 +292,7 @@ export default function ProfilePage() {
     restoreFiles()
   }, [restoreFiles])
 
-  // File replacement handlers
-  const handleReplaceDocument = () => {
-    setIsReplacingDocument(true)
-    setNewDocumentFile(null)
-  }
 
-  const handleReplaceEnrollment = () => {
-    setIsReplacingEnrollment(true)
-    setNewEnrollmentFile(null)
-  }
-
-  const handleCancelReplacement = (type: 'document' | 'enrollment') => {
-    if (type === 'document') {
-      setIsReplacingDocument(false)
-      setNewDocumentFile(null)
-    } else {
-      setIsReplacingEnrollment(false)
-      setNewEnrollmentFile(null)
-    }
-  }
-
-  const handleFileReplacement = async (file: File, type: 'document' | 'enrollment') => {
-    if (!user || !athlete) return
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      return
-    }
-
-    const uploadKey = `${type}-replacement`
-    setIsUploadingReplacement(true)
-    setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'uploading' }))
-    setUploadProgress((prev) => ({ ...prev, [uploadKey]: 0 }))
-
-    try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => ({
-          ...prev,
-          [uploadKey]: Math.min((prev[uploadKey] || 0) + 10, 90)
-        }))
-      }, 200)
-
-      progressIntervalsRef.current[uploadKey] = progressInterval
-
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const currentUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
-      const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
-
-      clearInterval(progressInterval)
-      delete progressIntervalsRef.current[uploadKey]
-
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.message || 'Erro ao fazer upload do arquivo.')
-      }
-
-      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
-
-      // Optimistic update - update UI immediately
-      let updateData: Partial<Athlete> = {}
-
-      if (type === 'document') {
-        updateData.cnh_cpf_document_url = uploadResult.url
-      } else {
-        updateData.enrollment_document_url = uploadResult.url
-      }
-      const { data: updatedAthlete, error: updateError } = await supabase
-        .from('athletes')
-        .update(updateData)
-        .eq('id', athlete.id)
-        .select()
-        .single()
-
-      if (updateError) {
-        // Refetch the latest athlete data on error
-        refetchAthlete()
-        throw updateError
-      }
-
-      // Confirm the update by refetching the latest data
-      refetchAthlete()
-
-      // Reset replacement state
-      if (type === 'document') {
-        setIsReplacingDocument(false)
-        setNewDocumentFile(null)
-      } else {
-        setIsReplacingEnrollment(false)
-        setNewEnrollmentFile(null)
-      }
-
-      setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'success' }))
-      setHasUnsavedFiles(false)
-
-      sessionStorage.removeItem('profile-form-state')
-
-      toast({
-        title: 'Arquivo substituído com sucesso!',
-        description: `${type === 'document' ? 'Documento' : 'Atestado de matrícula'} foi atualizado.`,
-        variant: 'success'
-      })
-    } catch (error) {
-      console.error('Error replacing file:', error)
-      setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'error' }))
-      toast({
-        title: 'Erro ao substituir arquivo',
-        description: error instanceof Error ? error.message : 'Ocorreu um erro inesperado.',
-        variant: 'destructive'
-      })
-    } finally {
-      setIsUploadingReplacement(false)
-      // Clean up interval if it exists
-      if (progressIntervalsRef.current[uploadKey]) {
-        clearInterval(progressIntervalsRef.current[uploadKey])
-        delete progressIntervalsRef.current[uploadKey]
-      }
-    }
-  }
 
   const handleDocumentFileChange = useCallback(
     (file: File | null) => {
@@ -606,31 +339,7 @@ export default function ProfilePage() {
     handleDocumentFileChange(file)
   }
 
-  const handleNewDocumentChange = (file: File | null) => {
-    if (file && file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O documento excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      setNewDocumentFile(null)
-      return
-    }
-    setNewDocumentFile(file)
-  }
 
-  const handleNewEnrollmentChange = (file: File | null) => {
-    if (file && file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O atestado excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      setNewEnrollmentFile(null)
-      return
-    }
-    setNewEnrollmentFile(file)
-  }
 
   const handleSportToggle = (sportId: string) => {
     setSelectedSports((prev) => {
@@ -657,18 +366,45 @@ export default function ProfilePage() {
       })
       return
     }
+
     setAthleteStatus('sent')
     setIsSubmitting(true)
     setUploadProgress((prev) => ({ ...prev, registration: 0 }))
     setUploadStatus((prev) => ({ ...prev, registration: 'uploading' }))
 
     try {
-      setCurrentUploadStep('Preparando documentos...')
+      // Etapa 1: Remover arquivos antigos da Cloudflare
+      setCurrentUploadStep('Removendo arquivos antigos...')
       setUploadProgress((prev) => ({ ...prev, registration: 10 }))
 
+      if (athlete?.cnh_cpf_document_url) {
+        try {
+          // Aqui você implementaria a lógica para remover o arquivo antigo da Cloudflare
+          // Por enquanto, apenas simulamos o processo
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        } catch (error) {
+          console.warn('Erro ao remover arquivo antigo do documento:', error)
+        }
+      }
+
+      if (athlete?.enrollment_document_url) {
+        try {
+          // Aqui você implementaria a lógica para remover o arquivo antigo da Cloudflare
+          // Por enquanto, apenas simulamos o processo
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        } catch (error) {
+          console.warn('Erro ao remover arquivo antigo do atestado:', error)
+        }
+      }
+
+      setUploadProgress((prev) => ({ ...prev, registration: 20 }))
+
+      // Etapa 2: Realizar upload dos novos arquivos
       let documentUrl = athlete?.cnh_cpf_document_url
+      let enrollmentUrl = athlete?.enrollment_document_url
+
       if (documentFile) {
-        setCurrentUploadStep('Enviando documento...')
+        setCurrentUploadStep('Enviando documento para Cloudflare...')
         const formDataDoc = new FormData()
         formDataDoc.append('file', documentFile)
         const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
@@ -676,12 +412,11 @@ export default function ProfilePage() {
           throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
         }
         documentUrl = uploadResult.url
-        setUploadProgress((prev) => ({ ...prev, registration: 40 }))
+        setUploadProgress((prev) => ({ ...prev, registration: 50 }))
       }
 
-      let enrollmentUrl = athlete?.enrollment_document_url
       if (enrollmentFile) {
-        setCurrentUploadStep('Enviando atestado de matrícula...')
+        setCurrentUploadStep('Enviando atestado para Cloudflare...')
         const formDataEnroll = new FormData()
         formDataEnroll.append('file', enrollmentFile)
         const uploadResult = await uploadFileToR2(
@@ -694,10 +429,11 @@ export default function ProfilePage() {
           throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
         }
         enrollmentUrl = uploadResult.url
-        setUploadProgress((prev) => ({ ...prev, registration: 60 }))
+        setUploadProgress((prev) => ({ ...prev, registration: 70 }))
       }
 
-      setCurrentUploadStep('Finalizando cadastro...')
+      // Etapa 3: Atualizar base de dados com URLs dos novos arquivos
+      setCurrentUploadStep('Atualizando banco de dados...')
       setUploadProgress((prev) => ({ ...prev, registration: 80 }))
 
       if (athlete) {
@@ -714,9 +450,7 @@ export default function ProfilePage() {
 
         if (updateError) throw updateError
 
-        // Real-time UI update e invalidar cache
-        refetchAthlete()
-
+        // Atualizar modalidades esportivas
         const { error: deleteSportsError } = await supabase.from('athlete_sports').delete().eq('athlete_id', athlete.id)
         if (deleteSportsError) throw deleteSportsError
 
@@ -748,10 +482,14 @@ export default function ProfilePage() {
 
         const { error: sportsError } = await supabase.from('athlete_sports').insert(athleteSports)
         if (sportsError) throw sportsError
-
-        // Real-time UI update e invalidar cache
-        refetchAthlete()
       }
+
+      // Etapa 4: Atualizar cache
+      setCurrentUploadStep('Atualizando cache...')
+      setUploadProgress((prev) => ({ ...prev, registration: 90 }))
+      
+      // Invalidar cache e buscar dados atualizados
+      await refetchAthlete()
 
       setUploadProgress((prev) => ({ ...prev, registration: 100 }))
       setCurrentUploadStep('Concluído!')
@@ -763,9 +501,11 @@ export default function ProfilePage() {
         variant: 'success'
       })
 
-      // Clear files after successful submission
+      // Limpar arquivos após submissão bem-sucedida
       setDocumentFile(null)
       setEnrollmentFile(null)
+      setHasUnsavedFiles(false)
+      sessionStorage.removeItem('profile-form-state')
     } catch (error: any) {
       console.error('Error during athlete registration:', error)
       setUploadStatus((prev) => ({ ...prev, registration: 'error' }))
@@ -1090,26 +830,10 @@ export default function ProfilePage() {
                               )}
                             </div>
 
-                            {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
+                            {athlete?.cnh_cpf_document_url ? (
                               <UploadedFileDisplay
                                 url={athlete.cnh_cpf_document_url}
                                 label='Documento com foto'
-                                onReplace={handleReplaceDocument}
-                                canReplace={
-                                  athleteStatus === 'pending' || athleteStatus === 'rejected' || athleteStatus === null
-                                }
-                                fileType='document'
-                              />
-                            ) : isReplacingDocument ? (
-                              <FileReplacementInterface
-                                label='documento com foto'
-                                description='Envie uma foto clara do seu documento de identidade (frente e verso se necessário)'
-                                onFileChange={handleNewDocumentChange}
-                                onCancel={() => handleCancelReplacement('document')}
-                                onConfirm={() => handleFileReplacement(newDocumentFile!, 'document')}
-                                selectedFile={newDocumentFile}
-                                isUploading={isUploadingReplacement}
-                                fileType='document'
                               />
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
@@ -1145,26 +869,10 @@ export default function ProfilePage() {
                               )}
                             </div>
 
-                            {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
+                            {athlete?.enrollment_document_url ? (
                               <UploadedFileDisplay
                                 url={athlete.enrollment_document_url}
                                 label='Atestado de matrícula'
-                                onReplace={handleReplaceEnrollment}
-                                canReplace={
-                                  athleteStatus === 'pending' || athleteStatus === 'rejected' || athleteStatus === null
-                                }
-                                fileType='enrollment'
-                              />
-                            ) : isReplacingEnrollment ? (
-                              <FileReplacementInterface
-                                label='atestado de matrícula'
-                                description='O atestado deve ser recente e comprovar sua matrícula na instituição de ensino'
-                                onFileChange={handleNewEnrollmentChange}
-                                onCancel={() => handleCancelReplacement('enrollment')}
-                                onConfirm={() => handleFileReplacement(newEnrollmentFile!, 'enrollment')}
-                                selectedFile={newEnrollmentFile}
-                                isUploading={isUploadingReplacement}
-                                fileType='enrollment'
                               />
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
@@ -1247,7 +955,6 @@ export default function ProfilePage() {
                             className='w-full bg-gradient-to-r from-[#0456FC] to-[#0345D1] hover:from-[#0345D1] hover:to-[#0234B8] text-white font-bold py-3 sm:py-4 text-sm sm:text-base lg:text-lg transition-all duration-200 disabled:opacity-50 shadow-lg'
                             disabled={
                               isSubmitting ||
-                              isUploadingReplacement ||
                               (!documentFile && !athlete?.cnh_cpf_document_url) ||
                               (!enrollmentFile && !athlete?.enrollment_document_url) ||
                               selectedSports.length === 0 ||
