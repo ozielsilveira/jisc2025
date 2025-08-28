@@ -1,7 +1,7 @@
 'use client'
 
 import { updateAthleteDocument } from '@/actions/athlete'
-import { uploadFileToR2 } from '@/actions/upload'
+import { getPresignedUrl, deleteFileFromR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -461,7 +461,6 @@ export default function ProfilePage() {
   const handleFileReplacement = async (file: File, type: 'document' | 'enrollment') => {
     if (!user || !athlete) return
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE_BYTES) {
       toast({
         title: 'Arquivo muito grande',
@@ -477,39 +476,53 @@ export default function ProfilePage() {
     setUploadProgress((prev) => ({ ...prev, [uploadKey]: 0 }))
 
     try {
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => ({
-          ...prev,
-          [uploadKey]: Math.min((prev[uploadKey] || 0) + 10, 90)
-        }))
-      }, 200)
+      // 1. Get presigned URL from server
+      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 10 }))
+      const presignedUrlResult = await getPresignedUrl(user.id, type, {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })
 
-      progressIntervalsRef.current[uploadKey] = progressInterval
-
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const currentUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
-      const uploadResult = await uploadFileToR2(formData, user.id, type, currentUrl)
-
-      clearInterval(progressInterval)
-      delete progressIntervalsRef.current[uploadKey]
-
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.message || 'Erro ao fazer upload do arquivo.')
+      if (!presignedUrlResult.success) {
+        throw new Error(presignedUrlResult.message || 'Falha ao obter URL de upload.')
       }
 
-      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
+      const { uploadUrl, publicUrl } = presignedUrlResult.data
 
-      const dbUpdateResult = await updateAthleteDocument(athlete.id, type, uploadResult.url!)
+      // 2. Upload file directly to R2 using the presigned URL
+      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 30 }))
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Falha no upload para o servidor de arquivos.')
+      }
+
+      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 70 }))
+
+      // 3. Delete old file if it exists
+      const oldFileUrl = type === 'document' ? athlete.cnh_cpf_document_url : athlete.enrollment_document_url
+      if (oldFileUrl) {
+        await deleteFileFromR2(oldFileUrl)
+      }
+
+      // 4. Update database with the new public URL
+      const dbUpdateResult = await updateAthleteDocument(athlete.id, type, publicUrl)
       if (!dbUpdateResult.success) {
         throw new Error(dbUpdateResult.message || 'Erro ao atualizar o banco de dados.')
       }
 
-      // Confirm the update by refetching the latest data
+      setUploadProgress((prev) => ({ ...prev, [uploadKey]: 100 }))
+
+      // 5. Refetch data and reset UI state
       refetchAthlete()
 
-      // Reset replacement state
       if (type === 'document') {
         setIsReplacingDocument(false)
         setNewDocumentFile(null)
@@ -520,7 +533,6 @@ export default function ProfilePage() {
 
       setUploadStatus((prev) => ({ ...prev, [uploadKey]: 'success' }))
       setHasUnsavedFiles(false)
-
       sessionStorage.removeItem('profile-form-state')
 
       toast({
@@ -538,11 +550,6 @@ export default function ProfilePage() {
       })
     } finally {
       setIsUploadingReplacement(false)
-      // Clean up interval if it exists
-      if (progressIntervalsRef.current[uploadKey]) {
-        clearInterval(progressIntervalsRef.current[uploadKey])
-        delete progressIntervalsRef.current[uploadKey]
-      }
     }
   }
 
@@ -654,31 +661,24 @@ export default function ProfilePage() {
       let documentUrl = athlete?.cnh_cpf_document_url
       if (documentFile) {
         setCurrentUploadStep('Enviando documento...')
-        const formDataDoc = new FormData()
-        formDataDoc.append('file', documentFile)
-        const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
-        }
-        documentUrl = uploadResult.url
+        const presignedUrlResult = await getPresignedUrl(user.id, 'document', documentFile)
+        if (!presignedUrlResult.success) throw new Error(presignedUrlResult.message)
+        const { uploadUrl, publicUrl } = presignedUrlResult.data
+        const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: documentFile })
+        if (!uploadResponse.ok) throw new Error('Falha no upload do documento.')
+        documentUrl = publicUrl
         setUploadProgress((prev) => ({ ...prev, registration: 40 }))
       }
 
       let enrollmentUrl = athlete?.enrollment_document_url
       if (enrollmentFile) {
         setCurrentUploadStep('Enviando atestado de matrícula...')
-        const formDataEnroll = new FormData()
-        formDataEnroll.append('file', enrollmentFile)
-        const uploadResult = await uploadFileToR2(
-          formDataEnroll,
-          user.id,
-          'enrollment',
-          athlete?.enrollment_document_url
-        )
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
-        }
-        enrollmentUrl = uploadResult.url
+        const presignedUrlResult = await getPresignedUrl(user.id, 'enrollment', enrollmentFile)
+        if (!presignedUrlResult.success) throw new Error(presignedUrlResult.message)
+        const { uploadUrl, publicUrl } = presignedUrlResult.data
+        const uploadResponse = await fetch(uploadUrl, { method: 'PUT', body: enrollmentFile })
+        if (!uploadResponse.ok) throw new Error('Falha no upload do atestado.')
+        enrollmentUrl = publicUrl
         setUploadProgress((prev) => ({ ...prev, registration: 60 }))
       }
 
