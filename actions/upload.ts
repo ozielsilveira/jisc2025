@@ -63,7 +63,71 @@ const getFileExtension = (file: { name: string; type: string }): string => {
   return 'bin'
 }
 
+// Função principal para upload de arquivos
+export async function uploadFileToR2(
+  formData: FormData,
+  userId: string,
+  fileType: 'document' | 'enrollment',
+  existingFileUrl?: string
+) {
+  try {
+    const file = formData.get('file') as File
+    if (!file) {
+      return { success: false, message: 'Nenhum arquivo fornecido.' }
+    }
 
+    // Validar tamanho do arquivo
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return { success: false, message: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.` }
+    }
+
+    // Se existe um arquivo antigo, removê-lo primeiro
+    if (existingFileUrl) {
+      try {
+        await deleteFileFromR2(existingFileUrl)
+      } catch (error) {
+        console.warn('Erro ao remover arquivo antigo:', error)
+        // Continua mesmo se falhar ao remover o arquivo antigo
+      }
+    }
+
+    // Gerar chave única para o arquivo
+    const fileExt = getFileExtension(file)
+    const key = `${userId}/${fileType}_${Date.now()}.${fileExt}`
+
+    // Converter File para Buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Upload do arquivo
+    const putCommand = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+      ContentLength: file.size
+    })
+
+    await S3.send(putCommand)
+
+    // Retornar URL pública do arquivo
+    const publicUrl = `${R2_PUBLIC_BUCKET_URL}/${key}`
+
+    return {
+      success: true,
+      url: publicUrl,
+      message: 'Arquivo enviado com sucesso!'
+    }
+  } catch (error: any) {
+    console.error('Error uploading file to R2:', error)
+    return {
+      success: false,
+      message: error.message || 'Erro ao fazer upload do arquivo.'
+    }
+  }
+}
+
+// Função para deletar arquivos
 export async function deleteFileFromR2(fileUrl: string) {
   if (!fileUrl) {
     return { success: false, message: 'Nenhuma URL de arquivo fornecida.' }
@@ -89,6 +153,7 @@ export async function deleteFileFromR2(fileUrl: string) {
   }
 }
 
+// Função para obter URL pré-assinada (mantida para compatibilidade)
 export async function getPresignedUrl(
   userId: string,
   fileType: 'document' | 'enrollment',

@@ -76,10 +76,14 @@ const truncateUrl = (url: string, maxLength = 50): string => {
 // Component to display uploaded file (simplified - no replacement functionality)
 const UploadedFileDisplay = ({
   url,
-  label
+  label,
+  onReplace,
+  canReplace = true
 }: {
   url: string
   label: string
+  onReplace?: () => void
+  canReplace?: boolean
 }) => {
   const fileName = url.split('/').pop() || 'arquivo'
   const truncatedUrl = truncateUrl(url)
@@ -119,6 +123,18 @@ const UploadedFileDisplay = ({
                 <span>Visualizar</span>
                 <ExternalLink className='h-3 w-3 flex-shrink-0' />
               </a>
+              {canReplace && onReplace && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={onReplace}
+                  className='inline-flex items-center justify-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300 hover:border-blue-400 transition-colors w-full sm:w-auto'
+                >
+                  <RefreshCw className='h-4 w-4 flex-shrink-0' />
+                  <span>Substituir</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -152,6 +168,12 @@ export default function ProfilePage() {
   // File upload state
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
+
+  // File replacement state
+  const [isReplacingDocument, setIsReplacingDocument] = useState(false)
+  const [isReplacingEnrollment, setIsReplacingEnrollment] = useState(false)
+  const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null)
+  const [newEnrollmentFile, setNewEnrollmentFile] = useState<File | null>(null)
 
   // Real-time upload progress state
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
@@ -299,6 +321,9 @@ export default function ProfilePage() {
       setDocumentFile(file)
       setHasUnsavedFiles(!!file)
       persistFiles()
+      if (file) {
+        setIsReplacingDocument(false)
+      }
     },
     [persistFiles]
   )
@@ -308,9 +333,21 @@ export default function ProfilePage() {
       setEnrollmentFile(file)
       setHasUnsavedFiles(!!file)
       persistFiles()
+      if (file) {
+        setIsReplacingEnrollment(false)
+      }
     },
     [persistFiles]
   )
+
+  // Substituição de arquivos
+  const handleReplaceDocument = () => {
+    setIsReplacingDocument(true)
+  }
+
+  const handleReplaceEnrollment = () => {
+    setIsReplacingEnrollment(true)
+  }
 
   // Validação de tamanho de arquivo no cliente para feedback imediato
   const handleEnrollmentChange = (file: File | null) => {
@@ -377,21 +414,23 @@ export default function ProfilePage() {
       setCurrentUploadStep('Removendo arquivos antigos...')
       setUploadProgress((prev) => ({ ...prev, registration: 10 }))
 
-      if (athlete?.cnh_cpf_document_url) {
+      // Remover documento antigo somente se houver novo documento selecionado
+      if (documentFile && athlete?.cnh_cpf_document_url) {
         try {
-          // Aqui você implementaria a lógica para remover o arquivo antigo da Cloudflare
-          // Por enquanto, apenas simulamos o processo
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          // Importar a função de remoção
+          const { deleteFileFromR2 } = await import('@/actions/upload')
+          await deleteFileFromR2(athlete.cnh_cpf_document_url)
         } catch (error) {
           console.warn('Erro ao remover arquivo antigo do documento:', error)
         }
       }
 
-      if (athlete?.enrollment_document_url) {
+      // Remover atestado antigo somente se houver novo atestado selecionado
+      if (enrollmentFile && athlete?.enrollment_document_url) {
         try {
-          // Aqui você implementaria a lógica para remover o arquivo antigo da Cloudflare
-          // Por enquanto, apenas simulamos o processo
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          // Importar a função de remoção
+          const { deleteFileFromR2 } = await import('@/actions/upload')
+          await deleteFileFromR2(athlete.enrollment_document_url)
         } catch (error) {
           console.warn('Erro ao remover arquivo antigo do atestado:', error)
         }
@@ -400,8 +439,8 @@ export default function ProfilePage() {
       setUploadProgress((prev) => ({ ...prev, registration: 20 }))
 
       // Etapa 2: Realizar upload dos novos arquivos
-      let documentUrl = athlete?.cnh_cpf_document_url
-      let enrollmentUrl = athlete?.enrollment_document_url
+      let documentUrl = athlete?.cnh_cpf_document_url || null
+      let enrollmentUrl = athlete?.enrollment_document_url || null
 
       if (documentFile) {
         setCurrentUploadStep('Enviando documento para Cloudflare...')
@@ -411,7 +450,7 @@ export default function ProfilePage() {
         if (!uploadResult.success) {
           throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
         }
-        documentUrl = uploadResult.url
+        documentUrl = uploadResult.url ?? null
         setUploadProgress((prev) => ({ ...prev, registration: 50 }))
       }
 
@@ -428,7 +467,7 @@ export default function ProfilePage() {
         if (!uploadResult.success) {
           throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
         }
-        enrollmentUrl = uploadResult.url
+        enrollmentUrl = uploadResult.url ?? null
         setUploadProgress((prev) => ({ ...prev, registration: 70 }))
       }
 
@@ -440,8 +479,8 @@ export default function ProfilePage() {
         const { data: updatedAthlete, error: updateError } = await supabase
           .from('athletes')
           .update({
-            cnh_cpf_document_url: documentUrl,
-            enrollment_document_url: enrollmentUrl,
+            cnh_cpf_document_url: documentUrl ?? athlete.cnh_cpf_document_url,
+            enrollment_document_url: enrollmentUrl ?? athlete.enrollment_document_url,
             status: 'sent'
           })
           .eq('id', athlete.id)
@@ -831,10 +870,25 @@ export default function ProfilePage() {
                             </div>
 
                             {athlete?.cnh_cpf_document_url ? (
-                              <UploadedFileDisplay
-                                url={athlete.cnh_cpf_document_url}
-                                label='Documento com foto'
-                              />
+                              isReplacingDocument ? (
+                                <div className='border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 w-full'>
+                                  <FileUpload
+                                    id='document-replace'
+                                    label='Substituir CNH ou RG com foto'
+                                    description='Selecione um novo arquivo para substituir o atual'
+                                    existingFileUrl={athlete?.cnh_cpf_document_url}
+                                    onFileChange={handleDocumentChange}
+                                    required={false}
+                                  />
+                                </div>
+                              ) : (
+                                <UploadedFileDisplay
+                                  url={athlete.cnh_cpf_document_url}
+                                  label='Documento com foto'
+                                  onReplace={handleReplaceDocument}
+                                  canReplace={!isSubmitting}
+                                />
+                              )
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
                                 <div className='flex items-center space-x-2 mb-2'>
@@ -870,10 +924,25 @@ export default function ProfilePage() {
                             </div>
 
                             {athlete?.enrollment_document_url ? (
-                              <UploadedFileDisplay
-                                url={athlete.enrollment_document_url}
-                                label='Atestado de matrícula'
-                              />
+                              isReplacingEnrollment ? (
+                                <div className='border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 w-full'>
+                                  <FileUpload
+                                    id='enrollment-replace'
+                                    label='Substituir atestado de matrícula'
+                                    description='Selecione um novo arquivo para substituir o atual'
+                                    existingFileUrl={athlete?.enrollment_document_url}
+                                    onFileChange={handleEnrollmentChange}
+                                    required={false}
+                                  />
+                                </div>
+                              ) : (
+                                <UploadedFileDisplay
+                                  url={athlete.enrollment_document_url}
+                                  label='Atestado de matrícula'
+                                  onReplace={handleReplaceEnrollment}
+                                  canReplace={!isSubmitting}
+                                />
+                              )
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
                                 <div className='flex items-center space-x-2 mb-2'>
