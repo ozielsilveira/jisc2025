@@ -165,6 +165,12 @@ export default function ProfilePage() {
   const isLoading = profileLoading || sportsLoading || athleteLoading
   const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
 
+  useEffect(() => {
+    if(athlete?.status && athleteStatus === null){
+      setAthleteStatus(athlete.status) 
+    }
+  }, [athlete?.status])
+
   // File upload state
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
@@ -785,8 +791,24 @@ export default function ProfilePage() {
                 </div>
               )}
 
+              {athleteStatus === null && (
+                <div className='px-1 sm:px-0'>
+                  <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4'>
+                    <div className='flex flex-col space-y-3 sm:flex-row sm:items-start sm:space-y-0 sm:space-x-3'>
+                      <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0 self-center sm:self-start sm:mt-0.5' />
+                      <div className='min-w-0 text-center sm:text-left'>
+                        <h4 className='font-medium text-blue-800 text-sm sm:text-base'>Carregando Status...</h4>
+                        <p className='text-xs sm:text-sm text-blue-700 mt-1'>
+                          Verificando o status do seu cadastro. Por favor, aguarde.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Registration Form */}
-              {(athleteStatus === 'rejected' || athleteStatus === null || athleteStatus === 'pending') && (
+              {(athleteStatus === 'rejected' || athleteStatus === 'pending') && (
                 <div className='px-1 sm:px-0'>
                   <Card className='shadow-lg w-full overflow-hidden'>
                     <CardHeader className='space-y-4 p-4 sm:p-6'>
