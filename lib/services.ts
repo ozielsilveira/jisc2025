@@ -213,7 +213,6 @@ export const athletePackagesService = {
       .from('athlete_packages')
       .select('id')
       .eq('athlete_id', athleteId)
-      .eq('package_id', packageId)
       .maybeSingle()
 
     if (fetchError) throw fetchError
@@ -223,23 +222,13 @@ export const athletePackagesService = {
       const { error: updateError } = await supabase
         .from('athlete_packages')
         .update({
+          package_id: packageId,
           payment_status: paymentStatus,
           updated_at: new Date().toISOString()
         })
         .eq('id', existing.id)
 
       if (updateError) throw updateError
-    } else {
-      // Inserir novo registro
-      const { error: insertError } = await supabase
-        .from('athlete_packages')
-        .insert({
-          athlete_id: athleteId,
-          package_id: packageId,
-          payment_status: paymentStatus
-        })
-
-      if (insertError) throw insertError
     }
 
     // Invalidar cache relacionado
@@ -282,7 +271,7 @@ export const athletePackagesService = {
     if (newStatus !== athlete.status) {
       const { error: statusUpdateError } = await supabase
         .from('athletes')
-        .update({ 
+        .update({
           status: newStatus,
           updated_at: new Date().toISOString()
         })
