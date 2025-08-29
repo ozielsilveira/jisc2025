@@ -170,17 +170,18 @@ export default function ProfilePage() {
     if (athlete?.status && athleteStatus === null) {
       setAthleteStatus(athlete.status)
     }
-  }, [athlete?.status])
+  }, [athlete?.status, athleteStatus])
 
   // File upload state
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [enrollmentFile, setEnrollmentFile] = useState<File | null>(null)
+  const [newDocumentUrl, setNewDocumentUrl] = useState<string | null>(null)
+  const [newEnrollmentUrl, setNewEnrollmentUrl] = useState<string | null>(null)
+
 
   // File replacement state
   const [isReplacingDocument, setIsReplacingDocument] = useState(false)
   const [isReplacingEnrollment, setIsReplacingEnrollment] = useState(false)
-  const [newDocumentFile, setNewDocumentFile] = useState<File | null>(null)
-  const [newEnrollmentFile, setNewEnrollmentFile] = useState<File | null>(null)
 
   // Real-time upload progress state
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
@@ -200,26 +201,11 @@ export default function ProfilePage() {
     if (typeof window === 'undefined') return
 
     const filesToPersist = {
-      documentFile: documentFile
-        ? {
-          name: documentFile.name,
-          size: documentFile.size,
-          type: documentFile.type,
-          lastModified: documentFile.lastModified
-        }
-        : null,
-      enrollmentFile: enrollmentFile
-        ? {
-          name: enrollmentFile.name,
-          size: enrollmentFile.size,
-          type: enrollmentFile.type,
-          lastModified: enrollmentFile.lastModified
-        }
-        : null,
+      // Don't persist file objects, just metadata if needed
+      documentFile: documentFile ? { name: documentFile.name, size: documentFile.size, type: documentFile.type } : null,
+      enrollmentFile: enrollmentFile ? { name: enrollmentFile.name, size: enrollmentFile.size, type: enrollmentFile.type } : null,
       selectedSports,
       agreedToTerms,
-      uploadProgress,
-      uploadStatus
     }
 
     sessionStorage.setItem('profile-form-state', JSON.stringify(filesToPersist))
@@ -228,8 +214,6 @@ export default function ProfilePage() {
     enrollmentFile,
     selectedSports,
     agreedToTerms,
-    uploadProgress,
-    uploadStatus
   ])
 
   const restoreFiles = useCallback(() => {
@@ -239,19 +223,13 @@ export default function ProfilePage() {
       const savedState = sessionStorage.getItem('profile-form-state')
       if (savedState) {
         const parsed = JSON.parse(savedState)
-
-        // Restore form state
         setSelectedSports(parsed.selectedSports || [])
         setAgreedToTerms(parsed.agreedToTerms || false)
-        setUploadProgress(parsed.uploadProgress || {})
-        setUploadStatus(parsed.uploadStatus || {})
 
-
-        // Show recovery message if there were files
         if (parsed.documentFile || parsed.enrollmentFile) {
           toast({
             title: 'Sessão restaurada',
-            description: 'Seus arquivos foram recuperados. Por favor, selecione-os novamente para continuar.',
+            description: 'Seus arquivos selecionados foram lembrados. Por favor, selecione-os novamente para iniciar o upload.',
             variant: 'success'
           })
           setHasUnsavedFiles(true)
@@ -267,48 +245,28 @@ export default function ProfilePage() {
       const isVisible = !document.hidden
       setIsPageVisible(isVisible)
 
-      if (!isVisible) {
-        // Page is becoming hidden - persist current state
+      if (!isVisible && hasUnsavedFiles) {
         persistFiles()
-      } else {
-        // Page is becoming visible - check if we need to restore state
-        if (!hasUnsavedFiles) {
-          restoreFiles()
-        }
       }
     }
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedFiles || documentFile || enrollmentFile) {
+      if (hasUnsavedFiles) {
         persistFiles()
         e.preventDefault()
-        e.returnValue = 'Você tem arquivos não salvos. Tem certeza que deseja sair?'
+        e.returnValue = 'Você tem uploads de arquivos pendentes. Tem certeza que deseja sair?'
         return e.returnValue
-      }
-    }
-
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        // Page was restored from cache
-        restoreFiles()
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('beforeunload', handleBeforeUnload)
-    window.addEventListener('pageshow', handlePageShow)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      window.removeEventListener('pageshow', handlePageShow)
-
-      // Clean up any running intervals
-      Object.values(progressIntervalsRef.current).forEach((interval) => {
-        clearInterval(interval)
-      })
     }
-  }, [persistFiles, restoreFiles, hasUnsavedFiles, documentFile, enrollmentFile])
+  }, [persistFiles, hasUnsavedFiles])
 
   // Carregar modalidades selecionadas do atleta quando disponível
   useEffect(() => {
@@ -321,66 +279,107 @@ export default function ProfilePage() {
     restoreFiles()
   }, [restoreFiles])
 
-
-
-  const handleDocumentFileChange = useCallback(
-    (file: File | null) => {
+  // New upload handler using presigned URLs
+  const handleFileSelectAndUpload = async (
+    file: File | null,
+    fileType: 'document' | 'enrollment'
+  ) => {
+    if (fileType === 'document') {
       setDocumentFile(file)
-      setHasUnsavedFiles(!!file)
-      persistFiles()
-      if (file) {
-        setIsReplacingDocument(false)
-      }
-    },
-    [persistFiles]
-  )
-
-  const handleEnrollmentFileChange = useCallback(
-    (file: File | null) => {
+      setNewDocumentUrl(null) // Reset on new file selection
+    } else {
       setEnrollmentFile(file)
-      setHasUnsavedFiles(!!file)
-      persistFiles()
-      if (file) {
-        setIsReplacingEnrollment(false)
-      }
-    },
-    [persistFiles]
-  )
+      setNewEnrollmentUrl(null) // Reset on new file selection
+    }
 
-  // Substituição de arquivos
+    if (!file) {
+      setUploadStatus((prev) => ({ ...prev, [fileType]: 'idle' }))
+      setUploadProgress((prev) => ({ ...prev, [fileType]: 0 }))
+      return
+    }
+
+    setHasUnsavedFiles(true)
+
+    // Client-side validation
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: `O arquivo excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
+        variant: 'destructive'
+      })
+      if (fileType === 'document') setDocumentFile(null)
+      else setEnrollmentFile(null)
+      return
+    }
+
+    setUploadStatus((prev) => ({ ...prev, [fileType]: 'uploading' }))
+    setUploadProgress((prev) => ({ ...prev, [fileType]: 0 }))
+
+    try {
+      const { getPresignedUrl } = await import('@/actions/upload')
+      const presignedUrlResult = await getPresignedUrl(user!.id, fileType, {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })
+
+      if (!presignedUrlResult.success || !presignedUrlResult.data) {
+        throw new Error(presignedUrlResult.message || 'Falha ao obter URL de upload.')
+      }
+
+      const { uploadUrl, publicUrl } = presignedUrlResult.data
+
+      const xhr = new XMLHttpRequest()
+      xhr.open('PUT', uploadUrl, true)
+      xhr.setRequestHeader('Content-Type', file.type)
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100)
+          setUploadProgress((prev) => ({ ...prev, [fileType]: percentComplete }))
+        }
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadStatus((prev) => ({ ...prev, [fileType]: 'success' }))
+          if (fileType === 'document') {
+            setNewDocumentUrl(publicUrl)
+            setIsReplacingDocument(false) // Close replacement UI
+          } else {
+            setNewEnrollmentUrl(publicUrl)
+            setIsReplacingEnrollment(false) // Close replacement UI
+          }
+          setHasUnsavedFiles(false) // Upload complete, file is "saved"
+        } else {
+          throw new Error(`Falha no upload: ${xhr.statusText}`)
+        }
+      }
+
+      xhr.onerror = () => {
+        throw new Error('Erro de rede durante o upload.')
+      }
+
+      xhr.send(file)
+    } catch (error: any) {
+      console.error(`Error uploading ${fileType}:`, error)
+      setUploadStatus((prev) => ({ ...prev, [fileType]: 'error' }))
+      toast({
+        title: 'Erro de Upload',
+        description: error.message || `Não foi possível enviar o arquivo.`,
+        variant: 'destructive'
+      })
+      setHasUnsavedFiles(false)
+    }
+  }
+
+
   const handleReplaceDocument = () => {
     setIsReplacingDocument(true)
   }
 
   const handleReplaceEnrollment = () => {
     setIsReplacingEnrollment(true)
-  }
-
-  // Validação de tamanho de arquivo no cliente para feedback imediato
-  const handleEnrollmentChange = (file: File | null) => {
-    if (file && file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O atestado excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      setEnrollmentFile(null)
-      return
-    }
-    handleEnrollmentFileChange(file)
-  }
-
-  const handleDocumentChange = (file: File | null) => {
-    if (file && file.size > MAX_FILE_SIZE_BYTES) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: `O documento excede o limite de ${MAX_FILE_SIZE_MB}MB.`,
-        variant: 'destructive'
-      })
-      setDocumentFile(null)
-      return
-    }
-    handleDocumentFileChange(file)
   }
 
 
@@ -396,107 +395,66 @@ export default function ProfilePage() {
     e.preventDefault()
     if (!user) return
 
-    const hasValidationErrors =
-      (!documentFile && !athlete?.cnh_cpf_document_url) ||
-      (!enrollmentFile && !athlete?.enrollment_document_url) ||
-      selectedSports.length === 0 ||
-      !agreedToTerms
+    // Validation
+    const isDocumentReady = newDocumentUrl || athlete?.cnh_cpf_document_url
+    const isEnrollmentReady = newEnrollmentUrl || athlete?.enrollment_document_url
+
+    const hasValidationErrors = !isDocumentReady || !isEnrollmentReady || selectedSports.length === 0 || !agreedToTerms
 
     if (hasValidationErrors) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Por favor, preencha todos os campos do formulário e aceite os termos antes de enviar.',
+        description: 'Por favor, envie todos os documentos, selecione suas modalidades e aceite os termos.',
         variant: 'destructive'
+      })
+      return
+    }
+
+    // Check for pending uploads
+    if (uploadStatus['document'] === 'uploading' || uploadStatus['enrollment'] === 'uploading') {
+      toast({
+        title: 'Aguarde o upload',
+        description: 'Alguns arquivos ainda estão sendo enviados. Por favor, aguarde a conclusão.',
+        variant: 'default'
       })
       return
     }
 
     setAthleteStatus('sent')
     setIsSubmitting(true)
-    setUploadProgress((prev) => ({ ...prev, registration: 0 }))
-    setUploadStatus((prev) => ({ ...prev, registration: 'uploading' }))
+    setCurrentUploadStep('Iniciando registro...')
 
     try {
-      // Etapa 1: Remover arquivos antigos da Cloudflare
-      setCurrentUploadStep('Removendo arquivos antigos...')
-      setUploadProgress((prev) => ({ ...prev, registration: 10 }))
-
-      // Remover documento antigo somente se houver novo documento selecionado
-      if (documentFile && athlete?.cnh_cpf_document_url) {
-        try {
-          // Importar a função de remoção
-          const { deleteFileFromR2 } = await import('@/actions/upload')
-          await deleteFileFromR2(athlete.cnh_cpf_document_url)
-        } catch (error) {
-          console.warn('Erro ao remover arquivo antigo do documento:', error)
-        }
+      // Step 1: Delete old files if new ones were uploaded
+      setCurrentUploadStep('Verificando arquivos antigos...')
+      if (newDocumentUrl && athlete?.cnh_cpf_document_url) {
+        const { deleteFileFromR2 } = await import('@/actions/upload')
+        await deleteFileFromR2(athlete.cnh_cpf_document_url)
+      }
+      if (newEnrollmentUrl && athlete?.enrollment_document_url) {
+        const { deleteFileFromR2 } = await import('@/actions/upload')
+        await deleteFileFromR2(athlete.enrollment_document_url)
       }
 
-      // Remover atestado antigo somente se houver novo atestado selecionado
-      if (enrollmentFile && athlete?.enrollment_document_url) {
-        try {
-          // Importar a função de remoção
-          const { deleteFileFromR2 } = await import('@/actions/upload')
-          await deleteFileFromR2(athlete.enrollment_document_url)
-        } catch (error) {
-          console.warn('Erro ao remover arquivo antigo do atestado:', error)
-        }
-      }
-
-      setUploadProgress((prev) => ({ ...prev, registration: 20 }))
-
-      // Etapa 2: Realizar upload dos novos arquivos
-      let documentUrl = athlete?.cnh_cpf_document_url || null
-      let enrollmentUrl = athlete?.enrollment_document_url || null
-
-      if (documentFile) {
-        setCurrentUploadStep('Enviando documento para Cloudflare...')
-        const formDataDoc = new FormData()
-        formDataDoc.append('file', documentFile)
-        const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
-        }
-        documentUrl = uploadResult.url ?? null
-        setUploadProgress((prev) => ({ ...prev, registration: 50 }))
-      }
-
-      if (enrollmentFile) {
-        setCurrentUploadStep('Enviando atestado para Cloudflare...')
-        const formDataEnroll = new FormData()
-        formDataEnroll.append('file', enrollmentFile)
-        const uploadResult = await uploadFileToR2(
-          formDataEnroll,
-          user.id,
-          'enrollment',
-          athlete?.enrollment_document_url
-        )
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
-        }
-        enrollmentUrl = uploadResult.url ?? null
-        setUploadProgress((prev) => ({ ...prev, registration: 70 }))
-      }
-
-      // Etapa 3: Atualizar base de dados com URLs dos novos arquivos
+      // Step 2: Prepare data for database update
       setCurrentUploadStep('Atualizando banco de dados...')
-      setUploadProgress((prev) => ({ ...prev, registration: 80 }))
+      const documentUrlToSave = newDocumentUrl || athlete?.cnh_cpf_document_url
+      const enrollmentUrlToSave = newEnrollmentUrl || athlete?.enrollment_document_url
 
+      // Step 3: Update or Create Athlete record
       if (athlete) {
-        const { data: updatedAthlete, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('athletes')
           .update({
-            cnh_cpf_document_url: documentUrl ?? athlete.cnh_cpf_document_url,
-            enrollment_document_url: enrollmentUrl ?? athlete.enrollment_document_url,
+            cnh_cpf_document_url: documentUrlToSave,
+            enrollment_document_url: enrollmentUrlToSave,
             status: 'sent'
           })
           .eq('id', athlete.id)
-          .select()
-          .single()
 
         if (updateError) throw updateError
 
-        // Atualizar modalidades esportivas
+        // Update sports
         const { error: deleteSportsError } = await supabase.from('athlete_sports').delete().eq('athlete_id', athlete.id)
         if (deleteSportsError) throw deleteSportsError
 
@@ -512,8 +470,8 @@ export default function ProfilePage() {
           .from('athletes')
           .insert({
             user_id: user.id,
-            cnh_cpf_document_url: documentUrl!,
-            enrollment_document_url: enrollmentUrl!,
+            cnh_cpf_document_url: documentUrlToSave!,
+            enrollment_document_url: enrollmentUrlToSave!,
             status: 'sent'
           })
           .select()
@@ -530,31 +488,27 @@ export default function ProfilePage() {
         if (sportsError) throw sportsError
       }
 
-      // Etapa 4: Atualizar cache
-      setCurrentUploadStep('Atualizando cache...')
-      setUploadProgress((prev) => ({ ...prev, registration: 90 }))
-
-      // Invalidar cache e buscar dados atualizados
+      // Step 4: Finalize and update UI
+      setCurrentUploadStep('Atualizando cache local...')
       await refetchAthlete()
 
-      setUploadProgress((prev) => ({ ...prev, registration: 100 }))
       setCurrentUploadStep('Concluído!')
-      setUploadStatus((prev) => ({ ...prev, registration: 'success' }))
-
       toast({
         title: 'Cadastro enviado com sucesso!',
         description: 'Seu cadastro de atleta foi enviado e está aguardando aprovação.',
         variant: 'success'
       })
 
-      // Limpar arquivos após submissão bem-sucedida
+      // Clean up state
       setDocumentFile(null)
       setEnrollmentFile(null)
+      setNewDocumentUrl(null)
+      setNewEnrollmentUrl(null)
       setHasUnsavedFiles(false)
       sessionStorage.removeItem('profile-form-state')
     } catch (error: any) {
       console.error('Error during athlete registration:', error)
-      setUploadStatus((prev) => ({ ...prev, registration: 'error' }))
+      setAthleteStatus('pending') // Revert status on failure
       toast({
         title: 'Erro no cadastro',
         description: error.message || 'Não foi possível concluir o seu cadastro de atleta. Tente novamente.',
@@ -562,11 +516,7 @@ export default function ProfilePage() {
       })
     } finally {
       setIsSubmitting(false)
-      setTimeout(() => {
-        setUploadProgress((prev) => ({ ...prev, registration: 0 }))
-        setCurrentUploadStep('')
-        setUploadStatus((prev) => ({ ...prev, registration: 'idle' }))
-      }, 3000)
+      setCurrentUploadStep('')
     }
   }
 
@@ -891,35 +841,15 @@ export default function ProfilePage() {
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
                               <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin flex-shrink-0 self-center sm:self-start' />
                               <span className='font-medium text-blue-800 text-sm sm:text-base text-center sm:text-left'>
-                                {currentUploadStep}
+                                {currentUploadStep || 'Enviando cadastro...'}
                               </span>
                             </div>
-                            <Progress value={uploadProgress['registration'] || 0} className='w-full' />
-                            <p className='text-xs sm:text-sm text-blue-600 text-center sm:text-left'>
-                              {uploadProgress['registration'] || 0}% concluído - Não feche esta página
-                            </p>
                           </div>
-                        )}
-
-                        {Object.entries(uploadStatus).map(
-                          ([key, status]) =>
-                            status === 'success' && (
-                              <div
-                                key={key}
-                                className='bg-green-50 border border-green-200 rounded-lg p-3 animate-in fade-in-50'
-                              >
-                                <div className='flex items-center space-x-2'>
-                                  <CheckCircle className='h-4 w-4 text-green-500' />
-                                  <span className='text-sm text-green-700 font-medium'>
-                                    Upload concluído com sucesso!
-                                  </span>
-                                </div>
-                              </div>
-                            )
                         )}
 
                         {/* File Uploads */}
                         <div className='space-y-6 sm:space-y-8'>
+                          {/* Document Upload */}
                           <div className='space-y-4'>
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
                               <div className='w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start'>
@@ -928,7 +858,7 @@ export default function ProfilePage() {
                               <h3 className='text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left'>
                                 Documento com Foto
                               </h3>
-                              {athlete?.cnh_cpf_document_url && (
+                              {(athlete?.cnh_cpf_document_url || newDocumentUrl) && (
                                 <div className='flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start'>
                                   <CheckCircle className='h-3 w-3 flex-shrink-0' />
                                   <span>Enviado</span>
@@ -936,44 +866,54 @@ export default function ProfilePage() {
                               )}
                             </div>
 
-                            {athlete?.cnh_cpf_document_url ? (
-                              isReplacingDocument ? (
-                                <div className='border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 w-full'>
-                                  <FileUpload
-                                    id='document-replace'
-                                    label='Substituir CNH ou RG com foto'
-                                    description='Selecione um novo arquivo para substituir o atual'
-                                    existingFileUrl={athlete?.cnh_cpf_document_url}
-                                    onFileChange={handleDocumentChange}
-                                    required={false}
-                                  />
-                                </div>
-                              ) : (
-                                <UploadedFileDisplay
-                                  url={athlete.cnh_cpf_document_url}
-                                  label='Documento com foto'
-                                  onReplace={handleReplaceDocument}
-                                  canReplace={!isSubmitting}
-                                />
-                              )
+                            {athlete?.cnh_cpf_document_url && !isReplacingDocument ? (
+                              <UploadedFileDisplay
+                                url={newDocumentUrl || athlete.cnh_cpf_document_url}
+                                label='Documento com foto'
+                                onReplace={handleReplaceDocument}
+                                canReplace={!isSubmitting}
+                              />
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
-                                <div className='flex items-center space-x-2 mb-2'>
-                                  <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
-                                  <span className='text-sm font-medium text-amber-700'>Documento pendente</span>
-                                </div>
+                                {!athlete?.cnh_cpf_document_url && (
+                                  <div className='flex items-center space-x-2 mb-2'>
+                                    <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
+                                    <span className='text-sm font-medium text-amber-700'>Documento pendente</span>
+                                  </div>
+                                )}
                                 <FileUpload
-                                  id='document'
+                                  id='document-upload'
                                   label='CNH ou RG com foto'
-                                  description='Envie uma foto clara do seu documento de identidade (frente e verso se necessário)'
-                                  existingFileUrl={athlete?.cnh_cpf_document_url}
-                                  onFileChange={handleDocumentChange}
+                                  description='Envie uma foto clara do seu documento (frente e verso se necessário)'
+                                  onFileChange={(file) => handleFileSelectAndUpload(file, 'document')}
                                   required={!athlete?.cnh_cpf_document_url}
                                 />
+                                {uploadStatus['document'] === 'uploading' && (
+                                  <div className='mt-4 space-y-2'>
+                                    <Progress value={uploadProgress['document']} className='w-full' />
+                                    <p className='text-sm text-blue-600 text-center'>
+                                      Enviando: {uploadProgress['document'] || 0}%
+                                    </p>
+                                  </div>
+                                )}
+                                {uploadStatus['document'] === 'error' && (
+                                  <p className='text-sm text-red-600 mt-2 text-center'>
+                                    Falha no upload. Por favor, tente novamente.
+                                  </p>
+                                )}
+                                {uploadStatus['document'] === 'success' && !newDocumentUrl && (
+                                   <div className='mt-4 space-y-2'>
+                                     <Progress value={100} className='w-full' />
+                                     <p className='text-sm text-green-600 text-center'>
+                                       Upload concluído!
+                                     </p>
+                                   </div>
+                                )}
                               </div>
                             )}
                           </div>
 
+                          {/* Enrollment Upload */}
                           <div className='space-y-4'>
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3'>
                               <div className='w-8 h-8 bg-[#0456FC] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 self-center sm:self-start'>
@@ -982,7 +922,7 @@ export default function ProfilePage() {
                               <h3 className='text-base sm:text-lg lg:text-xl font-semibold text-center sm:text-left'>
                                 Atestado de Matrícula / Certificado
                               </h3>
-                              {athlete?.enrollment_document_url && (
+                              {(athlete?.enrollment_document_url || newEnrollmentUrl) && (
                                 <div className='flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium self-center sm:self-start'>
                                   <CheckCircle className='h-3 w-3 flex-shrink-0' />
                                   <span>Enviado</span>
@@ -990,40 +930,49 @@ export default function ProfilePage() {
                               )}
                             </div>
 
-                            {athlete?.enrollment_document_url ? (
-                              isReplacingEnrollment ? (
-                                <div className='border-2 border-dashed border-blue-300 rounded-xl p-4 bg-blue-50 w-full'>
-                                  <FileUpload
-                                    id='enrollment-replace'
-                                    label='Substituir atestado de matrícula'
-                                    description='Selecione um novo arquivo para substituir o atual'
-                                    existingFileUrl={athlete?.enrollment_document_url}
-                                    onFileChange={handleEnrollmentChange}
-                                    required={false}
-                                  />
-                                </div>
-                              ) : (
-                                <UploadedFileDisplay
-                                  url={athlete.enrollment_document_url}
-                                  label='Atestado de matrícula'
-                                  onReplace={handleReplaceEnrollment}
-                                  canReplace={!isSubmitting}
-                                />
-                              )
+                            {athlete?.enrollment_document_url && !isReplacingEnrollment ? (
+                              <UploadedFileDisplay
+                                url={newEnrollmentUrl || athlete.enrollment_document_url}
+                                label='Atestado de matrícula'
+                                onReplace={handleReplaceEnrollment}
+                                canReplace={!isSubmitting}
+                              />
                             ) : (
                               <div className='border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50 w-full'>
-                                <div className='flex items-center space-x-2 mb-2'>
-                                  <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
-                                  <span className='text-sm font-medium text-amber-700'>Atestado pendente</span>
-                                </div>
+                                {!athlete?.enrollment_document_url && (
+                                  <div className='flex items-center space-x-2 mb-2'>
+                                    <AlertCircle className='h-4 w-4 text-amber-500 flex-shrink-0' />
+                                    <span className='text-sm font-medium text-amber-700'>Atestado pendente</span>
+                                  </div>
+                                )}
                                 <FileUpload
-                                  id='enrollment'
+                                  id='enrollment-upload'
                                   label='Comprovante de matrícula atual'
-                                  description='O atestado deve ser recente e comprovar sua matrícula na instituição de ensino'
-                                  existingFileUrl={athlete?.enrollment_document_url}
-                                  onFileChange={handleEnrollmentChange}
+                                  description='O atestado deve ser recente e comprovar sua matrícula na instituição'
+                                  onFileChange={(file) => handleFileSelectAndUpload(file, 'enrollment')}
                                   required={!athlete?.enrollment_document_url}
                                 />
+                                {uploadStatus['enrollment'] === 'uploading' && (
+                                  <div className='mt-4 space-y-2'>
+                                    <Progress value={uploadProgress['enrollment']} className='w-full' />
+                                    <p className='text-sm text-blue-600 text-center'>
+                                      Enviando: {uploadProgress['enrollment'] || 0}%
+                                    </p>
+                                  </div>
+                                )}
+                                {uploadStatus['enrollment'] === 'error' && (
+                                  <p className='text-sm text-red-600 mt-2 text-center'>
+                                    Falha no upload. Por favor, tente novamente.
+                                  </p>
+                                )}
+                                 {uploadStatus['enrollment'] === 'success' && !newEnrollmentUrl && (
+                                   <div className='mt-4 space-y-2'>
+                                     <Progress value={100} className='w-full' />
+                                     <p className='text-sm text-green-600 text-center'>
+                                       Upload concluído!
+                                     </p>
+                                   </div>
+                                )}
                               </div>
                             )}
                           </div>
