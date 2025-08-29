@@ -26,7 +26,7 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
     serverActions: {
-      bodySizeLimit: '15mb'
+      bodySizeLimit: '20mb'
     }
   }
 }

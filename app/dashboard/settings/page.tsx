@@ -1,6 +1,6 @@
 'use client'
 
-import { uploadFileToR2 } from '@/actions/upload'
+import { getPresignedUrl } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -71,8 +71,8 @@ export default function SettingsPage() {
         toast({ title: 'Tipo de arquivo inválido', description: 'Por favor, envie um PDF ou DOC/DOCX.', variant: 'destructive' });
         return;
       }
-      if (file.size > 10 * 1024 * 1024) { // 10MB
-        toast({ title: 'Arquivo muito grande', description: 'O tamanho máximo permitido é 10MB.', variant: 'destructive' });
+      if (file.size > 20 * 1024 * 1024) { // 20MB
+        toast({ title: 'Arquivo muito grande', description: 'O tamanho máximo permitido é 20MB.', variant: 'destructive' });
         return;
       }
       setSelectedFile(file)
@@ -92,34 +92,51 @@ export default function SettingsPage() {
     }
 
     setIsUploading(true)
-    const formData = new FormData()
-    formData.append('file', selectedFile)
 
     try {
-      const result = await uploadFileToR2(formData, user.id, 'document', athleticData.statute_url || undefined)
+      // Etapa 1: Obter a URL pré-assinada do servidor
+      const presignedResult = await getPresignedUrl(user.id, 'document', {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        size: selectedFile.size
+      })
 
-      if (result.success && result.url) {
-        const { error: updateError } = await supabase
-          .from('athletics')
-          .update({ statute_url: result.url })
-          .eq('id', athleticData.id)
-
-        if (updateError) throw updateError
-
-        setAthleticData((prev) => ({ ...prev!, statute_url: result.url }))
-        toast({
-          title: 'Upload Concluído',
-          description: 'Seu estatuto foi enviado com sucesso.',
-          variant: 'success'
-        })
-        setSelectedFile(null)
-        // Clear file input visually
-        const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
-
-      } else {
-        throw new Error(result.message || 'Falha no upload do arquivo.')
+      if (!presignedResult.success || !presignedResult.data) {
+        throw new Error(presignedResult.message || 'Falha ao preparar o upload.')
       }
+
+      const { uploadUrl, publicUrl } = presignedResult.data
+
+      // Etapa 2: Fazer o upload do arquivo diretamente para o R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: selectedFile,
+        headers: {
+          'Content-Type': selectedFile.type
+        }
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Falha no upload do arquivo para o servidor.')
+      }
+
+      // Etapa 3: Atualizar o URL no Supabase
+      const { error: updateError } = await supabase
+        .from('athletics')
+        .update({ statute_url: publicUrl })
+        .eq('id', athleticData.id)
+
+      if (updateError) throw updateError
+
+      setAthleticData((prev) => ({ ...prev!, statute_url: publicUrl }))
+      toast({
+        title: 'Upload Concluído',
+        description: 'Seu estatuto foi enviado com sucesso.',
+        variant: 'success'
+      })
+      setSelectedFile(null)
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
     } catch (error: any) {
       console.error('Upload error:', error)
       toast({
@@ -182,7 +199,7 @@ export default function SettingsPage() {
                 </Label>
                 <Input id='file-upload' type='file' onChange={handleFileChange} accept='.pdf,.doc,.docx' />
                 <p className='text-xs text-muted-foreground'>
-                  Tipos de arquivo permitidos: PDF, DOC, DOCX. Tamanho máximo: 10MB.
+                  Tipos de arquivo permitidos: PDF, DOC, DOCX. Tamanho máximo: 20MB.
                 </p>
               </div>
             </CardContent>

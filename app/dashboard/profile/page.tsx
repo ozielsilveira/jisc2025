@@ -1,6 +1,6 @@
 'use client'
 
-import { uploadFileToR2 } from '@/actions/upload'
+import { getPresignedUrl, deleteFileFromR2 } from '@/actions/upload'
 import { useAuth } from '@/components/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -60,7 +60,7 @@ type Athlete = {
 }
 
 // Definir o limite de tamanho de arquivo para validação no cliente
-const MAX_FILE_SIZE_MB = 15
+const MAX_FILE_SIZE_MB = 20
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 // Utility function to truncate URLs for display
@@ -413,133 +413,106 @@ export default function ProfilePage() {
 
     setAthleteStatus('sent')
     setIsSubmitting(true)
-    setUploadProgress((prev) => ({ ...prev, registration: 0 }))
-    setUploadStatus((prev) => ({ ...prev, registration: 'uploading' }))
+    setUploadProgress({ registration: 0 })
+    setUploadStatus({ registration: 'uploading' })
 
     try {
-      // Etapa 1: Remover arquivos antigos da Cloudflare
-      setCurrentUploadStep('Removendo arquivos antigos...')
-      setUploadProgress((prev) => ({ ...prev, registration: 10 }))
-
-      // Remover documento antigo somente se houver novo documento selecionado
+      // Etapa 1: Remover arquivos antigos, se necessário
+      setCurrentUploadStep('Verificando arquivos existentes...')
+      setUploadProgress({ registration: 5 })
       if (documentFile && athlete?.cnh_cpf_document_url) {
-        try {
-          // Importar a função de remoção
-          const { deleteFileFromR2 } = await import('@/actions/upload')
-          await deleteFileFromR2(athlete.cnh_cpf_document_url)
-        } catch (error) {
-          console.warn('Erro ao remover arquivo antigo do documento:', error)
-        }
+        await deleteFileFromR2(athlete.cnh_cpf_document_url)
       }
-
-      // Remover atestado antigo somente se houver novo atestado selecionado
       if (enrollmentFile && athlete?.enrollment_document_url) {
-        try {
-          // Importar a função de remoção
-          const { deleteFileFromR2 } = await import('@/actions/upload')
-          await deleteFileFromR2(athlete.enrollment_document_url)
-        } catch (error) {
-          console.warn('Erro ao remover arquivo antigo do atestado:', error)
-        }
+        await deleteFileFromR2(athlete.enrollment_document_url)
       }
+      setUploadProgress({ registration: 10 })
 
-      setUploadProgress((prev) => ({ ...prev, registration: 20 }))
-
-      // Etapa 2: Realizar upload dos novos arquivos
+      // Etapa 2: Realizar upload dos novos arquivos usando presigned URLs
       let documentUrl = athlete?.cnh_cpf_document_url || null
       let enrollmentUrl = athlete?.enrollment_document_url || null
 
-      if (documentFile) {
-        setCurrentUploadStep('Enviando documento para Cloudflare...')
-        const formDataDoc = new FormData()
-        formDataDoc.append('file', documentFile)
-        const uploadResult = await uploadFileToR2(formDataDoc, user.id, 'document', athlete?.cnh_cpf_document_url)
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do documento.')
+      const uploadFile = async (
+        file: File,
+        fileType: 'document' | 'enrollment',
+        progressStart: number,
+        progressEnd: number
+      ) => {
+        setCurrentUploadStep(`Obtendo URL para ${fileType}...`)
+        const presignedResult = await getPresignedUrl(user.id, fileType, {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        })
+
+        if (!presignedResult.success || !presignedResult.data) {
+          throw new Error(presignedResult.message || `Falha ao obter URL para ${fileType}.`)
         }
-        documentUrl = uploadResult.url ?? null
-        setUploadProgress((prev) => ({ ...prev, registration: 50 }))
+
+        const { uploadUrl, publicUrl } = presignedResult.data
+
+        setCurrentUploadStep(`Enviando ${fileType}...`)
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type }
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error(`Falha no upload do arquivo ${fileType}.`)
+        }
+
+        setUploadProgress({ registration: progressEnd })
+        return publicUrl
+      }
+
+      if (documentFile) {
+        documentUrl = await uploadFile(documentFile, 'document', 10, 50)
       }
 
       if (enrollmentFile) {
-        setCurrentUploadStep('Enviando atestado para Cloudflare...')
-        const formDataEnroll = new FormData()
-        formDataEnroll.append('file', enrollmentFile)
-        const uploadResult = await uploadFileToR2(
-          formDataEnroll,
-          user.id,
-          'enrollment',
-          athlete?.enrollment_document_url
-        )
-        if (!uploadResult.success) {
-          throw new Error(uploadResult.message || 'Erro ao fazer upload do atestado.')
-        }
-        enrollmentUrl = uploadResult.url ?? null
-        setUploadProgress((prev) => ({ ...prev, registration: 70 }))
+        enrollmentUrl = await uploadFile(enrollmentFile, 'enrollment', 50, 90)
       }
 
       // Etapa 3: Atualizar base de dados com URLs dos novos arquivos
-      setCurrentUploadStep('Atualizando banco de dados...')
-      setUploadProgress((prev) => ({ ...prev, registration: 80 }))
+      setCurrentUploadStep('Atualizando seu cadastro...')
+      setUploadProgress({ registration: 95 })
+
+      const athleteData = {
+        cnh_cpf_document_url: documentUrl,
+        enrollment_document_url: enrollmentUrl,
+        status: 'sent' as const
+      }
 
       if (athlete) {
-        const { data: updatedAthlete, error: updateError } = await supabase
-          .from('athletes')
-          .update({
-            cnh_cpf_document_url: documentUrl ?? athlete.cnh_cpf_document_url,
-            enrollment_document_url: enrollmentUrl ?? athlete.enrollment_document_url,
-            status: 'sent'
-          })
-          .eq('id', athlete.id)
-          .select()
-          .single()
-
+        const { error: updateError } = await supabase.from('athletes').update(athleteData).eq('id', athlete.id)
         if (updateError) throw updateError
 
-        // Atualizar modalidades esportivas
         const { error: deleteSportsError } = await supabase.from('athlete_sports').delete().eq('athlete_id', athlete.id)
         if (deleteSportsError) throw deleteSportsError
 
-        const athleteSports = selectedSports.map((sportId) => ({
-          athlete_id: athlete.id,
-          sport_id: sportId
-        }))
-
+        const athleteSports = selectedSports.map((sportId) => ({ athlete_id: athlete.id, sport_id: sportId }))
         const { error: insertSportsError } = await supabase.from('athlete_sports').insert(athleteSports)
         if (insertSportsError) throw insertSportsError
       } else {
+        // This case seems unlikely if the user is on their profile page, but handling it defensively.
         const { data: newAthlete, error: insertError } = await supabase
           .from('athletes')
-          .insert({
-            user_id: user.id,
-            cnh_cpf_document_url: documentUrl!,
-            enrollment_document_url: enrollmentUrl!,
-            status: 'sent'
-          })
+          .insert({ ...athleteData, user_id: user.id })
           .select()
           .single()
-
         if (insertError) throw insertError
 
-        const athleteSports = selectedSports.map((sportId) => ({
-          athlete_id: newAthlete.id,
-          sport_id: sportId
-        }))
-
+        const athleteSports = selectedSports.map((sportId) => ({ athlete_id: newAthlete.id, sport_id: sportId }))
         const { error: sportsError } = await supabase.from('athlete_sports').insert(athleteSports)
         if (sportsError) throw sportsError
       }
 
-      // Etapa 4: Atualizar cache
-      setCurrentUploadStep('Atualizando cache...')
-      setUploadProgress((prev) => ({ ...prev, registration: 90 }))
-
-      // Invalidar cache e buscar dados atualizados
+      // Etapa 4: Finalização
       await refetchAthlete()
-
-      setUploadProgress((prev) => ({ ...prev, registration: 100 }))
+      setUploadProgress({ registration: 100 })
       setCurrentUploadStep('Concluído!')
-      setUploadStatus((prev) => ({ ...prev, registration: 'success' }))
+      setUploadStatus({ registration: 'success' })
 
       toast({
         title: 'Cadastro enviado com sucesso!',
@@ -547,14 +520,13 @@ export default function ProfilePage() {
         variant: 'success'
       })
 
-      // Limpar arquivos após submissão bem-sucedida
       setDocumentFile(null)
       setEnrollmentFile(null)
       setHasUnsavedFiles(false)
       sessionStorage.removeItem('profile-form-state')
     } catch (error: any) {
       console.error('Error during athlete registration:', error)
-      setUploadStatus((prev) => ({ ...prev, registration: 'error' }))
+      setUploadStatus({ registration: 'error' })
       toast({
         title: 'Erro no cadastro',
         description: error.message || 'Não foi possível concluir o seu cadastro de atleta. Tente novamente.',
@@ -563,9 +535,9 @@ export default function ProfilePage() {
     } finally {
       setIsSubmitting(false)
       setTimeout(() => {
-        setUploadProgress((prev) => ({ ...prev, registration: 0 }))
+        setUploadProgress({ registration: 0 })
         setCurrentUploadStep('')
-        setUploadStatus((prev) => ({ ...prev, registration: 'idle' }))
+        setUploadStatus({ registration: 'idle' })
       }, 3000)
     }
   }
