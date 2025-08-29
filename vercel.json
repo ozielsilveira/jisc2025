@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/**": {
-      "maxRequestSize": "15mb"
+      "bodySizeLimit": "20mb"
     }
   },
   "images": {
