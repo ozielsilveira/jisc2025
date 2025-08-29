@@ -1,7 +1,7 @@
 'use server'
 
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 
 // Certifique-se de que estas variáveis de ambiente estão configuradas no seu ambiente Vercel
 // CLOUDFLARE_ACCOUNT_ID: Seu ID de conta da Cloudflare
@@ -17,7 +17,7 @@ const R2_BUCKET_NAME = process.env.CLOUDFLARE_BUCKET_NAME
 const R2_PUBLIC_BUCKET_URL = process.env.CLOUDFLARE_PUBLIC_BUCKET_URL
 
 // Definir o limite de tamanho de arquivo em MB
-const MAX_FILE_SIZE_MB = 10
+const MAX_FILE_SIZE_MB = 15
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024 // Convertendo para bytes
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_BUCKET_URL) {

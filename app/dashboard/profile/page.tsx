@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase'
 import {
   AlertCircle,
-  Check,
   CheckCircle,
   Clock,
   ExternalLink,
@@ -30,7 +29,6 @@ import {
   Trophy,
   Upload,
   Users,
-  X,
   Zap
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -62,7 +60,7 @@ type Athlete = {
 }
 
 // Definir o limite de tamanho de arquivo para validação no cliente
-const MAX_FILE_SIZE_MB = 5
+const MAX_FILE_SIZE_MB = 15
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 // Utility function to truncate URLs for display
@@ -169,8 +167,8 @@ export default function ProfilePage() {
   const [athleteStatus, setAthleteStatus] = useState(athlete?.status || null)
 
   useEffect(() => {
-    if(athlete?.status && athleteStatus === null){
-      setAthleteStatus(athlete.status) 
+    if (athlete?.status && athleteStatus === null) {
+      setAthleteStatus(athlete.status)
     }
   }, [athlete?.status])
 
@@ -204,19 +202,19 @@ export default function ProfilePage() {
     const filesToPersist = {
       documentFile: documentFile
         ? {
-            name: documentFile.name,
-            size: documentFile.size,
-            type: documentFile.type,
-            lastModified: documentFile.lastModified
-          }
+          name: documentFile.name,
+          size: documentFile.size,
+          type: documentFile.type,
+          lastModified: documentFile.lastModified
+        }
         : null,
       enrollmentFile: enrollmentFile
         ? {
-            name: enrollmentFile.name,
-            size: enrollmentFile.size,
-            type: enrollmentFile.type,
-            lastModified: enrollmentFile.lastModified
-          }
+          name: enrollmentFile.name,
+          size: enrollmentFile.size,
+          type: enrollmentFile.type,
+          lastModified: enrollmentFile.lastModified
+        }
         : null,
       selectedSports,
       agreedToTerms,
@@ -247,7 +245,7 @@ export default function ProfilePage() {
         setAgreedToTerms(parsed.agreedToTerms || false)
         setUploadProgress(parsed.uploadProgress || {})
         setUploadStatus(parsed.uploadStatus || {})
-        
+
 
         // Show recovery message if there were files
         if (parsed.documentFile || parsed.enrollmentFile) {
@@ -535,7 +533,7 @@ export default function ProfilePage() {
       // Etapa 4: Atualizar cache
       setCurrentUploadStep('Atualizando cache...')
       setUploadProgress((prev) => ({ ...prev, registration: 90 }))
-      
+
       // Invalidar cache e buscar dados atualizados
       await refetchAthlete()
 
@@ -688,9 +686,8 @@ export default function ProfilePage() {
                       )}
                       <div className='flex flex-col items-center space-y-1 sm:space-y-2 lg:space-y-3'>
                         <div
-                          className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${
-                            isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
-                          }`}
+                          className={`p-1.5 sm:p-2 lg:p-3 rounded-lg ${isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-50'
+                            }`}
                         >
                           <Icon className='h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8' />
                         </div>
@@ -854,7 +851,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Registration Form */}
               {(athleteStatus === 'rejected' || athleteStatus === 'pending') && (
                 <div className='px-1 sm:px-0'>
@@ -1063,9 +1060,8 @@ export default function ProfilePage() {
                           </div>
                           {/* Visual feedback for checkbox state */}
                           <div
-                            className={`transition-all duration-200 rounded-lg p-3 border-2 ${
-                              agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                            }`}
+                            className={`transition-all duration-200 rounded-lg p-3 border-2 ${agreedToTerms ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                              }`}
                           >
                             <div className='flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2'>
                               {agreedToTerms ? (
