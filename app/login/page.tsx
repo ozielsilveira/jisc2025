@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import type React from "react"
 
@@ -8,12 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { checkRateLimit, clearRateLimit, sanitizeInput, validateEmail, validatePassword } from "@/lib/security"
 import { supabase } from "@/lib/supabase"
-import { validateEmail, validatePassword, sanitizeInput, checkRateLimit, clearRateLimit } from "@/lib/security"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -90,33 +90,55 @@ export default function LoginPage() {
 
       clearRateLimit(clientIP)
 
-      if (userData.role === "athletic") {
-        toast({
-          title: "Login bem-sucedido!",
-          description: "Você será redirecionado para a listagem de atletas.",
-          variant: "success",
-        })
-        router.push("/dashboard/athletes")
-      }
+      const maintenanceMode = process.env.MAINTENANCE_MODE === "true"
 
-      if (userData.role === "athlete") {
-        toast({
-          title: "Login bem-sucedido!",
-          description: "Por favor, complete o seu cadastro nas configurações.",
-          variant: "success",
-        })
+      // Se o modo de manutenção estiver ativado
+      if (maintenanceMode) {
+        if (userData.role === "admin") {
+          // Admin pode acessar o painel mesmo durante a manutenção
+          toast({
+            title: "Login bem-sucedido!",
+            description: "Você será redirecionado para o painel.",
+            variant: "success",
+          })
+          router.push("/dashboard")
+        } else {
+          // Outros usuários vão para a tela de manutenção
+          toast({
+            title: "Sistema em manutenção",
+            description: "O sistema está em manutenção. Apenas administradores podem acessar o painel.",
+            variant: "destructive",
+          })
+          router.push("/dashboard/maintenance")
+        }
+      } else {
+        // Se não estiver em manutenção, o login ocorre normalmente
+        if (userData.role === "athletic") {
+          toast({
+            title: "Login bem-sucedido!",
+            description: "Você será redirecionado para a listagem de atletas.",
+            variant: "success",
+          })
+          router.push("/dashboard/athletes")
+        }
 
-        router.push("/dashboard/profile")
-      }
+        if (userData.role === "athlete") {
+          toast({
+            title: "Login bem-sucedido!",
+            description: "Por favor, complete o seu cadastro nas configurações.",
+            variant: "success",
+          })
+          router.push("/dashboard/profile")
+        }
 
-      if (userData.role === "admin") {
-        toast({
-          title: "Login bem-sucedido!",
-          description: "Você será redirecionado para o painel.",
-          variant: "success",
-        })
-
-        router.push("/dashboard")
+        if (userData.role === "admin") {
+          toast({
+            title: "Login bem-sucedido!",
+            description: "Você será redirecionado para o painel.",
+            variant: "success",
+          })
+          router.push("/dashboard")
+        }
       }
     } catch (error) {
       console.error("Login error:", error)
