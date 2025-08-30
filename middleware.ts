@@ -1,26 +1,10 @@
-import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs'
 import { NextResponse, type NextRequest } from 'next/server'
+import { supabase } from './lib/supabase'
 
-// TODO: Use environment variables for maintenance mode
 const MAINTENANCE_MODE_ENABLED = process.env.MAINTENANCE_MODE === 'true' || false
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createServerClient({
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    cookies: {
-      get: (name: string) => req.cookies.get(name)?.value,
-      set: (name: string, value: string, options: CookieOptions) => {
-        req.cookies.set({ name, value, ...options })
-        res.cookies.set({ name, value, ...options })
-      },
-      remove: (name: string, options: CookieOptions) => {
-        req.cookies.set({ name, value: '', ...options })
-        res.cookies.set({ name, value: '', ...options })
-      }
-    }
-  })
 
   const {
     data: { session }
@@ -28,9 +12,14 @@ export async function middleware(req: NextRequest) {
 
   const isMaintenancePage = req.nextUrl.pathname.startsWith('/maintenance')
   const isLoginPage = req.nextUrl.pathname.startsWith('/login')
+  const isLandingPage = req.nextUrl.pathname === '/'
 
   if (MAINTENANCE_MODE_ENABLED) {
     if (isMaintenancePage) {
+      return res
+    }
+
+    if (isLandingPage) {
       return res
     }
 
@@ -38,7 +27,7 @@ export async function middleware(req: NextRequest) {
     const isAdmin = userRole === 'admin'
 
     if (!isAdmin) {
-      if (isAuthPage) {
+      if (isLoginPage) {
         return res
       }
       return NextResponse.redirect(new URL('/maintenance', req.url))
