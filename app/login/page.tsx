@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import type React from "react"
 
@@ -90,55 +90,33 @@ export default function LoginPage() {
 
       clearRateLimit(clientIP)
 
-      const maintenanceMode = process.env.MAINTENANCE_MODE === "true"
+      if (userData.role === "athletic") {
+        toast({
+          title: "Login bem-sucedido!",
+          description: "Você será redirecionado para a listagem de atletas.",
+          variant: "success",
+        })
+        router.push("/dashboard/athletes")
+      }
 
-      // Se o modo de manutenção estiver ativado
-      if (maintenanceMode) {
-        if (userData.role === "admin") {
-          // Admin pode acessar o painel mesmo durante a manutenção
-          toast({
-            title: "Login bem-sucedido!",
-            description: "Você será redirecionado para o painel.",
-            variant: "success",
-          })
-          router.push("/dashboard")
-        } else {
-          // Outros usuários vão para a tela de manutenção
-          toast({
-            title: "Sistema em manutenção",
-            description: "O sistema está em manutenção. Apenas administradores podem acessar o painel.",
-            variant: "destructive",
-          })
-          router.push("/dashboard/maintenance")
-        }
-      } else {
-        // Se não estiver em manutenção, o login ocorre normalmente
-        if (userData.role === "athletic") {
-          toast({
-            title: "Login bem-sucedido!",
-            description: "Você será redirecionado para a listagem de atletas.",
-            variant: "success",
-          })
-          router.push("/dashboard/athletes")
-        }
+      if (userData.role === "athlete") {
+        toast({
+          title: "Login bem-sucedido!",
+          description: "Por favor, complete o seu cadastro nas configurações.",
+          variant: "success",
+        })
 
-        if (userData.role === "athlete") {
-          toast({
-            title: "Login bem-sucedido!",
-            description: "Por favor, complete o seu cadastro nas configurações.",
-            variant: "success",
-          })
-          router.push("/dashboard/profile")
-        }
+        router.push("/dashboard/profile")
+      }
 
-        if (userData.role === "admin") {
-          toast({
-            title: "Login bem-sucedido!",
-            description: "Você será redirecionado para o painel.",
-            variant: "success",
-          })
-          router.push("/dashboard")
-        }
+      if (userData.role === "admin") {
+        toast({
+          title: "Login bem-sucedido!",
+          description: "Você será redirecionado para o painel.",
+          variant: "success",
+        })
+
+        router.push("/dashboard")
       }
     } catch (error) {
       console.error("Login error:", error)
