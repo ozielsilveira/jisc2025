@@ -192,7 +192,7 @@ export const packagesService = {
 
   // Buscar pacotes SEM cache (dados sempre frescos)
   async getAllFresh(): Promise<Package[]> {
-    const { data, error } = await supabase.from('packages').select('*').order('price')
+    const { data, error } = await supabase.from('packages').select('*').eq('is_active', true).order('price')
 
     if (error) throw error
 

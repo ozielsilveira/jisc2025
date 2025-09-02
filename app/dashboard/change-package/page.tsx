@@ -15,6 +15,7 @@ type Package = {
   name: string
   description: string
   price: number
+  is_active: boolean
 }
 
 type AthletePackage = {

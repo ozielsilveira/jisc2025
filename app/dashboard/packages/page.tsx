@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
@@ -45,6 +46,7 @@ type PackageType = {
   category: 'games' | 'party' | 'combined'
   includes_party: boolean
   includes_games: boolean
+  is_active: boolean
   discount_percentage: number | null
   created_at: string
   updated_at: string
@@ -84,6 +86,7 @@ export default function PackagesPage() {
     category: 'games' as 'games' | 'party' | 'combined',
     includes_party: false,
     includes_games: true,
+    is_active: true,
     discount_percentage: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -179,6 +182,7 @@ export default function PackagesPage() {
       category: 'games',
       includes_party: false,
       includes_games: true,
+      is_active: true,
       discount_percentage: ''
     })
     setSelectedPackage(null)
@@ -194,6 +198,7 @@ export default function PackagesPage() {
       category: pkg.category,
       includes_party: pkg.includes_party,
       includes_games: pkg.includes_games,
+      is_active: pkg.is_active,
       discount_percentage: pkg.discount_percentage ? pkg.discount_percentage.toString() : ''
     })
     setIsDialogOpen(true)
@@ -226,6 +231,7 @@ export default function PackagesPage() {
         category: formData.category,
         includes_party: formData.includes_party,
         includes_games: formData.includes_games,
+        is_active: formData.is_active,
         discount_percentage: formData.discount_percentage ? Number.parseFloat(formData.discount_percentage) : null
       }
 
@@ -593,6 +599,15 @@ export default function PackagesPage() {
                     </div>
                   )}
 
+                  <div className='flex items-center space-x-2'>
+                    <Switch
+                      id='is_active'
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_active: checked }))}
+                    />
+                    <Label htmlFor='is_active'>Pacote Ativo</Label>
+                  </div>
+
                   <DialogFooter>
                     <Button type='submit' className='bg-[#0456FC]' disabled={isSubmitting}>
                       {isSubmitting ? 'Salvando...' : formData.id ? 'Atualizar Pacote' : 'Criar Pacote'}
@@ -684,7 +699,12 @@ export default function PackagesPage() {
                         <CardHeader className='pb-2'>
                           <div className='flex justify-between items-start'>
                             <CardTitle>{pkg.name}</CardTitle>
-                            {getCategoryBadge(pkg.category)}
+                            <div className='flex items-center gap-2'>
+                              {getCategoryBadge(pkg.category)}
+                              <Badge className={pkg.is_active ? 'bg-green-500' : 'bg-red-500'}>
+                                {pkg.is_active ? 'Ativo' : 'Inativo'}
+                              </Badge>
+                            </div>
                           </div>
                           <CardDescription>{pkg.description || 'Sem descrição disponível.'}</CardDescription>
                         </CardHeader>
