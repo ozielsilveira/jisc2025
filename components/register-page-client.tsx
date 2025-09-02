@@ -131,9 +131,19 @@ export default function RegisterPage() {
 
   const [athletics, setAthletics] = useState<Array<{ id: string; name: string; university: string }>>([])
   const [packages, setPackages] = useState<
-    Array<{ id: string; name: string; description: string; price: number; category: 'games' | 'party' | 'combined' }>
+    Array<{
+      id: string
+      name: string
+      description: string
+      price: number
+      category: 'games' | 'party' | 'combined'
+      is_active: boolean
+    }>
   >([])
-  const [selectedPackage, setSelectedPackage] = useState<{ category: 'games' | 'party' | 'combined' } | null>(null)
+  const [selectedPackage, setSelectedPackage] = useState<{
+    category: 'games' | 'party' | 'combined'
+    is_active: boolean
+  } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -161,7 +171,8 @@ export default function RegisterPage() {
         // Fetch packages
         const { data: packagesData, error: packagesError } = await supabase
           .from('packages')
-          .select('id, name, description, price, category')
+          .select('id, name, description, price, category, is_active')
+          .eq('is_active', true)
           .order('price')
 
         if (packagesError) throw packagesError

@@ -215,6 +215,7 @@ export interface Database {
           category: 'games' | 'party' | 'combined'
           includes_party: boolean
           includes_games: boolean
+          is_active: boolean
           discount_percentage: number | null
           created_at: string
           updated_at: string
@@ -227,6 +228,7 @@ export interface Database {
           category: 'games' | 'party' | 'combined'
           includes_party: boolean
           includes_games: boolean
+          is_active?: boolean
           discount_percentage?: number | null
           created_at?: string
           updated_at?: string
@@ -239,6 +241,7 @@ export interface Database {
           category?: 'games' | 'party' | 'combined'
           includes_party?: boolean
           includes_games?: boolean
+          is_active?: boolean
           discount_percentage?: number | null
           created_at?: string
           updated_at?: string
