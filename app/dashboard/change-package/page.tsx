@@ -4,7 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, PackageIcon, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { Loader2, PackageIcon, CheckCircle, AlertCircle, Info, Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
 import { athleteService, packagesService, athletePackagesService } from '@/lib/services'
@@ -34,6 +34,7 @@ export default function ChangePackagePage() {
   const [loading, setLoading] = React.useState(true)
   const [selectedPackageId, setSelectedPackageId] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isChangeLocked, setIsChangeLocked] = React.useState(false)
   
   // Estados do atleta e pacote atual
   const [athlete, setAthlete] = React.useState<any>(null)
@@ -66,6 +67,11 @@ export default function ChangePackagePage() {
         
         setAthlete(athleteData)
         
+        // Bloquear alteração para admin_athlete
+        if (athleteData.admin_athlete) {
+          setIsChangeLocked(true)
+        }
+
         // Identificar pacote atual (completed) e pendente (pending)
         if (athleteData.athlete_packages && Array.isArray(athleteData.athlete_packages)) {
           const completed = athleteData.athlete_packages.find(
@@ -213,7 +219,7 @@ export default function ChangePackagePage() {
     const isPending = pendingPackage?.package.id === pkg.id
 
     let cardClasses = 'transition-all duration-200 rounded-lg'
-    let isDisabled = false
+    let isDisabled = isChangeLocked
     let statusText = ''
     let statusIcon = null
     let statusColor = ''
@@ -285,6 +291,16 @@ export default function ChangePackagePage() {
           </div>
 
           {/* Alertas de informação */}
+          {isChangeLocked && (
+            <Alert className="border-yellow-200 bg-yellow-50">
+              <Lock className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-800">
+                <strong>Alteração de Pacote Bloqueada:</strong> Atletas administradores não podem
+                alterar o pacote diretamente. Entre em contato com o suporte.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {currentPackage && (
             <Alert className="border-blue-200 bg-blue-50">
               <Info className="h-4 w-4 text-blue-600" />
@@ -345,11 +361,12 @@ export default function ChangePackagePage() {
             </Button>
             <Button
               onClick={handleSubmit}
-                             disabled={
-                 !selectedPackageId || 
-                 isSubmitting || 
-                 (!!currentPackage && selectedPackageId === currentPackage.package.id)
-               }
+              disabled={
+                isChangeLocked ||
+                !selectedPackageId ||
+                isSubmitting ||
+                (!!currentPackage && selectedPackageId === currentPackage.package.id)
+              }
               className='bg-[#0456FC] hover:bg-[#0456FC]/90'
             >
               {isSubmitting ? (
