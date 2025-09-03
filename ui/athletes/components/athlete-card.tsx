@@ -133,26 +133,29 @@ export default function AthleteCard({
             )}
           </div>
 
-          {(userRole === 'admin' || userRole === 'athletic') && (athlete.status === 'sent' || athlete.status === 'rejected') && (
-            <div className='flex gap-3'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onReject(athlete.id)}
-                className='border-red-300 text-red-700'
-              >
-                <UserX className='h-4 w-4 mr-2' /> Rejeitar
-              </Button>
-              <Button
-                size='sm'
-                variant='outline'
-                className='border-green-300 hover:bg-green-700 text-black'
-                onClick={() => onApprove(athlete.id)}
-              >
-                <UserCheck className='h-4 w-4 mr-2' /> Aprovar
-              </Button>
-            </div>
-          )}
+          {(userRole === 'admin' || userRole === 'athletic') &&
+            (athlete.status === 'sent' || athlete.status === 'rejected' || athlete.admin_approved === false) && (
+              <div className='flex gap-3'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => onReject(athlete.id)}
+                  className='border-red-300 text-red-700'
+                >
+                  <UserX className='h-4 w-4 mr-2' /> Rejeitar
+                </Button>
+                {(athlete.status === 'sent' || athlete.status === 'rejected') && (
+                  <Button
+                    size='sm'
+                    variant='outline'
+                    className='border-green-300 hover:bg-green-700 text-black'
+                    onClick={() => onApprove(athlete.id)}
+                  >
+                    <UserCheck className='h-4 w-4 mr-2' /> Aprovar
+                  </Button>
+                )}
+              </div>
+            )}
         </div>
       </CardContent>
     </Card>
